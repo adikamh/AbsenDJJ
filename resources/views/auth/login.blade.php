@@ -20,7 +20,7 @@
         <div class="card">
             <div class="header">
                 <div class="logo-title">AbsenDJJ</div>
-                <div class="subtitle">Sistem Absensi & Logbook Praktik<br>Data Jalan & Jembatan</div>
+                <div class="subtitle">Sistem Absensi & Logbook Praktik</div>
             </div>
 
             @if ($errors->any())
@@ -45,6 +45,14 @@
                     <label class="form-label" for="password">Kata Sandi</label>
                     <div class="input-wrapper">
                         <input type="password" id="password" name="password" class="form-control" placeholder="********" required>
+                        <button type="button" class="password-toggle" id="password-toggle" aria-label="Tampilkan kata sandi" aria-pressed="false">
+                            <span class="password-toggle-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </span>
+                        </button>
                     </div>
                 </div>
 
@@ -55,10 +63,10 @@
                     </label>
                 </div>
 
-                <button type="submit" class="btn-submit">Masuk Aplikasi</button>
+                <button type="submit" class="btn-submit">Masuk</button>
             </form>
 
-            <div class="demo-accounts">
+            {{-- <div class="demo-accounts">
                 <div class="demo-title">Akun Demo (Password: password)</div>
                 <ul class="demo-list">
                     <li>
@@ -74,7 +82,7 @@
                         <span class="role-badge badge-pe">Intern</span>
                     </li>
                 </ul>
-            </div>
+            </div> --}}
         </div>
     </div>
 
