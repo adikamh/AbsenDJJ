@@ -13,10 +13,16 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->foreignId('role_id')->constrained('roles')->onDelete('restrict');
+            $table->foreignId('instansi_id')->nullable()->constrained('instansi')->onDelete('set null');
+            $table->foreignId('pembimbing_id')->nullable()->constrained('users')->onDelete('set null');
+            
+            $table->string('nama_lengkap');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->boolean('status_aktif')->default(true);
+            
             $table->rememberToken();
             $table->timestamps();
         });
