@@ -54,6 +54,36 @@ class DashboardController extends Controller
     }
 
     /**
+     * Super Admin management view for field supervisors.
+     */
+    public function managePembimbing()
+    {
+        $pembimbing = User::with('role', 'instansi')
+            ->whereHas('role', function ($query) {
+                $query->where('nama_role', 'admin');
+            })
+            ->orderBy('nama_lengkap')
+            ->get();
+
+        return view('dashboard.super_admin_pembimbing', compact('pembimbing'));
+    }
+
+    /**
+     * Super Admin management view for interns.
+     */
+    public function managePeserta()
+    {
+        $peserta = User::with('role', 'instansi', 'pembimbing')
+            ->whereHas('role', function ($query) {
+                $query->where('nama_role', 'peserta');
+            })
+            ->orderBy('nama_lengkap')
+            ->get();
+
+        return view('dashboard.super_admin_peserta', compact('peserta'));
+    }
+
+    /**
      * Field Supervisor (Admin) Dashboard.
      */
     private function adminDashboard(User $user)

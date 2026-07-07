@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CookieConsentController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -21,11 +22,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/logout', [AuthController::class, 'logout']); // convenient GET fallback
 });
 
+Route::post('/cookie-consent', [CookieConsentController::class, 'store'])->name('cookie-consent.store');
+
 // 3. Role-based Specific Route Groups (For RBAC testing & features)
 Route::middleware(['auth', 'role:super_admin'])->prefix('super-admin')->group(function () {
-    Route::get('/users', function () {
-        return "Welcome to Super Admin User Management panel!";
-    })->name('super-admin.users');
+    Route::get('/users', [DashboardController::class, 'managePembimbing'])->name('super-admin.users');
+    Route::get('/pembimbing', [DashboardController::class, 'managePembimbing'])->name('super-admin.pembimbing');
+    Route::get('/peserta', [DashboardController::class, 'managePeserta'])->name('super-admin.peserta');
 });
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
