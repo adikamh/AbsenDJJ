@@ -3,6 +3,14 @@
 @section('title', 'Pembimbing Dashboard')
 @section('header_title', 'Dashboard Pembimbing Lapangan')
 
+@push('styles')
+    @vite('resources/css/dashboard-admin.css')
+@endpush
+
+@push('scripts')
+    @vite('resources/js/dashboard-admin.js')
+@endpush
+
 @section('content')
     <div class="stats-grid">
         <div class="stat-card hover-lift">
@@ -42,14 +50,14 @@
                                 <td><strong>{{ $logbook->user->nama_lengkap }}</strong></td>
                                 <td>{{ $logbook->tanggal->format('d M Y') }}</td>
                                 <td>{{ $logbook->kegiatan }}</td>
-                                <td><span style="font-size: 0.8rem; color: var(--text-secondary);">{{ Str::limit($logbook->deskripsi, 60) }}</span></td>
+                                <td><span class="muted-small">{{ Str::limit($logbook->deskripsi, 60) }}</span></td>
                                 <td>
-                                    <span class="badge badge-warning" style="cursor: pointer;">Tinjau</span>
+                                    <span class="badge badge-warning action-badge">Tinjau</span>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" style="text-align: center; color: var(--text-secondary);">Tidak ada logbook yang membutuhkan persetujuan.</td>
+                                <td colspan="5" class="empty-state">Tidak ada logbook yang membutuhkan persetujuan.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -74,11 +82,11 @@
                         @forelse($interns as $intern)
                             <tr>
                                 <td><strong>{{ $intern->nama_lengkap }}</strong></td>
-                                <td><span style="font-size: 0.8rem;">{{ $intern->instansi?->nama_instansi ?? '-' }}</span></td>
+                                <td><span class="muted-small">{{ $intern->instansi?->nama_instansi ?? '-' }}</span></td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="2" style="text-align: center; color: var(--text-secondary);">Belum ada peserta yang dibimbing.</td>
+                                <td colspan="2" class="empty-state">Belum ada peserta yang dibimbing.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -119,19 +127,19 @@
                             <td>{{ $leave->alasan }}</td>
                             <td>
                                 @if($leave->file_bukti)
-                                    <a href="#" class="badge badge-info" style="text-decoration: none;">Unduh Bukti</a>
+                                    <a href="#" class="badge badge-info download-link">Unduh Bukti</a>
                                 @else
                                     -
                                 @endif
                             </td>
                             <td>
-                                <span class="badge badge-success" style="cursor: pointer; margin-right: 5px;">Setujui</span>
-                                <span class="badge badge-danger" style="cursor: pointer;">Tolak</span>
+                                <span class="badge badge-success action-badge action-badge-spaced">Setujui</span>
+                                <span class="badge badge-danger action-badge">Tolak</span>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" style="text-align: center; color: var(--text-secondary);">Tidak ada pengajuan izin yang tertunda.</td>
+                            <td colspan="7" class="empty-state">Tidak ada pengajuan izin yang tertunda.</td>
                         </tr>
                     @endforelse
                 </tbody>
