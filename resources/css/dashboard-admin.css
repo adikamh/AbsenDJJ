@@ -1,0 +1,22 @@
+/* Page-specific styles for dashboard/admin.blade.php. */
+.muted-small {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+}
+
+.empty-state {
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+.action-badge {
+    cursor: pointer;
+}
+
+.action-badge-spaced {
+    margin-right: 5px;
+}
+
+.download-link {
+    text-decoration: none;
+}

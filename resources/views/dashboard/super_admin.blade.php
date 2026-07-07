@@ -3,6 +3,14 @@
 @section('title', 'Super Admin Dashboard')
 @section('header_title', 'Super Admin Overview')
 
+@push('styles')
+    @vite('resources/css/dashboard-super-admin.css')
+@endpush
+
+@push('scripts')
+    @vite('resources/js/dashboard-super-admin.js')
+@endpush
+
 @section('content')
     <div class="stats-grid">
         <div class="stat-card hover-lift">
@@ -22,7 +30,7 @@
     <div class="content-card">
         <div class="card-header">
             <h2 class="card-title">Pengguna Baru Terdaftar</h2>
-            <a href="{{ route('super-admin.users') }}" class="badge badge-info" style="text-decoration: none;">Kelola</a>
+            <a href="{{ route('super-admin.users') }}" class="badge badge-info manage-link">Kelola</a>
         </div>
         <div class="table-responsive">
             <table class="custom-table">

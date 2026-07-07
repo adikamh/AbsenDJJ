@@ -1,0 +1,114 @@
+/* Page-specific styles for dashboard/peserta.blade.php. */
+.attendance-panel {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    justify-content: center;
+    padding: 20px 0;
+}
+
+.location-text {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+.location-coordinate {
+    color: var(--text-primary);
+    font-family: monospace;
+}
+
+.attendance-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+    max-width: 400px;
+    width: 100%;
+}
+
+.attendance-button {
+    flex: 1;
+}
+
+.attendance-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.attendance-button-in {
+    background: rgba(52, 211, 153, 0.05);
+    border-color: rgba(52, 211, 153, 0.3);
+    color: #34d399;
+}
+
+.attendance-button-out {
+    background: rgba(168, 85, 247, 0.05);
+    border-color: rgba(168, 85, 247, 0.3);
+    color: #c084fc;
+}
+
+.supervisor-card {
+    padding: 10px 0;
+    text-align: center;
+}
+
+.supervisor-avatar {
+    align-items: center;
+    background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+    border-radius: 50%;
+    color: white;
+    display: flex;
+    font-size: 1.5rem;
+    font-weight: bold;
+    height: 70px;
+    justify-content: center;
+    margin: 0 auto 15px;
+    width: 70px;
+}
+
+.supervisor-name {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.supervisor-email,
+.muted-small {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+}
+
+.supervisor-organization {
+    color: #a855f7;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-top: 10px;
+}
+
+.action-badge {
+    cursor: pointer;
+}
+
+.logbook-description {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    margin-top: 4px;
+}
+
+.leave-date {
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.leave-reason {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    margin-top: 2px;
+}
+
+.empty-state {
+    color: var(--text-secondary);
+    text-align: center;
+}
