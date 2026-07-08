@@ -27,7 +27,7 @@
         </div>
     </div>
 
-    <div class="dashboard-row">
+    <div class="admin-dashboard-row">
         <!-- Logbooks Pending Section -->
         <div class="content-card">
             <div class="card-header">

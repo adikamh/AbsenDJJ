@@ -36,7 +36,7 @@
     </div>
 
     <!-- Attendance Action & Quick Logbook Row -->
-    <div class="dashboard-row">
+    <div class="admin-dashboard-row">
         
         <!-- Attendance Control Panel -->
         <div class="content-card">
@@ -47,14 +47,96 @@
             <div class="attendance-panel">
                 <div class="location-text">
                     Lokasi Anda saat ini: <br>
-                    <strong class="location-coordinate">-6.8988, 107.6358 (ITENAS Area)</strong>
+                    <strong class="location-coordinate" id="location-coordinate">Mendeteksi lokasi...</strong>
                 </div>
 
+                @if(!$todayAttendance)
+                    <!-- Camera Control Area for Selfie -->
+                    <div class="camera-container">
+                        <!-- Video Stream Preview -->
+                        <video id="webcam-video" autoplay playsinline style="display: none; transform: scaleX(-1);"></video>
+                        <!-- Selfie Image Preview -->
+                        <img id="selfie-preview" style="display: none;" alt="Selfie Preview">
+                        
+                        <!-- Canvas for processing (Hidden) -->
+                        <canvas id="attendance-canvas" style="display: none;"></canvas>
+
+                        <!-- Camera Action Buttons -->
+                        <div class="camera-buttons">
+                            <button type="button" id="btn-start-camera" class="btn-camera btn-camera-primary">
+                                Buka Kamera
+                            </button>
+                            <button type="button" id="btn-capture-photo" class="btn-camera btn-camera-primary" style="display: none;">
+                                Ambil Foto
+                            </button>
+                            <button type="button" id="btn-retake-photo" class="btn-camera btn-camera-danger" style="display: none;">
+                                Foto Ulang
+                            </button>
+                        </div>
+                    </div>
+                @else
+                    {{-- ===== SUDAH ABSEN MASUK ===== --}}
+                    <div class="camera-container">
+
+                        {{-- Always show check-in selfie --}}
+                        @if($todayAttendance->foto_masuk)
+                            <div class="selfie-row">
+                                <img src="{{ asset($todayAttendance->foto_masuk) }}"
+                                     class="selfie-thumb selfie-thumb-in"
+                                     alt="Selfie Masuk">
+                                <div class="selfie-label selfie-label-in">✓ Selfie Masuk</div>
+                            </div>
+                        @endif
+
+                        {{-- Check-out camera UI — only when not yet checked out --}}
+                        @if(!$todayAttendance->jam_pulang)
+                            <div class="selfie-divider">Selfie Absen Pulang</div>
+
+                            <video id="webcam-video-out" autoplay playsinline
+                                   style="display: none; transform: scaleX(-1);"></video>
+                            <img id="selfie-preview-out" style="display: none;" alt="Selfie Pulang Preview">
+                            <canvas id="attendance-canvas-out" style="display: none;"></canvas>
+
+                            <div class="camera-buttons">
+                                <button type="button" id="btn-start-camera-out" class="btn-camera btn-camera-primary">
+                                    Buka Kamera
+                                </button>
+                                <button type="button" id="btn-capture-photo-out" class="btn-camera btn-camera-primary"
+                                        style="display: none;">
+                                    Ambil Foto
+                                </button>
+                                <button type="button" id="btn-retake-photo-out" class="btn-camera btn-camera-danger"
+                                        style="display: none;">
+                                    Foto Ulang
+                                </button>
+                            </div>
+
+                        @else
+                            {{-- Already fully done: show checkout selfie too --}}
+                            @if($todayAttendance->foto_pulang)
+                                <div class="selfie-divider">Selesai Hari Ini 🎉</div>
+                                <div class="selfie-row">
+                                    <img src="{{ asset($todayAttendance->foto_pulang) }}"
+                                         class="selfie-thumb selfie-thumb-out"
+                                         alt="Selfie Pulang">
+                                    <div class="selfie-label selfie-label-out">✓ Selfie Pulang</div>
+                                </div>
+                            @endif
+                        @endif
+
+                    </div>
+                @endif
+
                 <div class="attendance-actions">
-                    <button type="button" class="btn-logout attendance-button attendance-button-in" @disabled($todayAttendance)>
+                    <button type="button" id="btn-submit-in"
+                            class="btn-logout attendance-button attendance-button-in"
+                            @disabled(true)>
                         Absen Masuk
                     </button>
-                    <button type="button" class="btn-logout attendance-button attendance-button-out" @disabled(!$todayAttendance || $todayAttendance->jam_pulang)>
+                    <button type="button" id="btn-submit-out"
+                            class="btn-logout attendance-button attendance-button-out"
+                            @disabled(!$todayAttendance || $todayAttendance->jam_pulang)
+                            {{ ($todayAttendance && !$todayAttendance->jam_pulang) ? 'data-needs-selfie=true' : '' }}>
                         Absen Pulang
                     </button>
                 </div>
@@ -72,14 +154,14 @@
                 </div>
                 <h3 class="supervisor-name">{{ auth()->user()->pembimbing->nama_lengkap ?? 'Belum Ditugaskan' }}</h3>
                 <p class="supervisor-email">{{ auth()->user()->pembimbing->email ?? '-' }}</p>
-                <p class="supervisor-organization">Dinas Pekerjaan Umum & Tata Ruang</p>
+                <p class="supervisor-organization">{{ auth()->user()->pembimbing?->instansi?->nama_instansi ?? 'Instansi tidak terdaftar' }}</p>
             </div>
         </div>
 
     </div>
 
     <!-- Logbook & Leave History Tabular Sections -->
-    <div class="dashboard-row">
+    <div class="peserta-stack">
         
         <!-- Recent Logbooks -->
         <div class="content-card">
@@ -168,4 +250,5 @@
         </div>
 
     </div>
+
 @endsection

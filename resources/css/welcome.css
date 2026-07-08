@@ -1,7 +1,7 @@
 /* Page-specific styles for welcome.blade.php. */
 body {
     align-items: center;
-    background: #090d16;
+    background: linear-gradient(135deg, #1b264f 0%, #2e4085 50%, #384877 100%);
     color: #f8fafc;
     display: flex;
     font-family: Inter, ui-sans-serif, system-ui, sans-serif;
@@ -25,12 +25,19 @@ body {
 }
 
 .welcome-page a {
-    background: #a855f7;
+    background: linear-gradient(135deg, #ffcc33 0%, #ffc107 100%);
     border-radius: 8px;
-    color: white;
+    color: #1e293b;
     display: inline-block;
-    font-weight: 600;
+    font-weight: 700;
     padding: 0.75rem 1rem;
     text-decoration: none;
+    box-shadow: 0 4px 15px rgba(255, 204, 51, 0.3);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.welcome-page a:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 204, 51, 0.5);
 }
 
