@@ -18,6 +18,7 @@
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
+            <img src="{{ asset('images/Logo/Logo_PU.png') }}" alt="Logo PU" class="sidebar-logo">
             <span class="logo-text">AbsenDJJ</span>
         </div>
 
@@ -26,7 +27,7 @@
         </button>
 
         <ul class="nav-menu">
-            <li class="nav-item active">
+            <li class="nav-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                 <a href="{{ route('dashboard') }}">
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
                         <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>

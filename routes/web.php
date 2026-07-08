@@ -41,4 +41,7 @@ Route::middleware(['auth', 'role:peserta'])->prefix('peserta')->group(function (
     Route::get('/my-attendance', function () {
         return "Welcome to intern attendance details!";
     })->name('peserta.attendance');
+
+    Route::post('/attendance/check-in', [App\Http\Controllers\AttendanceController::class, 'checkIn'])->name('peserta.attendance.checkin');
+    Route::post('/attendance/check-out', [App\Http\Controllers\AttendanceController::class, 'checkOut'])->name('peserta.attendance.checkout');
 });

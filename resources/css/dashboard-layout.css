@@ -1,8 +1,10 @@
 :root {
-            --bg-base: #090d16;
-            --bg-sidebar: #0f172a;
-            --accent-primary: #a855f7;
-            --accent-secondary: #ec4899;
+            --bg-base: #0e1424;
+            --bg-sidebar: #171f38;
+            --accent-primary: #ffcc33;
+            --accent-secondary: #ffc107;
+            --accent-primary-rgba: rgba(255, 204, 51, 0.15);
+            --accent-primary-rgba-light: rgba(255, 204, 51, 0.05);
             --text-primary: #f8fafc;
             --text-secondary: #94a3b8;
             --glass-bg: rgba(30, 41, 59, 0.4);
@@ -12,16 +14,18 @@
         }
 
         [data-theme="light"] {
-            --bg-base: #f5f7ff;
+            --bg-base: #f4f6fa;
             --bg-sidebar: #ffffff;
-            --accent-primary: #7c3aed;
-            --accent-secondary: #db2777;
+            --accent-primary: #2e4085;
+            --accent-secondary: #384877;
+            --accent-primary-rgba: rgba(46, 64, 133, 0.12);
+            --accent-primary-rgba-light: rgba(46, 64, 133, 0.04);
             --text-primary: #0f172a;
             --text-secondary: #64748b;
             --glass-bg: rgba(255, 255, 255, 0.9);
             --glass-border: rgba(15, 23, 42, 0.08);
             --card-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
-            --page-header-bg: rgba(124, 58, 237, 0.06);
+            --page-header-bg: rgba(46, 64, 133, 0.06);
         }
 
         * {
@@ -57,15 +61,29 @@
             margin-bottom: 28px;
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: flex-start;
             gap: 12px;
+        }
+
+        .sidebar-logo {
+            height: 38px;
+            width: auto;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            border: 1.5px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-logo:hover {
+            transform: scale(1.08);
         }
 
         .logo-text {
             font-family: 'Outfit', sans-serif;
             font-size: 1.8rem;
             font-weight: 700;
-            background: linear-gradient(to right, #c084fc, #ec4899);
+            background: linear-gradient(to right, var(--accent-primary), var(--accent-secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -122,7 +140,7 @@
 
         .nav-item.active a, .nav-item a:hover {
             color: var(--text-primary);
-            background: rgba(168, 85, 247, 0.15);
+            background: var(--accent-primary-rgba);
             border-left: 3px solid var(--accent-primary);
         }
 
@@ -148,7 +166,7 @@
         .nav-submenu a:hover,
         .nav-submenu a.active-submenu {
             color: var(--text-primary);
-            background: rgba(168, 85, 247, 0.12);
+            background: var(--accent-primary-rgba-light);
         }
 
         .submenu-arrow {
@@ -457,6 +475,48 @@
         }
         .hover-lift:hover {
             transform: translateY(-4px);
-            box-shadow: 0 8px 30px rgba(168, 85, 247, 0.15);
+            box-shadow: 0 8px 30px var(--accent-primary-rgba);
+        }
+
+        /* Shared utility classes used across multiple dashboard pages */
+        .manage-link {
+            text-decoration: none;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+        .manage-link:hover {
+            opacity: 0.8;
+        }
+
+        .action-badge {
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+        .action-badge:hover {
+            opacity: 0.8;
+        }
+
+        .action-badge-spaced {
+            margin-right: 6px;
+        }
+
+        .empty-state {
+            color: var(--text-secondary);
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9rem;
+        }
+
+        .muted-small {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        .download-link {
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .download-link:hover {
+            opacity: 0.8;
         }
 

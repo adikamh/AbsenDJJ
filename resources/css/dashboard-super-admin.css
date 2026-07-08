@@ -1,5 +1,21 @@
-/* Page-specific styles for dashboard/super_admin.blade.php. */
-.manage-link {
-    text-decoration: none;
+/* Page-specific styles for dashboard/super_admin.blade.php */
+
+/* Stats grid gets a 3-column layout on large screens */
+@media (min-width: 1200px) {
+    .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
 }
 
+/* Style the role name text inside the role badge to look better */
+.custom-table .badge {
+    min-width: 90px;
+    text-align: center;
+    text-transform: capitalize;
+}
+
+/* Highlight recently registered users with a subtle left accent */
+.custom-table tbody tr:hover {
+    background: var(--accent-primary-rgba-light);
+    transition: background 0.2s ease;
+}

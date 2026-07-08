@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - AbsenDJJ</title>
+    <title>Login - Absen Magang</title>
     
     <!-- Premium Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,8 +19,9 @@
     <div class="login-container">
         <div class="card">
             <div class="header">
-                <div class="logo-title">AbsenDJJ</div>
-                <div class="subtitle">Sistem Absensi & Logbook Praktik</div>
+                <img src="{{ asset('images/Logo/Logo_PU.png') }}" alt="Logo PU" class="login-logo">
+                <div class="logo-title">Sistem Absen Magang</div>
+                <div class="subtitle">Direktorat Bina Teknik Jalan dan Jembatan</div>
             </div>
 
             @if ($errors->any())

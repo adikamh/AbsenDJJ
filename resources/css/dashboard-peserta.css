@@ -1,4 +1,27 @@
 /* Page-specific styles for dashboard/peserta.blade.php. */
+
+/* Two-column equal grid with spacing between rows */
+.admin-dashboard-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+@media (max-width: 1100px) {
+    .admin-dashboard-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Single-column stack layout: cards appear top-to-bottom */
+.peserta-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
 .attendance-panel {
     align-items: center;
     display: flex;
@@ -44,9 +67,9 @@
 }
 
 .attendance-button-out {
-    background: rgba(168, 85, 247, 0.05);
-    border-color: rgba(168, 85, 247, 0.3);
-    color: #c084fc;
+    background: rgba(255, 204, 51, 0.05);
+    border-color: rgba(255, 204, 51, 0.3);
+    color: #ffcc33;
 }
 
 .supervisor-card {
@@ -74,21 +97,16 @@
     margin-bottom: 5px;
 }
 
-.supervisor-email,
-.muted-small {
+.supervisor-email {
     color: var(--text-secondary);
     font-size: 0.8rem;
 }
 
 .supervisor-organization {
-    color: #a855f7;
+    color: var(--accent-primary);
     font-size: 0.75rem;
     font-weight: 500;
     margin-top: 10px;
-}
-
-.action-badge {
-    cursor: pointer;
 }
 
 .logbook-description {
@@ -108,7 +126,121 @@
     margin-top: 2px;
 }
 
-.empty-state {
+/* Camera Selfie area */
+.camera-container {
+    margin: 20px 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+#webcam-video, #selfie-preview {
+    width: 100%;
+    max-width: 280px;
+    border-radius: 16px;
+    background: #0f172a;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    border: 2px solid rgba(255, 255, 255, 0.05);
+}
+
+.camera-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    width: 100%;
+}
+
+.btn-camera {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
     color: var(--text-secondary);
+    transition: all 0.2s ease;
+}
+
+.btn-camera:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+}
+
+.btn-camera-primary {
+    border-color: rgba(255, 204, 51, 0.3);
+    color: #ffcc33;
+    background: rgba(255, 204, 51, 0.05);
+}
+
+.btn-camera-primary:hover {
+    background: rgba(255, 204, 51, 0.15);
+    color: #ffcc33;
+}
+
+.btn-camera-danger {
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #f87171;
+    background: rgba(239, 68, 68, 0.05);
+}
+
+.btn-camera-danger:hover {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+}
+
+/* Selfie thumbnail pair layout */
+.selfie-row {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+}
+
+.selfie-thumb {
+    width: 100%;
+    max-width: 280px;
+    border-radius: 14px;
+    object-fit: cover;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    display: block;
+}
+
+.selfie-thumb-in {
+    border: 2px solid #10b981;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.25);
+}
+
+.selfie-thumb-out {
+    border: 2px solid #ffcc33;
+    box-shadow: 0 4px 15px rgba(255, 204, 51, 0.25);
+}
+
+.selfie-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+
+.selfie-label-in  { color: #34d399; }
+.selfie-label-out { color: #ffcc33; }
+
+.selfie-divider {
+    width: 100%;
     text-align: center;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 6px 0;
+    border-top: 1px solid var(--glass-border);
+    margin-top: 4px;
 }
