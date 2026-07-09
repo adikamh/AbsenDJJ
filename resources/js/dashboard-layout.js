@@ -1,3 +1,6 @@
+import Swal from 'sweetalert2';
+import 'sweetalert2/dist/sweetalert2.min.css';
+
 // Page-specific scripts for dashboard/layout.blade.php.
 
 const root = document.documentElement;
@@ -5,6 +8,52 @@ const themeToggle = document.getElementById('theme-toggle');
 const sidebarToggle = document.getElementById('sidebar-toggle');
 const sidebar = document.getElementById('sidebar');
 const cookieModal = document.getElementById('cookie-modal-backdrop');
+
+function getSwalTheme() {
+    const isLight = root.getAttribute('data-theme') === 'light';
+
+    return {
+        background: isLight ? '#ffffff' : '#1e293b',
+        color: isLight ? '#0f172a' : '#f8fafc',
+        confirmButtonColor: isLight ? '#2e4085' : '#ffcc33',
+    };
+}
+
+function showNotification(icon, title, text) {
+    if (!text) {
+        return;
+    }
+
+    Swal.fire({
+        ...getSwalTheme(),
+        icon,
+        title,
+        text,
+        confirmButtonText: 'Mengerti',
+    });
+}
+
+window.confirmDangerAction = async function confirmDangerAction({
+    title = 'Apakah Anda yakin?',
+    text = 'Data akan diproses.',
+    confirmButtonText = 'Ya, lanjutkan',
+    cancelButtonText = 'Batal',
+} = {}) {
+    const result = await Swal.fire({
+        ...getSwalTheme(),
+        icon: 'warning',
+        title,
+        text,
+        showCancelButton: true,
+        confirmButtonText,
+        cancelButtonText,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#64748b',
+        reverseButtons: true,
+    });
+
+    return result.isConfirmed;
+};
 
 function applyTheme(theme) {
     root.setAttribute('data-theme', theme);
@@ -76,4 +125,22 @@ if (cookieModal) {
         });
     });
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    const notifications = window.absenNotifications || {};
+
+    if (notifications.success) {
+        showNotification('success', 'Berhasil', notifications.success);
+        return;
+    }
+
+    if (notifications.error) {
+        showNotification('error', 'Terjadi Kesalahan', notifications.error);
+        return;
+    }
+
+    if (notifications.validationError) {
+        showNotification('error', 'Data Belum Lengkap', 'Periksa kembali isian form yang tersedia.');
+    }
+});
 

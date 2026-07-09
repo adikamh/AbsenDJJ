@@ -126,8 +126,14 @@
         </div>
     @endif
 
+    <script>
+        window.absenNotifications = {
+            success: @json(session('success')),
+            error: @json(session('error')),
+            validationError: @json($errors->any()),
+        };
+    </script>
     @vite('resources/js/dashboard-layout.js')
     @stack('scripts')
 </body>
 </html>
-

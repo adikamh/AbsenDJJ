@@ -28,6 +28,9 @@ Route::post('/cookie-consent', [CookieConsentController::class, 'store'])->name(
 Route::middleware(['auth', 'role:super_admin'])->prefix('super-admin')->group(function () {
     Route::get('/users', [DashboardController::class, 'managePembimbing'])->name('super-admin.users');
     Route::get('/pembimbing', [DashboardController::class, 'managePembimbing'])->name('super-admin.pembimbing');
+    Route::post('/pembimbing', [DashboardController::class, 'storePembimbing'])->name('super-admin.pembimbing.store');
+    Route::put('/pembimbing/{pembimbing}', [DashboardController::class, 'updatePembimbing'])->name('super-admin.pembimbing.update');
+    Route::delete('/pembimbing/{pembimbing}', [DashboardController::class, 'destroyPembimbing'])->name('super-admin.pembimbing.destroy');
     Route::get('/peserta', [DashboardController::class, 'managePeserta'])->name('super-admin.peserta');
 });
 
