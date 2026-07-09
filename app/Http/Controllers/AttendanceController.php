@@ -73,9 +73,15 @@ class AttendanceController extends Controller
         File::put($dirPath . '/' . $fileName, $fotoData);
         $fotoPath = 'uploads/attendance/' . $fileName;
 
-        // Determine status (Terlambat if after 08:00 AM, otherwise Hadir)
+        // Determine status based on GeneralSettings (Terlambat if after the late limit, otherwise Hadir)
         $now = Carbon::now();
-        $limitTime = Carbon::today()->setTime(8, 0, 0); // 08:00 AM limit
+        $settings = app(\App\Settings\GeneralSettings::class);
+        $limitParts = explode(':', $settings->batas_keterlambatan);
+        $limitHour = isset($limitParts[0]) ? (int) $limitParts[0] : 8;
+        $limitMinute = isset($limitParts[1]) ? (int) $limitParts[1] : 15;
+        $limitSecond = isset($limitParts[2]) ? (int) $limitParts[2] : 0;
+        
+        $limitTime = Carbon::today()->setTime($limitHour, $limitMinute, $limitSecond);
         $status = $now->greaterThan($limitTime) ? 'Terlambat' : 'Hadir';
 
         // Create attendance record

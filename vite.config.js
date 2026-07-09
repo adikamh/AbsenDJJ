@@ -21,6 +21,13 @@ export default defineConfig({
                 'resources/js/dashboard-peserta.js',
                 'resources/css/welcome.css',
                 'resources/js/welcome.js',
+                'resources/css/super_admin_peserta.css',
+                'resources/js/super_admin_peserta.js',
+                'resources/css/super_admin_pembimbing.css',
+                'resources/js/super_admin_pembimbing.js',
+                'resources/css/super_admin_instansi.css',
+                'resources/js/super_admin_instansi.js',
+                'resources/css/super_admin_settings.css',
             ],
             refresh: true,
             fonts: [

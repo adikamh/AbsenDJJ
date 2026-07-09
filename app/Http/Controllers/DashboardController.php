@@ -47,11 +47,51 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
+        // Fetch last 7 working days attendance stats
+        $attendanceChartData = [];
+        $date = Carbon::today();
+        $daysCounted = 0;
+
+        while ($daysCounted < 7) {
+            if (!$date->isWeekend()) {
+                $dateString = $date->toDateString();
+
+                $hadir = Attendance::where('tanggal', $dateString)
+                    ->where('status', 'Hadir')
+                    ->count();
+
+                $terlambat = Attendance::where('tanggal', $dateString)
+                    ->where('status', 'Terlambat')
+                    ->count();
+
+                $izin = Attendance::where('tanggal', $dateString)
+                    ->whereIn('status', ['Izin', 'Sakit'])
+                    ->count();
+
+                $absen = Attendance::where('tanggal', $dateString)
+                    ->where('status', 'Tanpa Keterangan')
+                    ->count();
+
+                $attendanceChartData[] = [
+                    'label' => $date->translatedFormat('d M'),
+                    'hadir' => $hadir,
+                    'terlambat' => $terlambat,
+                    'izin' => $izin,
+                    'absen' => $absen,
+                ];
+                $daysCounted++;
+            }
+            $date = $date->subDay();
+        }
+
+        $attendanceChartData = array_reverse($attendanceChartData);
+
         return view('dashboard.super_admin', compact(
             'totalUsers',
             'totalInstansi',
             'totalHadirHariIni',
-            'recentUsers'
+            'recentUsers',
+            'attendanceChartData'
         ));
     }
 
@@ -67,7 +107,9 @@ class DashboardController extends Controller
             ->orderBy('nama_lengkap')
             ->get();
 
-        return view('dashboard.super_admin_pembimbing', compact('pembimbing'));
+        $instansi = Instansi::orderBy('nama_instansi')->get();
+
+        return view('dashboard.super_admin_pembimbing', compact('pembimbing', 'instansi'));
     }
 
     /**
@@ -202,7 +244,9 @@ class DashboardController extends Controller
             ->orderBy('nama_lengkap')
             ->get();
 
-        return view('dashboard.super_admin_peserta', compact('peserta', 'pembimbing'));
+        $instansi = Instansi::orderBy('nama_instansi')->get();
+
+        return view('dashboard.super_admin_peserta', compact('peserta', 'pembimbing', 'instansi'));
     }
 
     /**
@@ -423,5 +467,109 @@ class DashboardController extends Controller
             'recentLogbooks',
             'recentLeaves'
         ));
+    }
+
+    /**
+     * Super Admin view for Kelola Instansi.
+     */
+    public function manageInstansi()
+    {
+        $instansi = Instansi::withCount('users')
+            ->orderBy('nama_instansi')
+            ->get();
+
+        return view('dashboard.super_admin_instansi', compact('instansi'));
+    }
+
+    /**
+     * Store a new instansi.
+     */
+    public function storeInstansi(Request $request)
+    {
+        $validated = $request->validateWithBag('storeInstansi', [
+            'nama_instansi' => ['required', 'string', 'max:255', 'unique:instansi,nama_instansi'],
+            'jenis' => ['required', 'string', 'max:255'],
+        ]);
+
+        Instansi::create($validated);
+
+        return redirect()
+            ->route('super-admin.instansi')
+            ->with('success', 'Instansi berhasil ditambahkan.');
+    }
+
+    /**
+     * Update an existing instansi.
+     */
+    public function updateInstansi(Request $request, Instansi $instansi)
+    {
+        $validated = $request->validateWithBag('updateInstansi', [
+            'nama_instansi' => ['required', 'string', 'max:255', 'unique:instansi,nama_instansi,' . $instansi->id],
+            'jenis' => ['required', 'string', 'max:255'],
+        ]);
+
+        $instansi->update($validated);
+
+        return redirect()
+            ->route('super-admin.instansi')
+            ->with('success', 'Instansi berhasil diperbarui.');
+    }
+
+    /**
+     * Delete an instansi.
+     */
+    public function destroyInstansi(Instansi $instansi)
+    {
+        if ($instansi->users()->exists()) {
+            return redirect()
+                ->route('super-admin.instansi')
+                ->with('error', 'Instansi tidak dapat dihapus karena masih digunakan oleh pembimbing atau peserta.');
+        }
+
+        $instansi->delete();
+
+        return redirect()
+            ->route('super-admin.instansi')
+            ->with('success', 'Instansi berhasil dihapus.');
+    }
+
+    /**
+     * Show general settings form.
+     */
+    public function editSettings()
+    {
+        $settings = app(\App\Settings\GeneralSettings::class);
+        return view('dashboard.super_admin_settings', compact('settings'));
+    }
+
+    /**
+     * Update general settings.
+     */
+    public function updateSettings(Request $request)
+    {
+        $validated = $request->validate([
+            'jam_masuk' => ['required', 'string', 'regex:/^[0-9]{2}:[0-9]{2}(:[0-9]{2})?$/'],
+            'jam_pulang' => ['required', 'string', 'regex:/^[0-9]{2}:[0-9]{2}(:[0-9]{2})?$/'],
+            'batas_keterlambatan' => ['required', 'string', 'regex:/^[0-9]{2}:[0-9]{2}(:[0-9]{2})?$/'],
+            'latitude_kantor' => ['required', 'numeric', 'between:-90,90'],
+            'longitude_kantor' => ['required', 'numeric', 'between:-180,180'],
+            'radius_meter' => ['required', 'integer', 'min:1'],
+        ]);
+
+        $settings = app(\App\Settings\GeneralSettings::class);
+        
+        $settings->jam_masuk = strlen($validated['jam_masuk']) === 5 ? $validated['jam_masuk'] . ':00' : $validated['jam_masuk'];
+        $settings->jam_pulang = strlen($validated['jam_pulang']) === 5 ? $validated['jam_pulang'] . ':00' : $validated['jam_pulang'];
+        $settings->batas_keterlambatan = strlen($validated['batas_keterlambatan']) === 5 ? $validated['batas_keterlambatan'] . ':00' : $validated['batas_keterlambatan'];
+        
+        $settings->latitude_kantor = (string) $validated['latitude_kantor'];
+        $settings->longitude_kantor = (string) $validated['longitude_kantor'];
+        $settings->radius_meter = (int) $validated['radius_meter'];
+
+        $settings->save();
+
+        return redirect()
+            ->route('super-admin.settings')
+            ->with('success', 'Pengaturan parameter global berhasil diperbarui.');
     }
 }
