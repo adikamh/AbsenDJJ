@@ -29,9 +29,14 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('super-admin')->group(fu
     Route::get('/users', [DashboardController::class, 'managePembimbing'])->name('super-admin.users');
     Route::get('/pembimbing', [DashboardController::class, 'managePembimbing'])->name('super-admin.pembimbing');
     Route::post('/pembimbing', [DashboardController::class, 'storePembimbing'])->name('super-admin.pembimbing.store');
+    Route::put('/pembimbing/{pembimbing}/reset-password', [DashboardController::class, 'resetPembimbingPassword'])->name('super-admin.pembimbing.reset-password');
     Route::put('/pembimbing/{pembimbing}', [DashboardController::class, 'updatePembimbing'])->name('super-admin.pembimbing.update');
     Route::delete('/pembimbing/{pembimbing}', [DashboardController::class, 'destroyPembimbing'])->name('super-admin.pembimbing.destroy');
     Route::get('/peserta', [DashboardController::class, 'managePeserta'])->name('super-admin.peserta');
+    Route::post('/peserta', [DashboardController::class, 'storePeserta'])->name('super-admin.peserta.store');
+    Route::put('/peserta/{peserta}/reset-password', [DashboardController::class, 'resetPesertaPassword'])->name('super-admin.peserta.reset-password');
+    Route::put('/peserta/{peserta}', [DashboardController::class, 'updatePeserta'])->name('super-admin.peserta.update');
+    Route::delete('/peserta/{peserta}', [DashboardController::class, 'destroyPeserta'])->name('super-admin.peserta.destroy');
 });
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {

@@ -33,6 +33,12 @@ function showNotification(icon, title, text) {
     });
 }
 
+function showValidationAlert(text = 'Semua field wajib diisi.') {
+    showNotification('error', 'Data Belum Lengkap', text);
+}
+
+window.showValidationAlert = showValidationAlert;
+
 window.confirmDangerAction = async function confirmDangerAction({
     title = 'Apakah Anda yakin?',
     text = 'Data akan diproses.',
@@ -125,6 +131,62 @@ if (cookieModal) {
         });
     });
 }
+
+document.querySelectorAll('input[inputmode="numeric"]').forEach((input) => {
+    input.addEventListener('input', () => {
+        input.value = input.value.replace(/\D/g, '');
+    });
+});
+
+document.querySelectorAll('.modal-form').forEach((form) => {
+    form.noValidate = true;
+
+    form.addEventListener('submit', (event) => {
+        const requiredFields = [...form.querySelectorAll('[required]')];
+        const hasEmptyField = requiredFields.some((field) => !String(field.value || '').trim());
+
+        if (hasEmptyField) {
+            event.preventDefault();
+            showValidationAlert('Semua field wajib diisi.');
+            return;
+        }
+
+        const phoneInput = form.querySelector('input[name="no_telepon"]');
+        if (phoneInput && !/^[0-9]+$/.test(phoneInput.value)) {
+            event.preventDefault();
+            showValidationAlert('No telepon hanya boleh berisi angka.');
+            return;
+        }
+
+        const emergencyPhoneInputs = [...form.querySelectorAll('input[name^="no_darurat_"]')];
+        const hasInvalidEmergencyPhone = emergencyPhoneInputs.some((input) => !/^[0-9]+$/.test(input.value));
+        if (hasInvalidEmergencyPhone) {
+            event.preventDefault();
+            showValidationAlert('No darurat hanya boleh berisi angka.');
+            return;
+        }
+
+        const emailInput = form.querySelector('input[type="email"]');
+        if (emailInput && !emailInput.validity.valid) {
+            event.preventDefault();
+            showValidationAlert('Format email tidak valid.');
+            return;
+        }
+
+        const passwordInput = form.querySelector('input[name="password"][minlength]');
+        if (passwordInput && passwordInput.value.length < Number(passwordInput.minLength)) {
+            event.preventDefault();
+            showValidationAlert(`Password minimal ${passwordInput.minLength} karakter.`);
+            return;
+        }
+
+        const passwordConfirmationInput = form.querySelector('input[name="password_confirmation"]');
+        if (passwordInput && passwordConfirmationInput && passwordInput.value !== passwordConfirmationInput.value) {
+            event.preventDefault();
+            showValidationAlert('Konfirmasi password harus sama dengan password baru.');
+        }
+    });
+});
 
 document.addEventListener('DOMContentLoaded', () => {
     const notifications = window.absenNotifications || {};

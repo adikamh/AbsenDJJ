@@ -562,7 +562,8 @@
         }
 
         .form-group input,
-        .form-group select {
+        .form-group select,
+        .form-group textarea {
             width: 100%;
             border: 1px solid var(--glass-border);
             border-radius: 8px;
@@ -574,14 +575,49 @@
         }
 
         [data-theme="light"] .form-group input,
-        [data-theme="light"] .form-group select {
+        [data-theme="light"] .form-group select,
+        [data-theme="light"] .form-group textarea {
             background: rgba(255, 255, 255, 0.88);
         }
 
         .form-group input:focus,
-        .form-group select:focus {
+        .form-group select:focus,
+        .form-group textarea:focus {
             border-color: var(--accent-primary);
             box-shadow: 0 0 0 3px var(--accent-primary-rgba);
+        }
+
+        .form-group textarea {
+            min-height: 92px;
+            resize: vertical;
+        }
+
+        .password-field {
+            display: flex;
+            gap: 8px;
+            align-items: stretch;
+        }
+
+        .password-field input {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .password-toggle {
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            background: rgba(148, 163, 184, 0.14);
+            color: var(--text-primary);
+            cursor: pointer;
+            font: inherit;
+            font-size: 0.85rem;
+            font-weight: 700;
+            padding: 0 12px;
+            white-space: nowrap;
+        }
+
+        .password-toggle:hover {
+            border-color: var(--accent-primary);
         }
 
         .form-error {
@@ -610,13 +646,24 @@
         .btn-action {
             border: 0;
             border-radius: 8px;
-            padding: 8px 10px;
+            width: 34px;
+            height: 34px;
+            padding: 0;
             cursor: pointer;
             color: var(--text-primary);
-            font-size: 0.78rem;
-            font-weight: 700;
-            line-height: 1;
+            display: inline-grid;
+            place-items: center;
             transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+
+        .btn-action svg {
+            width: 17px;
+            height: 17px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
         }
 
         .btn-action:hover {
@@ -632,6 +679,11 @@
         .btn-action-edit {
             background: rgba(245, 158, 11, 0.16);
             color: #fbbf24;
+        }
+
+        .btn-action-reset {
+            background: rgba(14, 165, 233, 0.16);
+            color: #38bdf8;
         }
 
         .btn-action-delete {
