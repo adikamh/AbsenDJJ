@@ -47,6 +47,7 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('super-admin')->group(fu
     Route::put('/settings', [DashboardController::class, 'updateSettings'])->name('super-admin.settings.update');
 
     Route::post('/schedules', [DashboardController::class, 'storeScheduleOverride'])->name('super-admin.schedules.store');
+    Route::post('/schedules/sync-holidays', [DashboardController::class, 'syncHolidays'])->name('super-admin.schedules.sync-holidays');
     Route::put('/schedules/{schedule}', [DashboardController::class, 'updateScheduleOverride'])->name('super-admin.schedules.update');
     Route::delete('/schedules/{schedule}', [DashboardController::class, 'destroyScheduleOverride'])->name('super-admin.schedules.destroy');
 });

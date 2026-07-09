@@ -231,5 +231,36 @@ class SuperAdminSettingsTest extends TestCase
         $response->assertRedirect('/super-admin/settings');
         $response->assertSessionHas('error');
     }
+
+    public function test_super_admin_can_sync_holidays_from_api(): void
+    {
+        \Illuminate\Support\Facades\Http::fake([
+            'api-hari-libur.vercel.app/*' => \Illuminate\Support\Facades\Http::response([
+                'status' => 'success',
+                'code' => 200,
+                'data' => [
+                    [
+                        'date' => '2026-08-17',
+                        'description' => 'Hari Kemerdekaan RI'
+                    ]
+                ],
+                'message' => 'Holidays Found'
+            ], 200)
+        ]);
+
+        $response = $this->actingAs($this->superAdmin)
+            ->post('/super-admin/schedules/sync-holidays', [
+                'year' => 2026,
+            ]);
+
+        $response->assertRedirect('/super-admin/settings');
+        $response->assertSessionHas('success');
+        $this->assertDatabaseHas('work_schedules', [
+            'type' => 'date',
+            'specific_date' => '2026-08-17 00:00:00',
+            'is_holiday' => 1,
+            'keterangan' => 'Hari Kemerdekaan RI',
+        ]);
+    }
 }
 

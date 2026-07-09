@@ -29,9 +29,13 @@
 
             {{-- Tab Navigation --}}
             <div class="schedule-tabs">
-                <button type="button" class="schedule-tab active" data-tab="tab-default">
+                <button type="button" class="schedule-tab active" data-tab="tab-calendar">
+                    <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
+                    Kalender Jadwal
+                </button>
+                <button type="button" class="schedule-tab" data-tab="tab-default">
                     <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg>
-                    Default
+                    Jadwal Keseluruhan
                 </button>
                 <button type="button" class="schedule-tab" data-tab="tab-day">
                     <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
@@ -43,8 +47,44 @@
                 </button>
             </div>
 
-            {{-- ===== Tab 1: Default Schedule ===== --}}
-            <div class="tab-content active" id="tab-default">
+            {{-- ===== Tab 1: Kalender Jadwal (Interactive Monthly Calendar) ===== --}}
+            <div class="tab-content active" id="tab-calendar">
+                <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 0.9rem;">
+                    Klik pada tanggal di kalender untuk menambahkan atau mengedit jadwal khusus/hari libur pada tanggal tersebut.
+                </p>
+                <div class="calendar-wrapper">
+                    <div class="calendar-header-bar">
+                        <button type="button" id="calendar-prev-month" class="btn-secondary" style="padding: 6px 12px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                        </button>
+                        <h3 id="calendar-month-year-label" class="calendar-title-text">Juli 2026</h3>
+                        <button type="button" id="calendar-next-month" class="btn-secondary" style="padding: 6px 12px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                        </button>
+                    </div>
+                    <div class="calendar-grid">
+                        <div class="calendar-day-label">Min</div>
+                        <div class="calendar-day-label">Sen</div>
+                        <div class="calendar-day-label">Sel</div>
+                        <div class="calendar-day-label">Rab</div>
+                        <div class="calendar-day-label">Kam</div>
+                        <div class="calendar-day-label">Jum</div>
+                        <div class="calendar-day-label">Sab</div>
+                        
+                        <div id="calendar-days-container" class="calendar-days-grid"></div>
+                    </div>
+                    
+                    <div class="calendar-legend">
+                        <span class="legend-item"><span class="legend-dot dot-default"></span> Jadwal Default</span>
+                        <span class="legend-item"><span class="legend-dot dot-day"></span> Custom Hari (Mingguan)</span>
+                        <span class="legend-item"><span class="legend-dot dot-date"></span> Custom Tanggal (Khusus)</span>
+                        <span class="legend-item"><span class="legend-dot dot-holiday"></span> Hari Libur / Tanggal Merah</span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- ===== Tab 2: Default Schedule ===== --}}
+            <div class="tab-content" id="tab-default">
                 <p style="color: var(--text-muted); margin-bottom: 16px; font-size: 0.9rem;">
                     Jadwal default berlaku untuk semua hari kecuali yang di-override di tab "Jadwal per Hari" atau "Tanggal Khusus".
                 </p>
@@ -52,25 +92,25 @@
                     @csrf
                     @method('PUT')
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+                    <div class="time-inputs-grid">
                         <div class="form-group">
-                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--text-main);">Jam Masuk</label>
+                            <label>Jam Masuk</label>
                             <div class="input-with-icon">
-                                <input type="time" name="jam_masuk" value="{{ old('jam_masuk', substr($settings->jam_masuk, 0, 5)) }}" required style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--glass-border); background: var(--input-bg); color: var(--text-main);">
+                                <input type="time" name="jam_masuk" value="{{ old('jam_masuk', substr($settings->jam_masuk, 0, 5)) }}" required>
                                 <span class="input-icon-right"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--text-main);">Batas Terlambat</label>
+                            <label>Batas Terlambat</label>
                             <div class="input-with-icon">
-                                <input type="time" name="batas_keterlambatan" value="{{ old('batas_keterlambatan', substr($settings->batas_keterlambatan, 0, 5)) }}" required style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--glass-border); background: var(--input-bg); color: var(--text-main);">
+                                <input type="time" name="batas_keterlambatan" value="{{ old('batas_keterlambatan', substr($settings->batas_keterlambatan, 0, 5)) }}" required>
                                 <span class="input-icon-right"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--text-main);">Jam Pulang</label>
+                            <label>Jam Pulang</label>
                             <div class="input-with-icon">
-                                <input type="time" name="jam_pulang" value="{{ old('jam_pulang', substr($settings->jam_pulang, 0, 5)) }}" required style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--glass-border); background: var(--input-bg); color: var(--text-main);">
+                                <input type="time" name="jam_pulang" value="{{ old('jam_pulang', substr($settings->jam_pulang, 0, 5)) }}" required>
                                 <span class="input-icon-right"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>
                             </div>
                         </div>
@@ -215,13 +255,19 @@
             {{-- ===== Tab 3: Specific Dates / Holidays ===== --}}
             <div class="tab-content" id="tab-date">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                    <p style="color: var(--text-muted); margin: 0; font-size: 0.9rem;">
+                    <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">
                         Atur jadwal khusus untuk tanggal tertentu atau tandai sebagai hari libur nasional.
                     </p>
-                    <button type="button" id="btn-add-date-override" class="btn-primary" style="padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;">
-                        <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/></svg>
-                        Tambah Tanggal
-                    </button>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <button type="button" id="btn-import-holidays" class="btn-secondary" style="padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            Import Hari Libur
+                        </button>
+                        <button type="button" id="btn-add-date-override" class="btn-primary" style="padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;">
+                            <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/></svg>
+                            Tambah Tanggal
+                        </button>
+                    </div>
                 </div>
 
                 @if($dateOverrides->count() > 0)
@@ -238,7 +284,7 @@
                                     <th style="text-align: center;">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="table-date-body">
                                 @foreach($dateOverrides as $dateOvr)
                                     <tr>
                                         <td><strong>{{ \Carbon\Carbon::parse($dateOvr->specific_date)->translatedFormat('d M Y') }}</strong></td>
@@ -255,13 +301,13 @@
                                         <td>{{ $dateOvr->keterangan ?? '-' }}</td>
                                         <td style="text-align: center;">
                                             <div style="display: flex; gap: 6px; justify-content: center;">
-                                                <button type="button" class="btn-date-edit" data-id="{{ $dateOvr->id }}" data-date="{{ $dateOvr->specific_date->format('Y-m-d') }}" data-jam-masuk="{{ $dateOvr->jam_masuk ? substr($dateOvr->jam_masuk, 0, 5) : '' }}" data-batas="{{ $dateOvr->batas_keterlambatan ? substr($dateOvr->batas_keterlambatan, 0, 5) : '' }}" data-jam-pulang="{{ $dateOvr->jam_pulang ? substr($dateOvr->jam_pulang, 0, 5) : '' }}" data-is-holiday="{{ $dateOvr->is_holiday ? '1' : '0' }}" data-keterangan="{{ $dateOvr->keterangan ?? '' }}" style="padding: 6px 12px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-size: 0.85rem; background: var(--accent-primary); color: white; border: none;">
+                                                <button type="button" class="btn-date-edit" data-id="{{ $dateOvr->id }}" data-date="{{ $dateOvr->specific_date->format('Y-m-d') }}" data-jam-masuk="{{ $dateOvr->jam_masuk ? substr($dateOvr->jam_masuk, 0, 5) : '' }}" data-batas="{{ $dateOvr->batas_keterlambatan ? substr($dateOvr->batas_keterlambatan, 0, 5) : '' }}" data-jam-pulang="{{ $dateOvr->jam_pulang ? substr($dateOvr->jam_pulang, 0, 5) : '' }}" data-is-holiday="{{ $dateOvr->is_holiday ? '1' : '0' }}" data-keterangan="{{ $dateOvr->keterangan ?? '' }}">
                                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                                     Edit
                                                 </button>
                                                 <form action="{{ route('super-admin.schedules.destroy', $dateOvr->id) }}" method="POST" class="inline-form" onsubmit="return handleDateDelete(event)">
                                                     @csrf @method('DELETE')
-                                                    <button type="submit" style="padding: 6px 12px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-size: 0.85rem; background: #ef4444; color: white; border: none;">
+                                                    <button type="submit" class="btn-date-delete">
                                                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                                                         Hapus
                                                     </button>
@@ -273,8 +319,22 @@
                             </tbody>
                         </table>
                     </div>
+                    
+                    <div id="table-date-pagination" class="table-pagination-controls" style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; padding: 0 4px;">
+                        <span class="pagination-info" id="date-pagination-info" style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">
+                            Menampilkan 1 - 5 dari X data
+                        </span>
+                        <div class="pagination-buttons" style="display: flex; gap: 8px;">
+                            <button type="button" id="btn-date-prev" class="btn-secondary" style="padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.82rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                                &larr; Sebelumnya
+                            </button>
+                            <button type="button" id="btn-date-next" class="btn-secondary" style="padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.82rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                                Berikutnya &rarr;
+                            </button>
+                        </div>
+                    </div>
                 @else
-                    <div style="text-align: center; padding: 40px 20px; color: var(--text-muted);">
+                    <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
                         <svg width="40" height="40" viewBox="0 0 20 20" fill="currentColor" style="opacity: 0.3; margin-bottom: 12px;">
                             <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
                         </svg>
@@ -306,7 +366,7 @@
 
                 <!-- Map Search & Geolocation Bar -->
                 <div class="map-search-bar" style="display: flex; gap: 8px; margin-bottom: 12px;">
-                    <input type="text" id="map-search-input" placeholder="Cari nama lokasi atau alamat kantor..." style="flex: 1; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--glass-border); background: var(--input-bg); color: var(--text-main); font-size: 14px;">
+                    <input type="text" id="map-search-input" placeholder="Cari nama lokasi atau alamat kantor..." style="flex: 1; font-size: 14px;">
                     <button type="button" id="btn-map-search" class="btn-secondary" style="padding: 10px 16px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="11" cy="11" r="8"></circle>
@@ -326,24 +386,24 @@
                 <div id="map"></div>
 
                 <div class="form-group" style="margin-bottom: 20px;">
-                    <label for="latitude_kantor" style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--text-main);">Latitude Kantor</label>
-                    <input type="text" id="latitude_kantor" name="latitude_kantor" value="{{ old('latitude_kantor', $settings->latitude_kantor) }}" required readonly style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--glass-border); background: var(--input-bg); color: var(--text-main); cursor: not-allowed;">
-                    <small style="display: block; color: var(--text-muted); margin-top: 4px;">Terisi otomatis dari penanda peta di atas.</small>
+                    <label for="latitude_kantor">Latitude Kantor</label>
+                    <input type="text" id="latitude_kantor" name="latitude_kantor" value="{{ old('latitude_kantor', $settings->latitude_kantor) }}" required readonly style="cursor: not-allowed;">
+                    <small style="display: block; color: var(--text-secondary); margin-top: 4px;">Terisi otomatis dari penanda peta di atas.</small>
                 </div>
 
                 <div class="form-group" style="margin-bottom: 20px;">
-                    <label for="longitude_kantor" style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--text-main);">Longitude Kantor</label>
-                    <input type="text" id="longitude_kantor" name="longitude_kantor" value="{{ old('longitude_kantor', $settings->longitude_kantor) }}" required readonly style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--glass-border); background: var(--input-bg); color: var(--text-main); cursor: not-allowed;">
-                    <small style="display: block; color: var(--text-muted); margin-top: 4px;">Terisi otomatis dari penanda peta di atas.</small>
+                    <label for="longitude_kantor">Longitude Kantor</label>
+                    <input type="text" id="longitude_kantor" name="longitude_kantor" value="{{ old('longitude_kantor', $settings->longitude_kantor) }}" required readonly style="cursor: not-allowed;">
+                    <small style="display: block; color: var(--text-secondary); margin-top: 4px;">Terisi otomatis dari penanda peta di atas.</small>
                 </div>
 
                 <div class="form-group" style="margin-bottom: 20px;">
-                    <label for="radius_meter" style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--text-main);">Radius Batas Absensi (Meter)</label>
+                    <label for="radius_meter">Radius Batas Absensi (Meter)</label>
                     <div class="input-with-icon">
-                        <input type="number" id="radius_meter" name="radius_meter" min="1" value="{{ old('radius_meter', $settings->radius_meter) }}" required style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--glass-border); background: var(--input-bg); color: var(--text-main);">
+                        <input type="number" id="radius_meter" name="radius_meter" min="1" value="{{ old('radius_meter', $settings->radius_meter) }}" required>
                         <span class="input-icon-right"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>
                     </div>
-                    <small style="display: block; color: var(--text-muted); margin-top: 4px;">Batas jarak maksimal (dalam meter) peserta boleh melakukan absen dari titik koordinat kantor.</small>
+                    <small style="display: block; color: var(--text-secondary); margin-top: 4px;">Batas jarak maksimal (dalam meter) peserta boleh melakukan absen dari titik koordinat kantor.</small>
                 </div>
 
                 <div style="display: flex; justify-content: flex-end; margin-top: 16px;">
@@ -372,37 +432,38 @@
                 <input type="hidden" name="day_of_week" id="day-form-day">
 
                 <div class="modal-body">
-                    <div class="form-group" style="margin-bottom: 16px;">
-                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <div class="holiday-switch-container">
+                        <span class="holiday-switch-label">Tandai sebagai Hari Libur</span>
+                        <label class="switch-toggle">
                             <input type="checkbox" name="is_holiday" id="day-form-holiday" value="1" onchange="toggleDayTimeInputs()">
-                            <span style="font-weight: 600; color: var(--text-main);">Tandai sebagai Hari Libur</span>
+                            <span class="switch-slider"></span>
                         </label>
                     </div>
 
                     <div id="day-time-inputs">
-                        <div class="form-group" style="margin-bottom: 12px;">
-                            <label style="display: block; font-weight: 600; margin-bottom: 6px; color: var(--text-main);">Jam Masuk</label>
-                            <input type="time" name="jam_masuk" id="day-form-masuk" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--glass-border); background: var(--input-bg); color: var(--text-main);">
+                        <div class="form-group" style="margin-bottom: 14px;">
+                            <label>Jam Masuk Kerja</label>
+                            <input type="time" name="jam_masuk" id="day-form-masuk">
                         </div>
-                        <div class="form-group" style="margin-bottom: 12px;">
-                            <label style="display: block; font-weight: 600; margin-bottom: 6px; color: var(--text-main);">Batas Terlambat</label>
-                            <input type="time" name="batas_keterlambatan" id="day-form-batas" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--glass-border); background: var(--input-bg); color: var(--text-main);">
+                        <div class="form-group" style="margin-bottom: 14px;">
+                            <label>Batas Toleransi Keterlambatan</label>
+                            <input type="time" name="batas_keterlambatan" id="day-form-batas">
                         </div>
-                        <div class="form-group" style="margin-bottom: 12px;">
-                            <label style="display: block; font-weight: 600; margin-bottom: 6px; color: var(--text-main);">Jam Pulang</label>
-                            <input type="time" name="jam_pulang" id="day-form-pulang" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--glass-border); background: var(--input-bg); color: var(--text-main);">
+                        <div class="form-group" style="margin-bottom: 14px;">
+                            <label>Jam Pulang Kerja</label>
+                            <input type="time" name="jam_pulang" id="day-form-pulang">
                         </div>
                     </div>
 
-                    <div class="form-group" style="margin-bottom: 12px;">
-                        <label style="display: block; font-weight: 600; margin-bottom: 6px; color: var(--text-main);">Keterangan (opsional)</label>
-                        <input type="text" name="keterangan" id="day-form-keterangan" placeholder="Contoh: Jumat siang" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--glass-border); background: var(--input-bg); color: var(--text-main);">
+                    <div class="form-group" style="margin-bottom: 14px;">
+                        <label>Keterangan Acara/Alasan (opsional)</label>
+                        <input type="text" name="keterangan" id="day-form-keterangan" placeholder="Contoh: Jumat Berkah, Jam Kerja Pendek">
                     </div>
                 </div>
 
                 <div class="modal-footer">
                     <button type="button" class="btn-secondary" onclick="document.getElementById('day-override-modal').style.display='none'" style="padding: 10px 20px; border-radius: 8px; cursor: pointer;">Batal</button>
-                    <button type="submit" class="btn-primary" style="padding: 10px 20px; border-radius: 8px; cursor: pointer;">Simpan</button>
+                    <button type="submit" class="btn-primary" style="padding: 10px 20px; border-radius: 8px; cursor: pointer;">Simpan Jadwal</button>
                 </div>
             </form>
         </div>
@@ -421,42 +482,43 @@
                 <input type="hidden" name="type" value="date">
 
                 <div class="modal-body">
-                    <div class="form-group" style="margin-bottom: 12px;" id="date-form-date-group">
-                        <label style="display: block; font-weight: 600; margin-bottom: 6px; color: var(--text-main);">Tanggal</label>
-                        <input type="date" name="specific_date" id="date-form-date" required style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--glass-border); background: var(--input-bg); color: var(--text-main);">
+                    <div class="form-group" style="margin-bottom: 14px;" id="date-form-date-group">
+                        <label>Pilih Tanggal Khusus</label>
+                        <input type="date" name="specific_date" id="date-form-date" required>
                     </div>
 
-                    <div class="form-group" style="margin-bottom: 16px;">
-                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <div class="holiday-switch-container">
+                        <span class="holiday-switch-label">Tandai sebagai Hari Libur</span>
+                        <label class="switch-toggle">
                             <input type="checkbox" name="is_holiday" id="date-form-holiday" value="1" onchange="toggleDateTimeInputs()">
-                            <span style="font-weight: 600; color: var(--text-main);">Tandai sebagai Hari Libur</span>
+                            <span class="switch-slider"></span>
                         </label>
                     </div>
 
                     <div id="date-time-inputs">
-                        <div class="form-group" style="margin-bottom: 12px;">
-                            <label style="display: block; font-weight: 600; margin-bottom: 6px; color: var(--text-main);">Jam Masuk</label>
-                            <input type="time" name="jam_masuk" id="date-form-masuk" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--glass-border); background: var(--input-bg); color: var(--text-main);">
+                        <div class="form-group" style="margin-bottom: 14px;">
+                            <label>Jam Masuk Kerja</label>
+                            <input type="time" name="jam_masuk" id="date-form-masuk">
                         </div>
-                        <div class="form-group" style="margin-bottom: 12px;">
-                            <label style="display: block; font-weight: 600; margin-bottom: 6px; color: var(--text-main);">Batas Terlambat</label>
-                            <input type="time" name="batas_keterlambatan" id="date-form-batas" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--glass-border); background: var(--input-bg); color: var(--text-main);">
+                        <div class="form-group" style="margin-bottom: 14px;">
+                            <label>Batas Toleransi Keterlambatan</label>
+                            <input type="time" name="batas_keterlambatan" id="date-form-batas">
                         </div>
-                        <div class="form-group" style="margin-bottom: 12px;">
-                            <label style="display: block; font-weight: 600; margin-bottom: 6px; color: var(--text-main);">Jam Pulang</label>
-                            <input type="time" name="jam_pulang" id="date-form-pulang" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--glass-border); background: var(--input-bg); color: var(--text-main);">
+                        <div class="form-group" style="margin-bottom: 14px;">
+                            <label>Jam Pulang Kerja</label>
+                            <input type="time" name="jam_pulang" id="date-form-pulang">
                         </div>
                     </div>
 
-                    <div class="form-group" style="margin-bottom: 12px;">
-                        <label style="display: block; font-weight: 600; margin-bottom: 6px; color: var(--text-main);">Keterangan (opsional)</label>
-                        <input type="text" name="keterangan" id="date-form-keterangan" placeholder="Contoh: Hari Raya Idul Fitri" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--glass-border); background: var(--input-bg); color: var(--text-main);">
+                    <div class="form-group" style="margin-bottom: 14px;">
+                        <label>Keterangan Hari Libur/Acara (opsional)</label>
+                        <input type="text" name="keterangan" id="date-form-keterangan" placeholder="Contoh: Hari Raya Idul Fitri, Cuti Bersama">
                     </div>
                 </div>
 
                 <div class="modal-footer">
                     <button type="button" class="btn-secondary" onclick="document.getElementById('date-override-modal').style.display='none'" style="padding: 10px 20px; border-radius: 8px; cursor: pointer;">Batal</button>
-                    <button type="submit" class="btn-primary" style="padding: 10px 20px; border-radius: 8px; cursor: pointer;">Simpan</button>
+                    <button type="submit" class="btn-primary" style="padding: 10px 20px; border-radius: 8px; cursor: pointer;">Simpan Jadwal</button>
                 </div>
             </form>
         </div>
@@ -466,7 +528,187 @@
 @push('scripts')
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script>
+        // ===== Database Schedule Data Passed to JS =====
+        const globalDefaultSettings = {
+            jam_masuk: "{{ substr($settings->jam_masuk, 0, 5) }}",
+            batas_keterlambatan: "{{ substr($settings->batas_keterlambatan, 0, 5) }}",
+            jam_pulang: "{{ substr($settings->jam_pulang, 0, 5) }}"
+        };
+
+        const rawDayOverrides = @json($dayOverrides->values());
+        const rawDateOverrides = @json($dateOverrides);
+
+        const dayOverrides = {};
+        rawDayOverrides.forEach(ovr => {
+            dayOverrides[ovr.day_of_week] = {
+                id: ovr.id,
+                jam_masuk: ovr.jam_masuk ? ovr.jam_masuk.substring(0, 5) : null,
+                batas_keterlambatan: ovr.batas_keterlambatan ? ovr.batas_keterlambatan.substring(0, 5) : null,
+                jam_pulang: ovr.jam_pulang ? ovr.jam_pulang.substring(0, 5) : null,
+                is_holiday: ovr.is_holiday == 1,
+                keterangan: ovr.keterangan || ''
+            };
+        });
+
+        const dateOverrides = {};
+        rawDateOverrides.forEach(ovr => {
+            if (ovr.specific_date) {
+                const dateKey = ovr.specific_date.substring(0, 10);
+                dateOverrides[dateKey] = {
+                    id: ovr.id,
+                    jam_masuk: ovr.jam_masuk ? ovr.jam_masuk.substring(0, 5) : null,
+                    batas_keterlambatan: ovr.batas_keterlambatan ? ovr.batas_keterlambatan.substring(0, 5) : null,
+                    jam_pulang: ovr.jam_pulang ? ovr.jam_pulang.substring(0, 5) : null,
+                    is_holiday: ovr.is_holiday == 1,
+                    keterangan: ovr.keterangan || ''
+                };
+            }
+        });
+
         document.addEventListener('DOMContentLoaded', () => {
+            // ===== Calendar Rendering Logic =====
+            let currentCalDate = new Date();
+            
+            function renderCalendar() {
+                const year = currentCalDate.getFullYear();
+                const month = currentCalDate.getMonth();
+                
+                const monthNames = [
+                    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+                    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+                ];
+                document.getElementById('calendar-month-year-label').textContent = `${monthNames[month]} ${year}`;
+                
+                const container = document.getElementById('calendar-days-container');
+                if (!container) return;
+                container.innerHTML = '';
+                
+                const firstDayIndex = new Date(year, month, 1).getDay();
+                const totalDays = new Date(year, month + 1, 0).getDate();
+                
+                for (let i = 0; i < firstDayIndex; i++) {
+                    const emptyCell = document.createElement('div');
+                    emptyCell.className = 'calendar-cell cell-empty';
+                    container.appendChild(emptyCell);
+                }
+                
+                for (let day = 1; day <= totalDays; day++) {
+                    const dateObj = new Date(year, month, day);
+                    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    const dayOfWeek = dateObj.getDay();
+                    
+                    const cell = document.createElement('div');
+                    cell.className = 'calendar-cell';
+                    if (dayOfWeek === 0) {
+                        cell.classList.add('cell-sunday');
+                    }
+                    
+                    let statusClass = 'cell-status-default';
+                    let infoText = `${globalDefaultSettings.jam_masuk} - ${globalDefaultSettings.jam_pulang}`;
+                    let isHoliday = false;
+                    let overrideId = '';
+                    let jamMasuk = globalDefaultSettings.jam_masuk;
+                    let batas = globalDefaultSettings.batas_keterlambatan;
+                    let jamPulang = globalDefaultSettings.jam_pulang;
+                    let keterangan = '';
+                    
+                    if (dateOverrides[dateStr]) {
+                        const ovr = dateOverrides[dateStr];
+                        overrideId = ovr.id;
+                        isHoliday = ovr.is_holiday;
+                        keterangan = ovr.keterangan || '';
+                        
+                        if (isHoliday) {
+                            statusClass = 'cell-status-holiday';
+                            infoText = 'Libur';
+                        } else {
+                            statusClass = 'cell-status-date';
+                            jamMasuk = ovr.jam_masuk;
+                            batas = ovr.batas_keterlambatan;
+                            jamPulang = ovr.jam_pulang;
+                            infoText = `${jamMasuk} - ${jamPulang}`;
+                        }
+                    }
+                    else if (dayOverrides[dayOfWeek]) {
+                        const ovr = dayOverrides[dayOfWeek];
+                        overrideId = ovr.id;
+                        isHoliday = ovr.is_holiday;
+                        keterangan = ovr.keterangan || '';
+                        
+                        if (isHoliday) {
+                            statusClass = 'cell-status-holiday';
+                            infoText = 'Libur';
+                        } else {
+                            statusClass = 'cell-status-day';
+                            jamMasuk = ovr.jam_masuk;
+                            batas = ovr.batas_keterlambatan;
+                            jamPulang = ovr.jam_pulang;
+                            infoText = `${jamMasuk} - ${jamPulang}`;
+                        }
+                    }
+                    else if (dayOfWeek === 0) {
+                        statusClass = 'cell-status-holiday';
+                        infoText = 'Libur';
+                        keterangan = 'Minggu Libur';
+                        isHoliday = true;
+                    }
+                    
+                    cell.classList.add(statusClass);
+                    
+                    cell.innerHTML = `
+                        <span class="cell-number">${day}</span>
+                        <div style="display: flex; flex-direction: column; width: 100%; align-items: center; justify-content: flex-end; flex-grow: 1; min-height: 42px;">
+                            <div class="cell-info" title="${infoText}">${infoText}</div>
+                            ${keterangan ? `<div class="cell-desc" title="${keterangan}">${keterangan}</div>` : ''}
+                        </div>
+                    `;
+                    
+                    cell.addEventListener('click', () => {
+                        const modal = document.getElementById('date-override-modal');
+                        const form = document.getElementById('date-override-form');
+                        if (!modal || !form) return;
+                        
+                        document.getElementById('date-modal-title').textContent = isHoliday && dateOverrides[dateStr] ? 'Edit Tanggal Khusus' : 'Atur Tanggal Khusus / Libur';
+                        
+                        document.getElementById('date-form-date').value = dateStr;
+                        document.getElementById('date-form-date').readOnly = true;
+                        document.getElementById('date-form-date-group').style.display = 'block';
+                        
+                        document.getElementById('date-form-masuk').value = isHoliday ? globalDefaultSettings.jam_masuk : jamMasuk;
+                        document.getElementById('date-form-batas').value = isHoliday ? globalDefaultSettings.batas_keterlambatan : batas;
+                        document.getElementById('date-form-pulang').value = isHoliday ? globalDefaultSettings.jam_pulang : jamPulang;
+                        
+                        document.getElementById('date-form-holiday').checked = isHoliday;
+                        document.getElementById('date-form-keterangan').value = keterangan;
+                        toggleDateTimeInputs();
+                        
+                        if (dateOverrides[dateStr]) {
+                            form.action = `/super-admin/schedules/${overrideId}`;
+                            document.getElementById('date-form-method').value = 'PUT';
+                        } else {
+                            form.action = '{{ route("super-admin.schedules.store") }}';
+                            document.getElementById('date-form-method').value = 'POST';
+                        }
+                        
+                        modal.style.display = 'flex';
+                    });
+                    
+                    container.appendChild(cell);
+                }
+            }
+            
+            renderCalendar();
+            
+            document.getElementById('calendar-prev-month')?.addEventListener('click', () => {
+                currentCalDate.setMonth(currentCalDate.getMonth() - 1);
+                renderCalendar();
+            });
+            
+            document.getElementById('calendar-next-month')?.addEventListener('click', () => {
+                currentCalDate.setMonth(currentCalDate.getMonth() + 1);
+                renderCalendar();
+            });
+
             // ===== Tab switching =====
             document.querySelectorAll('.schedule-tab').forEach(tab => {
                 tab.addEventListener('click', () => {
@@ -484,7 +726,7 @@
                     const form = document.getElementById('day-override-form');
                     const overrideId = btn.dataset.overrideId;
 
-                    document.getElementById('day-modal-title').textContent = 'Edit Jadwal — ' + btn.dataset.dayName;
+                    document.getElementById('day-modal-title').textContent = 'Edit Jadwal : ' + btn.dataset.dayName;
                     document.getElementById('day-form-day').value = btn.dataset.day;
                     document.getElementById('day-form-masuk').value = btn.dataset.jamMasuk;
                     document.getElementById('day-form-batas').value = btn.dataset.batas;
@@ -547,6 +789,90 @@
 
                     modal.style.display = 'flex';
                 });
+            });
+
+            // ===== Import Holidays Action =====
+            document.getElementById('btn-import-holidays')?.addEventListener('click', () => {
+                const currentYear = new Date().getFullYear();
+                
+                if (window.Swal) {
+                    window.Swal.fire({
+                        ...getSwalColors(),
+                        title: 'Import Hari Libur Nasional',
+                        html: `
+                            <p style="margin-bottom: 12px; font-size: 0.9rem; color: var(--text-secondary);">
+                                Masukkan tahun untuk mengunduh daftar hari libur nasional Indonesia otomatis.
+                            </p>
+                            <input type="number" id="swal-input-year" class="swal2-input" value="${currentYear}" min="2020" max="2035" style="width: 80%; margin: 10px auto; border-radius: 8px; border: 1px solid var(--glass-border); padding: 10px 14px; background: rgba(15, 23, 42, 0.18); color: var(--text-primary);">
+                        `,
+                        showCancelButton: true,
+                        confirmButtonText: 'Import Sekarang',
+                        cancelButtonText: 'Batal',
+                        preConfirm: () => {
+                            const yearVal = document.getElementById('swal-input-year').value;
+                            if (!yearVal || isNaN(yearVal) || yearVal < 2020 || yearVal > 2035) {
+                                window.Swal.showValidationMessage('Masukkan tahun yang valid (2020 - 2035)');
+                                return false;
+                            }
+                            return yearVal;
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed && result.value) {
+                            // Show loading
+                            window.Swal.fire({
+                                ...getSwalColors(),
+                                title: 'Sedang Mengimpor...',
+                                text: 'Mohon tunggu sementara data diunduh.',
+                                allowOutsideClick: false,
+                                didOpen: () => {
+                                    window.Swal.showLoading();
+                                }
+                            });
+
+                            // Submit via dynamically created form
+                            const form = document.createElement('form');
+                            form.method = 'POST';
+                            form.action = '{{ route("super-admin.schedules.sync-holidays") }}';
+                            
+                            const csrfInput = document.createElement('input');
+                            csrfInput.type = 'hidden';
+                            csrfInput.name = '_token';
+                            csrfInput.value = '{{ csrf_token() }}';
+                            form.appendChild(csrfInput);
+
+                            const yearInput = document.createElement('input');
+                            yearInput.type = 'hidden';
+                            yearInput.name = 'year';
+                            yearInput.value = result.value;
+                            form.appendChild(yearInput);
+
+                            document.body.appendChild(form);
+                            form.submit();
+                        }
+                    });
+                } else {
+                    const yearPrompt = prompt('Masukkan tahun (contoh: 2026):', currentYear);
+                    if (yearPrompt) {
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = '{{ route("super-admin.schedules.sync-holidays") }}';
+                        
+                        const csrfInput = document.createElement('input');
+                        csrfInput.type = 'hidden';
+                        csrfInput.name = '_token';
+                        csrfInput.value = '{{ csrf_token() }}';
+                        form.appendChild(csrfInput);
+
+                        const yearInput = document.createElement('input');
+                        yearInput.type = 'hidden';
+                        yearInput.name = 'year';
+                        yearInput.value = yearPrompt;
+                        form.appendChild(yearInput);
+
+                        document.body.appendChild(form);
+                        form.submit();
+                    }
+                }
             });
 
             // ===== Leaflet Map (preserved from before) =====
@@ -638,6 +964,66 @@
                     { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
                 );
             });
+
+            // ===== Pagination for Specific Dates Table =====
+            const tableBody = document.getElementById('table-date-body');
+            const paginationContainer = document.getElementById('table-date-pagination');
+            
+            if (tableBody && paginationContainer) {
+                const rows = Array.from(tableBody.querySelectorAll('tr'));
+                const itemsPerPage = 5;
+                const totalItems = rows.length;
+                const totalPages = Math.ceil(totalItems / itemsPerPage);
+                let currentTablePage = 1;
+                
+                if (totalItems <= itemsPerPage) {
+                    paginationContainer.style.display = 'none';
+                } else {
+                    const prevBtn = document.getElementById('btn-date-prev');
+                    const nextBtn = document.getElementById('btn-date-next');
+                    const infoLabel = document.getElementById('date-pagination-info');
+                    
+                    function showTablePage(page) {
+                        currentTablePage = page;
+                        
+                        rows.forEach((row, idx) => {
+                            const startIdx = (page - 1) * itemsPerPage;
+                            const endIdx = page * itemsPerPage;
+                            if (idx >= startIdx && idx < endIdx) {
+                                row.style.display = '';
+                            } else {
+                                row.style.display = 'none';
+                            }
+                        });
+                        
+                        const startNum = (page - 1) * itemsPerPage + 1;
+                        const endNum = Math.min(page * itemsPerPage, totalItems);
+                        infoLabel.textContent = `Menampilkan ${startNum} - ${endNum} dari ${totalItems} data`;
+                        
+                        prevBtn.disabled = (page === 1);
+                        nextBtn.disabled = (page === totalPages);
+                        
+                        prevBtn.style.opacity = (page === 1) ? '0.5' : '1';
+                        prevBtn.style.cursor = (page === 1) ? 'not-allowed' : 'pointer';
+                        nextBtn.style.opacity = (page === totalPages) ? '0.5' : '1';
+                        nextBtn.style.cursor = (page === totalPages) ? 'not-allowed' : 'pointer';
+                    }
+                    
+                    prevBtn.addEventListener('click', () => {
+                        if (currentTablePage > 1) {
+                            showTablePage(currentTablePage - 1);
+                        }
+                    });
+                    
+                    nextBtn.addEventListener('click', () => {
+                        if (currentTablePage < totalPages) {
+                            showTablePage(currentTablePage + 1);
+                        }
+                    });
+                    
+                    showTablePage(1);
+                }
+            }
         });
 
         // ===== Toggle helpers =====

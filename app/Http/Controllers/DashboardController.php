@@ -682,5 +682,61 @@ class DashboardController extends Controller
             ->route('super-admin.settings')
             ->with('success', 'Jadwal override berhasil dihapus, kembali ke default.');
     }
+
+    /**
+     * Sync Indonesian national holidays from public API for a given year.
+     */
+    public function syncHolidays(Request $request)
+    {
+        $validated = $request->validate([
+            'year' => ['required', 'integer', 'between:2020,2035'],
+        ]);
+
+        $year = $validated['year'];
+        
+        try {
+            $response = \Illuminate\Support\Facades\Http::get("https://api-hari-libur.vercel.app/api?year={$year}");
+
+            if ($response->failed()) {
+                return redirect()->route('super-admin.settings')
+                    ->with('error', 'Gagal menghubungi API Hari Libur. Silakan coba lagi nanti.');
+            }
+
+            $body = $response->json();
+            if (!isset($body['status']) || $body['status'] !== 'success' || !isset($body['data'])) {
+                return redirect()->route('super-admin.settings')
+                    ->with('error', 'Format data API Hari Libur tidak valid.');
+            }
+
+            $holidays = $body['data'];
+            $importedCount = 0;
+
+            foreach ($holidays as $holiday) {
+                $dateStr = $holiday['date'];
+                $desc = $holiday['description'];
+
+                // Check duplicate
+                $exists = \App\Models\WorkSchedule::where('type', 'date')
+                    ->where('specific_date', $dateStr)
+                    ->exists();
+
+                if (!$exists) {
+                    \App\Models\WorkSchedule::create([
+                        'type' => 'date',
+                        'specific_date' => $dateStr,
+                        'is_holiday' => true,
+                        'keterangan' => $desc,
+                    ]);
+                    $importedCount++;
+                }
+            }
+
+            return redirect()->route('super-admin.settings')
+                ->with('success', "Berhasil mengimpor {$importedCount} hari libur nasional untuk tahun {$year}.");
+        } catch (\Exception $e) {
+            return redirect()->route('super-admin.settings')
+                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
+    }
 }
 
