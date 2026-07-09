@@ -4,12 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title') - AbsenDJJ</title>
+    <title>@yield('title') - Absen Magang</title>
     
     <!-- Premium Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="manifest" href="{{ asset('manifest.json') }}">
+    <meta name="theme-color" content="#007bff">
+    <link rel="apple-touch-icon" href="/icon.png">
+    
     @vite('resources/css/dashboard-layout.css')
     @stack('styles')
 </head>
@@ -19,7 +23,7 @@
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <img src="{{ asset('images/Logo/Logo_PU.png') }}" alt="Logo PU" class="sidebar-logo">
-            <span class="logo-text">AbsenDJJ</span>
+            <span class="logo-text">Absen Magang</span>
         </div>
 
         <button type="button" class="sidebar-toggle" id="sidebar-toggle" aria-label="Buka/tutup sidebar">
@@ -153,5 +157,15 @@
     </script>
     @vite('resources/js/dashboard-layout.js')
     @stack('scripts')
+
+    <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .then(reg => console.log('Service Worker Registered!'))
+                .catch(err => console.log('SW Registration Failed:', err));
+        });
+    }
+</script>
 </body>
 </html>

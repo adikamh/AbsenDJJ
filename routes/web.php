@@ -45,6 +45,10 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('super-admin')->group(fu
 
     Route::get('/settings', [DashboardController::class, 'editSettings'])->name('super-admin.settings');
     Route::put('/settings', [DashboardController::class, 'updateSettings'])->name('super-admin.settings.update');
+
+    Route::post('/schedules', [DashboardController::class, 'storeScheduleOverride'])->name('super-admin.schedules.store');
+    Route::put('/schedules/{schedule}', [DashboardController::class, 'updateScheduleOverride'])->name('super-admin.schedules.update');
+    Route::delete('/schedules/{schedule}', [DashboardController::class, 'destroyScheduleOverride'])->name('super-admin.schedules.destroy');
 });
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
