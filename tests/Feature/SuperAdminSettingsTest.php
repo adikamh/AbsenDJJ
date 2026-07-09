@@ -124,4 +124,112 @@ class SuperAdminSettingsTest extends TestCase
 
         $response->assertSessionHasErrors(['jam_masuk', 'latitude_kantor', 'radius_meter']);
     }
+
+    // ===== Schedule Override CRUD Tests =====
+
+    public function test_super_admin_can_create_day_override(): void
+    {
+        $data = [
+            'type' => 'day',
+            'day_of_week' => 5, // Jumat
+            'jam_masuk' => '07:00',
+            'batas_keterlambatan' => '07:30',
+            'jam_pulang' => '11:30',
+            'keterangan' => 'Jadwal Jumat',
+        ];
+
+        $response = $this->actingAs($this->superAdmin)
+            ->post('/super-admin/schedules', $data);
+
+        $response->assertRedirect('/super-admin/settings');
+        $this->assertDatabaseHas('work_schedules', [
+            'type' => 'day',
+            'day_of_week' => 5,
+            'jam_masuk' => '07:00:00',
+        ]);
+    }
+
+    public function test_super_admin_can_create_date_override(): void
+    {
+        $data = [
+            'type' => 'date',
+            'specific_date' => '2026-08-17',
+            'is_holiday' => 1,
+            'keterangan' => 'Hari Kemerdekaan RI',
+        ];
+
+        $response = $this->actingAs($this->superAdmin)
+            ->post('/super-admin/schedules', $data);
+
+        $response->assertRedirect('/super-admin/settings');
+        $this->assertDatabaseHas('work_schedules', [
+            'type' => 'date',
+            'specific_date' => '2026-08-17 00:00:00',
+            'is_holiday' => 1,
+        ]);
+    }
+
+    public function test_super_admin_can_update_schedule_override(): void
+    {
+        $schedule = \App\Models\WorkSchedule::create([
+            'type' => 'day',
+            'day_of_week' => 5,
+            'jam_masuk' => '07:00:00',
+            'batas_keterlambatan' => '07:30:00',
+            'jam_pulang' => '11:30:00',
+        ]);
+
+        $response = $this->actingAs($this->superAdmin)
+            ->put('/super-admin/schedules/' . $schedule->id, [
+                'jam_masuk' => '07:15',
+                'batas_keterlambatan' => '07:45',
+                'jam_pulang' => '12:00',
+            ]);
+
+        $response->assertRedirect('/super-admin/settings');
+        $this->assertDatabaseHas('work_schedules', [
+            'id' => $schedule->id,
+            'jam_masuk' => '07:15:00',
+        ]);
+    }
+
+    public function test_super_admin_can_delete_schedule_override(): void
+    {
+        $schedule = \App\Models\WorkSchedule::create([
+            'type' => 'day',
+            'day_of_week' => 0,
+            'is_holiday' => true,
+            'keterangan' => 'Minggu Libur',
+        ]);
+
+        $response = $this->actingAs($this->superAdmin)
+            ->delete('/super-admin/schedules/' . $schedule->id);
+
+        $response->assertRedirect('/super-admin/settings');
+        $this->assertDatabaseMissing('work_schedules', ['id' => $schedule->id]);
+    }
+
+    public function test_duplicate_day_override_is_rejected(): void
+    {
+        \App\Models\WorkSchedule::create([
+            'type' => 'day',
+            'day_of_week' => 5,
+            'jam_masuk' => '07:00:00',
+            'batas_keterlambatan' => '07:30:00',
+            'jam_pulang' => '11:30:00',
+        ]);
+
+        $response = $this->actingAs($this->superAdmin)
+            ->post('/super-admin/schedules', [
+                'type' => 'day',
+                'day_of_week' => 5,
+                'jam_masuk' => '08:00',
+                'batas_keterlambatan' => '08:15',
+                'jam_pulang' => '12:00',
+            ]);
+
+        $response->assertRedirect('/super-admin/settings');
+        $response->assertSessionHas('error');
+    }
 }
+

@@ -539,7 +539,10 @@ class DashboardController extends Controller
     public function editSettings()
     {
         $settings = app(\App\Settings\GeneralSettings::class);
-        return view('dashboard.super_admin_settings', compact('settings'));
+        $dayOverrides = \App\Models\WorkSchedule::where('type', 'day')->get()->keyBy('day_of_week');
+        $dateOverrides = \App\Models\WorkSchedule::where('type', 'date')->orderBy('specific_date')->get();
+
+        return view('dashboard.super_admin_settings', compact('settings', 'dayOverrides', 'dateOverrides'));
     }
 
     /**
@@ -572,4 +575,112 @@ class DashboardController extends Controller
             ->route('super-admin.settings')
             ->with('success', 'Pengaturan parameter global berhasil diperbarui.');
     }
+
+    /**
+     * Store a new work schedule override (per-day or per-date).
+     */
+    public function storeScheduleOverride(Request $request)
+    {
+        $validated = $request->validate([
+            'type' => ['required', 'in:day,date'],
+            'day_of_week' => ['required_if:type,day', 'nullable', 'integer', 'between:0,6'],
+            'specific_date' => ['required_if:type,date', 'nullable', 'date'],
+            'jam_masuk' => ['nullable', 'string', 'regex:/^[0-9]{2}:[0-9]{2}(:[0-9]{2})?$/'],
+            'batas_keterlambatan' => ['nullable', 'string', 'regex:/^[0-9]{2}:[0-9]{2}(:[0-9]{2})?$/'],
+            'jam_pulang' => ['nullable', 'string', 'regex:/^[0-9]{2}:[0-9]{2}(:[0-9]{2})?$/'],
+            'is_holiday' => ['nullable', 'boolean'],
+            'keterangan' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $isHoliday = $request->boolean('is_holiday');
+
+        // Check for duplicates
+        if ($validated['type'] === 'day') {
+            $exists = \App\Models\WorkSchedule::where('type', 'day')
+                ->where('day_of_week', $validated['day_of_week'])
+                ->exists();
+            if ($exists) {
+                return redirect()->route('super-admin.settings')
+                    ->with('error', 'Override untuk hari tersebut sudah ada. Silakan edit yang sudah ada.');
+            }
+        } else {
+            $exists = \App\Models\WorkSchedule::where('type', 'date')
+                ->where('specific_date', $validated['specific_date'])
+                ->exists();
+            if ($exists) {
+                return redirect()->route('super-admin.settings')
+                    ->with('error', 'Override untuk tanggal tersebut sudah ada. Silakan edit yang sudah ada.');
+            }
+        }
+
+        $data = [
+            'type' => $validated['type'],
+            'day_of_week' => $validated['type'] === 'day' ? $validated['day_of_week'] : null,
+            'specific_date' => $validated['type'] === 'date' ? $validated['specific_date'] : null,
+            'is_holiday' => $isHoliday,
+            'keterangan' => $validated['keterangan'] ?? null,
+        ];
+
+        if (!$isHoliday) {
+            $data['jam_masuk'] = isset($validated['jam_masuk']) ? (strlen($validated['jam_masuk']) === 5 ? $validated['jam_masuk'] . ':00' : $validated['jam_masuk']) : null;
+            $data['batas_keterlambatan'] = isset($validated['batas_keterlambatan']) ? (strlen($validated['batas_keterlambatan']) === 5 ? $validated['batas_keterlambatan'] . ':00' : $validated['batas_keterlambatan']) : null;
+            $data['jam_pulang'] = isset($validated['jam_pulang']) ? (strlen($validated['jam_pulang']) === 5 ? $validated['jam_pulang'] . ':00' : $validated['jam_pulang']) : null;
+        }
+
+        \App\Models\WorkSchedule::create($data);
+
+        return redirect()
+            ->route('super-admin.settings')
+            ->with('success', 'Jadwal override berhasil ditambahkan.');
+    }
+
+    /**
+     * Update an existing work schedule override.
+     */
+    public function updateScheduleOverride(Request $request, \App\Models\WorkSchedule $schedule)
+    {
+        $validated = $request->validate([
+            'jam_masuk' => ['nullable', 'string', 'regex:/^[0-9]{2}:[0-9]{2}(:[0-9]{2})?$/'],
+            'batas_keterlambatan' => ['nullable', 'string', 'regex:/^[0-9]{2}:[0-9]{2}(:[0-9]{2})?$/'],
+            'jam_pulang' => ['nullable', 'string', 'regex:/^[0-9]{2}:[0-9]{2}(:[0-9]{2})?$/'],
+            'is_holiday' => ['nullable', 'boolean'],
+            'keterangan' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $isHoliday = $request->boolean('is_holiday');
+
+        $data = [
+            'is_holiday' => $isHoliday,
+            'keterangan' => $validated['keterangan'] ?? $schedule->keterangan,
+        ];
+
+        if ($isHoliday) {
+            $data['jam_masuk'] = null;
+            $data['batas_keterlambatan'] = null;
+            $data['jam_pulang'] = null;
+        } else {
+            $data['jam_masuk'] = isset($validated['jam_masuk']) ? (strlen($validated['jam_masuk']) === 5 ? $validated['jam_masuk'] . ':00' : $validated['jam_masuk']) : $schedule->jam_masuk;
+            $data['batas_keterlambatan'] = isset($validated['batas_keterlambatan']) ? (strlen($validated['batas_keterlambatan']) === 5 ? $validated['batas_keterlambatan'] . ':00' : $validated['batas_keterlambatan']) : $schedule->batas_keterlambatan;
+            $data['jam_pulang'] = isset($validated['jam_pulang']) ? (strlen($validated['jam_pulang']) === 5 ? $validated['jam_pulang'] . ':00' : $validated['jam_pulang']) : $schedule->jam_pulang;
+        }
+
+        $schedule->update($data);
+
+        return redirect()
+            ->route('super-admin.settings')
+            ->with('success', 'Jadwal override berhasil diperbarui.');
+    }
+
+    /**
+     * Delete a work schedule override (reverts to default).
+     */
+    public function destroyScheduleOverride(\App\Models\WorkSchedule $schedule)
+    {
+        $schedule->delete();
+
+        return redirect()
+            ->route('super-admin.settings')
+            ->with('success', 'Jadwal override berhasil dihapus, kembali ke default.');
+    }
 }
+

@@ -73,10 +73,25 @@ class AttendanceController extends Controller
         File::put($dirPath . '/' . $fileName, $fotoData);
         $fotoPath = 'uploads/attendance/' . $fileName;
 
-        // Determine status based on GeneralSettings (Terlambat if after the late limit, otherwise Hadir)
+        // Determine status based on schedule priority: specific date > day-of-week > GeneralSettings default
         $now = Carbon::now();
+        $schedule = \App\Models\WorkSchedule::getScheduleForDate($now);
+
+        // If today is a holiday, reject check-in
+        if ($schedule && $schedule->is_holiday) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hari ini adalah hari libur (' . ($schedule->keterangan ?? 'Libur') . '). Absensi tidak tersedia.',
+            ], 400);
+        }
+
+        // Get the applicable late limit
         $settings = app(\App\Settings\GeneralSettings::class);
-        $limitParts = explode(':', $settings->batas_keterlambatan);
+        $limitStr = ($schedule && $schedule->batas_keterlambatan)
+            ? $schedule->batas_keterlambatan
+            : $settings->batas_keterlambatan;
+
+        $limitParts = explode(':', $limitStr);
         $limitHour = isset($limitParts[0]) ? (int) $limitParts[0] : 8;
         $limitMinute = isset($limitParts[1]) ? (int) $limitParts[1] : 15;
         $limitSecond = isset($limitParts[2]) ? (int) $limitParts[2] : 0;
