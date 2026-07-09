@@ -39,6 +39,9 @@ class UserSeeder extends Seeder
                 'role_id' => $roleAdmin->id,
                 'nama_lengkap' => 'Ir. Hendra Wijaya, M.T.',
                 'password' => Hash::make('password'),
+                'nip' => '198001012005011001',
+                'no_telepon' => '081111111111',
+                'alamat' => 'Jl. Melati No. 12, Bandung',
                 'status_aktif' => true,
             ]
         );
@@ -49,6 +52,9 @@ class UserSeeder extends Seeder
                 'role_id' => $roleAdmin->id,
                 'nama_lengkap' => 'Ratna Sari, S.T.',
                 'password' => Hash::make('password'),
+                'nip' => '198502022008022002',
+                'no_telepon' => '082222222222',
+                'alamat' => 'Jl. Dahlia No. 34, Jakarta',
                 'status_aktif' => true,
             ]
         );
@@ -59,6 +65,9 @@ class UserSeeder extends Seeder
                 'role_id' => $roleAdmin->id,
                 'nama_lengkap' => 'Budi Setiawan, S.Kom.',
                 'password' => Hash::make('password'),
+                'nip' => '199003032015031003',
+                'no_telepon' => '083333333333',
+                'alamat' => 'Jl. Kenanga No. 56, Surabaya',
                 'status_aktif' => true,
             ]
         );
@@ -83,6 +92,7 @@ class UserSeeder extends Seeder
             // Assign instansi and pembimbing round-robin
             $instansi = $instansis[$index % $instansis->count()];
             $pembimbing = $pembimbingList[$index % count($pembimbingList)];
+            $cities = ['Bandung', 'Jakarta', 'Surabaya', 'Semarang'];
 
             User::firstOrCreate(
                 ['email' => $data['email']],
@@ -92,6 +102,13 @@ class UserSeeder extends Seeder
                     'pembimbing_id' => $pembimbing->id,
                     'nama_lengkap' => $data['nama_lengkap'],
                     'password' => Hash::make('password'),
+                    'nip' => '2026000' . ($index + 1),
+                    'no_telepon' => '0812345678' . $index,
+                    'alamat' => 'Jl. Flamboyan No. ' . ($index + 1) . ', Kota ' . $cities[$index % 4],
+                    'no_darurat_1' => '089876543' . $index,
+                    'hubungan_darurat_1' => 'Orang Tua',
+                    'no_darurat_2' => '089987654' . $index,
+                    'hubungan_darurat_2' => 'Saudara',
                     'status_aktif' => true,
                 ]
             );

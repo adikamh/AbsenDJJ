@@ -1,6 +1,8 @@
 import Swal from 'sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css';
 
+window.Swal = Swal;
+
 // Page-specific scripts for dashboard/layout.blade.php.
 
 const root = document.documentElement;

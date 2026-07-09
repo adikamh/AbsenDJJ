@@ -37,6 +37,14 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('super-admin')->group(fu
     Route::put('/peserta/{peserta}/reset-password', [DashboardController::class, 'resetPesertaPassword'])->name('super-admin.peserta.reset-password');
     Route::put('/peserta/{peserta}', [DashboardController::class, 'updatePeserta'])->name('super-admin.peserta.update');
     Route::delete('/peserta/{peserta}', [DashboardController::class, 'destroyPeserta'])->name('super-admin.peserta.destroy');
+
+    Route::get('/instansi', [DashboardController::class, 'manageInstansi'])->name('super-admin.instansi');
+    Route::post('/instansi', [DashboardController::class, 'storeInstansi'])->name('super-admin.instansi.store');
+    Route::put('/instansi/{instansi}', [DashboardController::class, 'updateInstansi'])->name('super-admin.instansi.update');
+    Route::delete('/instansi/{instansi}', [DashboardController::class, 'destroyInstansi'])->name('super-admin.instansi.destroy');
+
+    Route::get('/settings', [DashboardController::class, 'editSettings'])->name('super-admin.settings');
+    Route::put('/settings', [DashboardController::class, 'updateSettings'])->name('super-admin.settings.update');
 });
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {

@@ -8,6 +8,7 @@
 @endpush
 
 @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     @vite('resources/js/dashboard-super-admin.js')
 @endpush
 
@@ -24,6 +25,16 @@
         <div class="stat-card hover-lift">
             <div class="stat-label">Peserta Hadir Hari Ini</div>
             <div class="stat-value">{{ $totalHadirHariIni }}</div>
+        </div>
+    </div>
+
+    <!-- Attendance Analytics Chart -->
+    <div class="content-card" style="margin-bottom: 24px;">
+        <div class="card-header">
+            <h2 class="card-title">Analisis Kehadiran (7 Hari Kerja Terakhir)</h2>
+        </div>
+        <div class="chart-container" style="position: relative; height: 350px; width: 100%; margin-top: 16px;">
+            <div id="attendanceChart" data-chart-data="{{ json_encode($attendanceChartData) }}"></div>
         </div>
     </div>
 
