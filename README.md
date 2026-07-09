@@ -1,58 +1,143 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 📱 AbsenDJJ - Sistem Manajemen Absensi Geofencing & Magang Terpadu
 
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="300" alt="Laravel Logo">
+  <br><br>
+  <img src="https://img.shields.io/badge/Laravel-11.x-FF2D20?style=for-the-badge&logo=laravel" alt="Laravel Version">
+  <img src="https://img.shields.io/badge/Vite-5.x-646CFF?style=for-the-badge&logo=vite" alt="Vite Version">
+  <img src="https://img.shields.io/badge/Leaflet-JS-199900?style=for-the-badge&logo=leaflet" alt="Leaflet JS">
+  <img src="https://img.shields.io/badge/ApexCharts-Visuals-34D399?style=for-the-badge" alt="ApexCharts">
+  <img src="https://img.shields.io/badge/SweetAlert2-Popups-F28F8F?style=for-the-badge" alt="SweetAlert2">
 </p>
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🌟 Tentang AbsenDJJ
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+**AbsenDJJ** adalah platform berbasis web modern untuk pencatatan kehadiran (absensi) bagi para peserta magang atau Praktik Kerja Lapangan (PKL) secara presisi. Dilengkapi dengan batasan area masuk (**Geofencing**), pengawasan berbasis pembimbing (Admin), serta kendali parameter global dan statistik visual interaktif oleh **Super Admin**.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Aplikasi dirancang dengan antarmuka yang sangat responsif, mendukung **Light Mode & Dark Mode** secara instan, serta pemisahan kode modular (Clean Architecture) antara JavaScript, CSS, dan PHP Blade view.
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 🛠️ Fitur Utama Aplikasi
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 👑 1. Dashboard Super Admin (Analisis Historis)
+* **ApexCharts Stacked Chart**: Grafikstacked column harian yang memvisualisasikan data kehadiran peserta magang (Hadir, Terlambat, Izin, Absen) secara kronologis dalam 7 hari kerja terakhir.
+* **Smart Theme Synchronization**: Otomatis menyelaraskan warna teks, sumbu diagram, gridlines, legenda, dan tooltip ApexCharts saat berganti antara tema terang dan gelap secara real-time via `MutationObserver`.
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+### 🎛️ 2. Parameter Global & Geofencing Pintar
+* **Visual Map Geofencing**: Penandaan titik koordinat latitude & longitude kantor secara langsung di peta interaktif **Leaflet.js** (tidak perlu input angka koordinat manual).
+* **Radius Geofence Dinamis**: Lingkaran hijau di peta membesar/mengecil secara instan saat kolom radius diubah.
+* **Geocoding Search**: Cari nama lokasi atau alamat kantor secara instan menggunakan pencarian terintegrasi API **Nominatim OpenStreetMap**.
+* **Navigator GPS**: Tombol GPS untuk mendeteksi posisi koordinat perangkat pengguna secara langsung melalui HTML5 Geolocation.
+* **Waktu Kehadiran Dinamis**: Pengaturan Jam Masuk, Jam Pulang, dan Batas Keterlambatan yang divalidasi secara dinamis saat peserta melakukan absensi.
 
-## Agentic Development
+### 🏢 3. Kelola Master Data Terpusat
+* **Kelola Instansi**: Pengelolaan data sekolah, universitas, atau dinas peserta magang lengkap dengan validasi relasional (mencegah penghapusan jika instansi masih memiliki anggota).
+* **Kelola Peserta & Pembimbing**: CRUD lengkap, reset password, dan detail profil lengkap (bebas dari pemaparan data sensitif password).
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+### 🔍 4. UI/UX Premium & Kontras Maksimal
+* **Searchable Dropdown & Autocomplete**: Pilihan pembimbing dan autocomplete instansi yang ramah pencarian.
+* **Warna Sesuai Tema**: Warna dropdown kustom dan elemen select/option otomatis menyesuaikan warna latar belakang terang/gelap demi kenyamanan mata.
+* **Filter Terpadu & Pagination**: Satu modal filter gabungan dengan penanda tombol aktif dan pagination client-side (maksimal 5 data per halaman).
+* **Custom SweetAlert2**: Dialog peringatan kustom yang serasi dengan tema gelap/terang.
 
-```bash
-composer require laravel/boost --dev
+---
 
-php artisan boost:install
+## 📐 Alur Kerja Absensi Geofencing
+
+```mermaid
+graph TD
+    A[Peserta klik Absen Masuk] --> B{Ambil GPS Perangkat}
+    B --> C{Hitung Jarak ke Koordinat Kantor}
+    C -->|Jarak > Radius Kantor| D[Absensi Ditolak - Luar Area Geofence]
+    C -->|Jarak <= Radius Kantor| E{Cek Waktu Kehadiran}
+    E -->|Waktu > Batas Keterlambatan| F[Catat Absen: Terlambat]
+    E -->|Waktu <= Batas Keterlambatan| G[Catat Absen: Hadir]
+    D --> H[Pop-up Notifikasi SweetAlert2]
+    F --> H
+    G --> H
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+---
 
-## Contributing
+## 💻 Tech Stack & Ketergantungan
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+* **Backend**: Laravel 11.x (PHP 8.2+)
+* **Frontend**: HTML5, Vanilla CSS, Vanilla ES6 JavaScript (dihubungkan via Laravel Vite)
+* **State & Configuration**: `spatie/laravel-settings` (Penyimpanan parameter dinamis berbasis database)
+* **Libraries (via CDN / Bundle)**:
+  * **Leaflet.js v1.9.4** (Peta Geofencing)
+  * **ApexCharts v3.35** (Visualisasi Dashboard)
+  * **SweetAlert2** (Notifikasi Interaktif)
 
-## Code of Conduct
+---
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## 🚀 Panduan Instalasi & Pengembangan
 
-## Security Vulnerabilities
+### 1. Kloning Repositori
+```bash
+git clone https://github.com/adikamh/AbsenDJJ.git
+cd AbsenDJJ
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### 2. Pasang Dependensi Composer & NPM
+```bash
+composer install
+npm install
+```
 
-## License
+### 3. Konfigurasi Environment (`.env`)
+Salin berkas `.env.example` ke `.env` dan sesuaikan kredensial basis data Anda:
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 4. Jalankan Migrasi & Seeder Database
+Inisialisasi tabel, parameter default settings, dan pengguna bawaan (Super Admin, Pembimbing, Peserta):
+```bash
+php artisan migrate --seed
+```
+
+### 5. Kompilasi Aset & Jalankan Server Lokal
+Jalankan server pengembangan Laravel Artisan serta bundler Vite secara bersamaan:
+```bash
+# Terminal 1: Server Laravel
+php artisan serve
+
+# Terminal 2: Bundler Vite
+npm run dev
+```
+
+### 6. Menjalankan Tes Otomatis
+Validasi kebenaran fitur pengaturan, CRUD, dan batasan hak akses melalui unit testing PHPUnit:
+```bash
+php artisan test
+```
+
+---
+
+## 📂 Struktur Aset Khusus (Super Admin)
+
+Untuk mematuhi modularitas kode, aset JavaScript dan CSS untuk halaman Super Admin dipisahkan ke dalam berkas-berkas tersendiri:
+```text
+resources/
+├── css/
+│   ├── super_admin_peserta.css
+│   ├── super_admin_pembimbing.css
+│   ├── super_admin_instansi.css
+│   └── super_admin_settings.css
+└── js/
+    ├── super_admin_peserta.js
+    ├── super_admin_pembimbing.js
+    ├── super_admin_instansi.js
+    └── dashboard-super-admin.js (ApexCharts handler)
+```
+
+---
+
+## 🔒 Lisensi
+
+Aplikasi ini dilisensikan di bawah lisensi [MIT License](LICENSE).
