@@ -281,3 +281,60 @@
 - Menambahkan **kolom pencarian lokasi (search input)** di atas peta Leaflet yang terhubung ke Nominatim API untuk mempermudah pencarian alamat kantor secara visual.
 - Menambahkan **tombol navigasi lokasi (GPS)** menggunakan browser Geolocation API untuk mendeteksi posisi koordinat pengguna saat ini, lalu menaruh marker dan mengarahkan peta ke lokasi tersebut secara langsung.
 - Mengganti seluruh pesan **browser default alert** (seperti lokasi tidak ditemukan atau kegagalan GPS) dengan pop-up dialog **SweetAlert2** interaktif berpenampilan modern dengan skema warna background, teks, dan tombol yang menyesuaikan tema aktif (light/dark mode).
+
+## Penyelarasan Tema & Penyempurnaan Tampilan Halaman Pengaturan (Jadwal Kehadiran)
+
+- Menghapus semua inline style override yang tidak kompatibel pada input form dan label di `super_admin_settings.blade.php`, seperti `background: var(--input-bg)` dan `color: var(--text-main)`. Hal ini membuat input form mewarisi desain global secara konsisten.
+- Mengubah warna teks deskripsi dan kontainer kosong (empty state) dari variabel non-standar `var(--text-muted)` ke variabel standar `var(--text-secondary)`.
+- Mengimplementasikan CSS grid responsive `.time-inputs-grid` pada form tab jadwal default untuk menggantikan grid kolom kaku, sehingga tampilan di layar mobile tidak terhimpit.
+- Memperbarui berkas stylesheet `super_admin_settings.css` untuk:
+  - Menyinkronkan warna latar belakang kartu hari (`.day-card`) dengan variabel standar `--glass-bg` agar terlihat kontras dan terbaca baik pada light mode maupun dark mode.
+  - Memperbaiki warna tombol edit (`.btn-day-edit` dan `.btn-date-edit`) menggunakan latar `--accent-primary` dan teks `--button-primary-text` agar teksnya tetap terbaca jelas (tidak berwarna putih di atas warna kuning terang).
+  - Menyinkronkan modal overlay (`.modal-container`) menggunakan latar belakang `--modal-bg` agar warna latar belakang modal berubah solid putih pada light mode dan solid gelap pada dark mode, menjaga agar teks isian di dalamnya tidak kabur atau tidak terbaca.
+  - Memperbaiki tab navigation hover dan background aktif menggunakan `--accent-primary-rgba` dan `--accent-primary-rgba-light` alih-alih variabel RGB mentah yang tidak terdefinisi.
+- Menghubungkan tombol aksi Edit dan Hapus pada tabel tanggal khusus dengan class `.btn-date-edit` dan `.btn-date-delete` kustom yang diatur langsung dalam berkas CSS, menghilangkan deklarasi inline style yang tidak perlu.
+- Mengubah checkbox "Tandai sebagai Hari Libur" biasa menjadi komponen **toggle switch switch-slider kustom** yang modern dan interaktif dengan aksen merah cerah (`#ef4444`) saat diaktifkan, serta merapikan struktur form di dalam modal `Edit Jadwal Hari` dan `Tambah/Edit Tanggal Khusus` agar seragam dan sedap dipandang.
+
+## Integrasi Import Hari Libur Nasional Otomatis (API Vercel Hari Libur)
+
+- Menyediakan fitur import hari libur nasional Indonesia secara otomatis menggunakan REST API publik `https://api-hari-libur.vercel.app/api`.
+- Menambahkan route POST `/super-admin/schedules/sync-holidays` di [web.php](file:///c:/laragon/www/AbsenDJJ/routes/web.php).
+- Mengimplementasikan method `syncHolidays()` di [DashboardController.php](file:///c:/laragon/www/AbsenDJJ/app/Http/Controllers/DashboardController.php) yang melakukan HTTP GET ke API, mem-parsing daftar hari libur, mengecek duplikasi tanggal di database, dan menyimpan data hari libur baru ke tabel `work_schedules` dengan status `is_holiday: true`.
+- Menambahkan tombol **Import Hari Libur** dengan ikon download bergaya modern di tab Tanggal Khusus/Libur pada halaman [super_admin_settings.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/super_admin_settings.blade.php).
+- Menghubungkan tombol tersebut dengan modal input SweetAlert2 agar Super Admin dapat memilih tahun target import secara interaktif, lengkap dengan efek visual loading saat proses sinkronisasi berjalan.
+- Menulis unit/feature test `test_super_admin_can_sync_holidays_from_api` di [SuperAdminSettingsTest.php](file:///c:/laragon/www/AbsenDJJ/tests/Feature/SuperAdminSettingsTest.php) dengan memanfaatkan `Http::fake()` untuk menjamin keandalan pengujian tanpa bergantung pada koneksi internet eksternal (11/11 tests passed).
+
+## Tampilan Keterangan Acara / Hari Libur di Sel Kalender
+
+- Menambahkan sub-elemen `.cell-desc` untuk menampilkan keterangan hari libur atau alasan penanggalan khusus langsung di bawah jam kerja pada setiap sel tanggal di kalender.
+- Mengatur style CSS `.cell-desc` dengan visual tag berlatar belakang transparan tipis berwarna tematik (merah untuk libur, biru untuk tanggal khusus, hijau untuk override hari) agar terlihat rapi dan tidak merusak estetika tata letak.
+- Memisahkan status utama jam kerja (`Libur` / `Jam Masuk - Pulang`) dari kolom `keterangan` di JavaScript agar tampilan sel tanggal bersih, konsisten, dan mudah dipahami.
+
+## Fitur Pagination pada Tabel Tanggal Khusus / Libur
+
+- Menambahkan fitur **pagination sisi klien** (client-side pagination) pada tabel data Tanggal Khusus / Libur dengan batas maksimum **5 baris per halaman**.
+- Menyematkan elemen kontrol pagination (`table-pagination-controls`) yang menampilkan keterangan halaman yang aktif (misal: *Menampilkan 1 - 5 dari 12 data*) beserta tombol navigasi **Sebelumnya** dan **Berikutnya**.
+- Logika JavaScript pagination otomatis menyembunyikan kontainer kontrol navigasi jika jumlah total data kurang dari atau sama dengan 5 baris, serta melakukan disable tombol navigasi di halaman pertama dan terakhir secara dinamis dengan visual opacity `0.5` dan cursor `not-allowed`.
+
+## Tombol Generator Password Otomatis Acak pada Tambah Peserta
+
+- Mengganti sistem pemilihan radio button yang kompleks dengan satu input field password tunggal yang fleksibel.
+- Menambahkan **tombol generator bertuliskan 'Auto'** (text button) di samping input password.
+- Menulis algoritma acak (`generateRandomPassword()`) pada [super_admin_peserta.js](file:///c:/laragon/www/AbsenDJJ/resources/js/super_admin_peserta.js) yang memadukan karakter dari NIP & Nama secara acak/scrambled:
+  - **Panjang acak**: berkisar antara **8 hingga 10 karakter** untuk password otomatis.
+  - **Panjang manual**: minimal 8 karakter dan maksimal bebas.
+  - **Format aman**: menjamin kombinasi huruf besar, huruf kecil, angka, dan karakter underscore (`_`), serta menyaring/melarang karakter spesial lainnya.
+- Menampilkan SweetAlert2 dialog pop-up yang informatif ketika tombol generator 'Auto' diklik untuk memberitahukan password baru yang terbentuk dan langsung mengisi isian password secara otomatis.
+- Memperkecil lebar tampilan input field password di modal Tambah Peserta (dari semula satu baris penuh `span 2` menjadi setengah baris `1 column`) agar sejajar dan seragam dengan isian data peserta lainnya.
+
+## Perluasan Fitur Auto-Generate Password pada Reset Peserta & Kelola Pembimbing
+
+- **Reset Password Peserta**: Menambahkan tombol **Auto** di modal Reset Password Peserta yang otomatis menghasilkan password acak (8-10 karakter) berdasarkan dataset NIP & Nama peserta aktif dan mengisi kolom Password Baru serta Konfirmasi Password secara bersamaan.
+- **Tambah Pembimbing**: Menambahkan tombol **Auto** dengan posisi lebar penuh (sepanjang input no telepon) dan tombol pendukung di bawah input password pada modal Tambah Pembimbing ([super_admin_pembimbing.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/super_admin_pembimbing.blade.php)).
+- **Reset Password Pembimbing**: Menambahkan tombol **Auto** di modal Reset Password Pembimbing yang mengisi kolom Password Baru & Konfirmasi secara otomatis dengan password acak aman (8-10 karakter).
+- Melengkapi berkas JavaScript [super_admin_pembimbing.js](file:///c:/laragon/www/AbsenDJJ/resources/js/super_admin_pembimbing.js) dengan algoritma generator password acak berbasis NIP & Nama untuk mendukung pembimbing baru maupun proses reset.
+
+
+
+
+

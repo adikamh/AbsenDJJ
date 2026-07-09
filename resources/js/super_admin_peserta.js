@@ -136,6 +136,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (resetPasswordPesertaForm) {
                 resetPasswordPesertaForm.action = actionTemplate.replace('__ID__', button.dataset.id);
                 resetPasswordPesertaForm.reset();
+                resetPasswordPesertaForm.dataset.nip = button.dataset.nip || '';
+                resetPasswordPesertaForm.dataset.name = button.dataset.name || '';
             }
 
             setValue('reset_id', button.dataset.id);
@@ -559,4 +561,148 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize table
     filterTable();
+
+    // ===== Password Generator Action =====
+    const nipInput = document.getElementById('nip');
+    const nameInput = document.getElementById('nama_lengkap');
+    const passwordInput = document.getElementById('password');
+    const btnGeneratePassword = document.getElementById('btn-generate-password');
+
+    function generateRandomPassword() {
+        const nipVal = (nipInput ? nipInput.value.trim() : '').replace(/[^0-9]/g, '');
+        const nameVal = (nameInput ? nameInput.value.trim() : '').replace(/[^a-zA-Z]/g, '');
+        
+        // 1. Determine target length L (8, 9, or 10)
+        const L = Math.floor(Math.random() * 3) + 8;
+        
+        // 2. Select uppercase char
+        const uppers = nameVal.replace(/[^A-Z]/g, '');
+        const charUpper = uppers.length > 0 ? uppers[Math.floor(Math.random() * uppers.length)] : String.fromCharCode(65 + Math.floor(Math.random() * 26));
+        
+        // 3. Select lowercase char
+        const lowers = nameVal.replace(/[^a-z]/g, '');
+        const charLower = lowers.length > 0 ? lowers[Math.floor(Math.random() * lowers.length)] : String.fromCharCode(97 + Math.floor(Math.random() * 26));
+        
+        // 4. Select digit
+        const charDigit = nipVal.length > 0 ? nipVal[Math.floor(Math.random() * nipVal.length)] : String.fromCharCode(48 + Math.floor(Math.random() * 10));
+        
+        // 5. Underscore
+        const charUnderscore = '_';
+        
+        // 6. Build initial array
+        let pwdArr = [charUpper, charLower, charDigit, charUnderscore];
+        
+        // 7. Pool of characters to draw from (Name, NIP, and basic alphanumeric pool)
+        let pool = nameVal + nipVal + 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_';
+        
+        while (pwdArr.length < L) {
+            const randChar = pool[Math.floor(Math.random() * pool.length)];
+            pwdArr.push(randChar);
+        }
+        
+        // 8. Shuffle
+        for (let i = pwdArr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [pwdArr[i], pwdArr[j]] = [pwdArr[j], pwdArr[i]];
+        }
+        
+        return pwdArr.join('');
+    }
+
+    btnGeneratePassword?.addEventListener('click', () => {
+        if (!passwordInput) return;
+        
+        // Generate and set password
+        const pwd = generateRandomPassword();
+        passwordInput.value = pwd;
+        
+        // Switch to text view so user can read the password
+        passwordInput.type = 'text';
+        if (toggleAddPesertaPassword) {
+            toggleAddPesertaPassword.textContent = 'Sembunyikan';
+        }
+        
+        if (window.Swal) {
+            window.Swal.fire({
+                background: document.documentElement.getAttribute('data-theme') === 'light' ? '#ffffff' : '#1e293b',
+                color: document.documentElement.getAttribute('data-theme') === 'light' ? '#0f172a' : '#f8fafc',
+                confirmButtonColor: '#2e4085',
+                icon: 'success',
+                title: 'Password Dibuat!',
+                html: `Password acak telah dibuat:<br><strong style="font-family: monospace; font-size: 1.2rem; color: var(--accent-primary); letter-spacing: 2px;">${pwd}</strong>`,
+                timer: 4000,
+                showConfirmButton: true,
+                confirmButtonText: 'Oke'
+            });
+        }
+    });
+
+    // Make sure password input is required
+    if (passwordInput) {
+        passwordInput.required = true;
+    }
+
+    // ===== Reset Password Generator Action =====
+    const btnGenerateResetPassword = document.getElementById('btn-generate-reset-password');
+    const resetPasswordInput = document.getElementById('reset_password');
+    const resetPasswordConfirmInput = document.getElementById('reset_password_confirmation');
+    const toggleResetPasswordBtn = document.getElementById('toggle-reset-peserta-password');
+    const resetPasswordFormEl = document.getElementById('reset-password-peserta-form');
+
+    btnGenerateResetPassword?.addEventListener('click', () => {
+        if (!resetPasswordInput || !resetPasswordConfirmInput) return;
+        
+        const nipVal = (resetPasswordFormEl?.dataset.nip || '').replace(/[^0-9]/g, '');
+        const nameVal = (resetPasswordFormEl?.dataset.name || '').replace(/[^a-zA-Z]/g, '');
+        
+        const L = Math.floor(Math.random() * 3) + 8;
+        
+        const uppers = nameVal.replace(/[^A-Z]/g, '');
+        const charUpper = uppers.length > 0 ? uppers[Math.floor(Math.random() * uppers.length)] : String.fromCharCode(65 + Math.floor(Math.random() * 26));
+        
+        const lowers = nameVal.replace(/[^a-z]/g, '');
+        const charLower = lowers.length > 0 ? lowers[Math.floor(Math.random() * lowers.length)] : String.fromCharCode(97 + Math.floor(Math.random() * 26));
+        
+        const charDigit = nipVal.length > 0 ? nipVal[Math.floor(Math.random() * nipVal.length)] : String.fromCharCode(48 + Math.floor(Math.random() * 10));
+        
+        const charUnderscore = '_';
+        
+        let pwdArr = [charUpper, charLower, charDigit, charUnderscore];
+        
+        let pool = nameVal + nipVal + 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_';
+        
+        while (pwdArr.length < L) {
+            const randChar = pool[Math.floor(Math.random() * pool.length)];
+            pwdArr.push(randChar);
+        }
+        
+        for (let i = pwdArr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [pwdArr[i], pwdArr[j]] = [pwdArr[j], pwdArr[i]];
+        }
+        
+        const pwd = pwdArr.join('');
+        resetPasswordInput.value = pwd;
+        resetPasswordConfirmInput.value = pwd;
+        
+        resetPasswordInput.type = 'text';
+        resetPasswordConfirmInput.type = 'text';
+        if (toggleResetPasswordBtn) {
+            toggleResetPasswordBtn.textContent = 'Sembunyikan';
+        }
+        
+        if (window.Swal) {
+            window.Swal.fire({
+                background: document.documentElement.getAttribute('data-theme') === 'light' ? '#ffffff' : '#1e293b',
+                color: document.documentElement.getAttribute('data-theme') === 'light' ? '#0f172a' : '#f8fafc',
+                confirmButtonColor: '#2e4085',
+                icon: 'success',
+                title: 'Password Dibuat!',
+                html: `Password baru acak telah dibuat:<br><strong style="font-family: monospace; font-size: 1.2rem; color: var(--accent-primary); letter-spacing: 2px;">${pwd}</strong>`,
+                timer: 4000,
+                showConfirmButton: true,
+                confirmButtonText: 'Oke'
+            });
+        }
+    });
 });

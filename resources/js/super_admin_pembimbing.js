@@ -121,6 +121,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (resetPasswordPembimbingForm) {
                 resetPasswordPembimbingForm.action = actionTemplate.replace('__ID__', button.dataset.id);
                 resetPasswordPembimbingForm.reset();
+                resetPasswordPembimbingForm.dataset.nip = button.dataset.nip || '';
+                resetPasswordPembimbingForm.dataset.name = button.dataset.name || '';
             }
 
             setValue('reset_id', button.dataset.id);
@@ -421,4 +423,104 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize table
     filterTable();
+
+    // ===== Password Generator Action =====
+    const nipInput = document.getElementById('nip');
+    const nameInput = document.getElementById('nama_lengkap');
+    const btnGeneratePassword = document.getElementById('btn-generate-pembimbing-password');
+
+    function generateRandomPassword(nipValRaw, nameValRaw) {
+        const nipVal = (nipValRaw || '').replace(/[^0-9]/g, '');
+        const nameVal = (nameValRaw || '').replace(/[^a-zA-Z]/g, '');
+        
+        const L = Math.floor(Math.random() * 3) + 8;
+        
+        const uppers = nameVal.replace(/[^A-Z]/g, '');
+        const charUpper = uppers.length > 0 ? uppers[Math.floor(Math.random() * uppers.length)] : String.fromCharCode(65 + Math.floor(Math.random() * 26));
+        
+        const lowers = nameVal.replace(/[^a-z]/g, '');
+        const charLower = lowers.length > 0 ? lowers[Math.floor(Math.random() * lowers.length)] : String.fromCharCode(97 + Math.floor(Math.random() * 26));
+        
+        const charDigit = nipVal.length > 0 ? nipVal[Math.floor(Math.random() * nipVal.length)] : String.fromCharCode(48 + Math.floor(Math.random() * 10));
+        
+        const charUnderscore = '_';
+        
+        let pwdArr = [charUpper, charLower, charDigit, charUnderscore];
+        
+        let pool = nameVal + nipVal + 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_';
+        
+        while (pwdArr.length < L) {
+            const randChar = pool[Math.floor(Math.random() * pool.length)];
+            pwdArr.push(randChar);
+        }
+        
+        for (let i = pwdArr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [pwdArr[i], pwdArr[j]] = [pwdArr[j], pwdArr[i]];
+        }
+        
+        return pwdArr.join('');
+    }
+
+    btnGeneratePassword?.addEventListener('click', () => {
+        if (!addPembimbingPassword) return;
+        
+        const pwd = generateRandomPassword(nipInput?.value || '', nameInput?.value || '');
+        addPembimbingPassword.value = pwd;
+        addPembimbingPassword.type = 'text';
+        
+        if (toggleAddPembimbingPassword) {
+            toggleAddPembimbingPassword.textContent = 'Sembunyikan';
+        }
+        
+        if (window.Swal) {
+            window.Swal.fire({
+                background: document.documentElement.getAttribute('data-theme') === 'light' ? '#ffffff' : '#1e293b',
+                color: document.documentElement.getAttribute('data-theme') === 'light' ? '#0f172a' : '#f8fafc',
+                confirmButtonColor: '#2e4085',
+                icon: 'success',
+                title: 'Password Dibuat!',
+                html: `Password acak telah dibuat:<br><strong style="font-family: monospace; font-size: 1.2rem; color: var(--accent-primary); letter-spacing: 2px;">${pwd}</strong>`,
+                timer: 4000,
+                showConfirmButton: true,
+                confirmButtonText: 'Oke'
+            });
+        }
+    });
+
+    if (addPembimbingPassword) {
+        addPembimbingPassword.required = true;
+    }
+
+    // ===== Reset Password Generator Action =====
+    const btnGenerateResetPassword = document.getElementById('btn-generate-pembimbing-reset-password');
+    const resetPasswordFormEl = document.getElementById('reset-password-pembimbing-form');
+
+    btnGenerateResetPassword?.addEventListener('click', () => {
+        if (!resetPembimbingPassword || !resetPembimbingPasswordConfirmation) return;
+        
+        const pwd = generateRandomPassword(resetPasswordFormEl?.dataset.nip || '', resetPasswordFormEl?.dataset.name || '');
+        resetPembimbingPassword.value = pwd;
+        resetPembimbingPasswordConfirmation.value = pwd;
+        
+        resetPembimbingPassword.type = 'text';
+        resetPembimbingPasswordConfirmation.type = 'text';
+        if (toggleResetPembimbingPassword) {
+            toggleResetPembimbingPassword.textContent = 'Sembunyikan';
+        }
+        
+        if (window.Swal) {
+            window.Swal.fire({
+                background: document.documentElement.getAttribute('data-theme') === 'light' ? '#ffffff' : '#1e293b',
+                color: document.documentElement.getAttribute('data-theme') === 'light' ? '#0f172a' : '#f8fafc',
+                confirmButtonColor: '#2e4085',
+                icon: 'success',
+                title: 'Password Dibuat!',
+                html: `Password baru acak telah dibuat:<br><strong style="font-family: monospace; font-size: 1.2rem; color: var(--accent-primary); letter-spacing: 2px;">${pwd}</strong>`,
+                timer: 4000,
+                showConfirmButton: true,
+                confirmButtonText: 'Oke'
+            });
+        }
+    });
 });

@@ -109,6 +109,7 @@
                                         data-action="reset-password-peserta"
                                         data-id="{{ $user->id }}"
                                         data-name="{{ $user->nama_lengkap }}"
+                                        data-nip="{{ $user->nip }}"
                                         aria-label="Reset password {{ $user->nama_lengkap }}"
                                         title="Reset Password"
                                     >
@@ -211,12 +212,16 @@
 
                     <div class="form-group">
                         <label for="password">Password</label>
-                        <div class="password-field">
-                            <input type="password" id="password" name="password" minlength="8" required>
-                            <button type="button" class="password-toggle" id="toggle-add-peserta-password">
+                        <input type="password" id="password" name="password" minlength="8" required style="width: 100%; padding: 10px 14px; border-radius: 8px;">
+                        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px;">
+                            <button type="button" id="btn-generate-password" class="btn-secondary" style="padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600;" title="Buat Password Otomatis">
+                                Auto
+                            </button>
+                            <button type="button" id="toggle-add-peserta-password" class="password-toggle" style="padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600; white-space: nowrap; font-family: inherit; font-style: normal; border: 1px solid var(--glass-border); background: rgba(148, 163, 184, 0.14); color: var(--text-primary);">
                                 Tampilkan
                             </button>
                         </div>
+                        <span style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px; display: block;">Masukkan minimal 8 karakter (bebas) atau klik tombol **Auto** untuk membuat password otomatis acak (8-10 karakter dari NIP & Nama).</span>
                         @error('password', 'storePeserta')
                             <span class="form-error">{{ $message }}</span>
                         @enderror
@@ -526,9 +531,12 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="reset_password">Password Baru</label>
-                        <div class="password-field">
-                            <input type="password" id="reset_password" name="password" minlength="8" required>
-                            <button type="button" class="password-toggle" id="toggle-reset-peserta-password">
+                        <input type="password" id="reset_password" name="password" minlength="8" required style="width: 100%; padding: 10px 14px; border-radius: 8px;">
+                        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px;">
+                            <button type="button" id="btn-generate-reset-password" class="btn-secondary" style="padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600;" title="Buat Password Otomatis">
+                                Auto
+                            </button>
+                            <button type="button" id="toggle-reset-peserta-password" class="password-toggle" style="padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600; white-space: nowrap; font-family: inherit; font-style: normal; border: 1px solid var(--glass-border); background: rgba(148, 163, 184, 0.14); color: var(--text-primary);">
                                 Tampilkan
                             </button>
                         </div>
@@ -539,7 +547,7 @@
 
                     <div class="form-group">
                         <label for="reset_password_confirmation">Konfirmasi Password</label>
-                        <input type="password" id="reset_password_confirmation" name="password_confirmation" minlength="8" required>
+                        <input type="password" id="reset_password_confirmation" name="password_confirmation" minlength="8" required style="width: 100%; padding: 10px 14px; border-radius: 8px;">
                         @error('password_confirmation', 'resetPesertaPassword')
                             <span class="form-error">{{ $message }}</span>
                         @enderror
