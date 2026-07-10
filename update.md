@@ -358,3 +358,37 @@
 - Memperbarui method `login()` pada [AuthController.php](file:///c:/laragon/www/AbsenDJJ/app/Http/Controllers/AuthController.php) agar menghapus seluruh sesi aktif lainnya di database (tabel `sessions`) bagi akun yang berhasil login (kecuali akun `super_admin`), menyisakan hanya sesi baru yang sedang aktif saat ini.
 - Membuat berkas test feature baru di [AuthSingleSessionTest.php](file:///c:/laragon/www/AbsenDJJ/tests/Feature/AuthSingleSessionTest.php) untuk memverifikasi bahwa login akun pembimbing (admin) secara otomatis menghapus sesi lainnya, sementara akun superadmin tetap dapat mempertahankan beberapa sesi aktif secara bersamaan.
 - Memverifikasi fungsionalitas dengan menjalankan seluruh test suite (`php artisan test`) dan seluruh pengujian (28/28 tests) dinyatakan lulus (*passed*).
+
+## Reorganisasi Struktur Berkas View, JS, dan CSS Berdasarkan Peran Pengguna (Role-Based Reorganization)
+
+- Mengelompokkan seluruh berkas visual (Views), logika client-side (JS), dan stylesheet (CSS) ke dalam subfolder yang terpisah berdasarkan peran pengguna (*super_admin*, *admin*, dan *peserta*):
+  - **Super Admin**:
+    - Views: `dashboard/super_admin/dashboard.blade.php`, `instansi.blade.php`, `pembimbing.blade.php`, `peserta.blade.php`, `settings.blade.php`
+    - JS: `resources/js/super_admin/dashboard.js`, `instansi.js`, `pembimbing.js`, `peserta.js`, `settings.js`
+    - CSS: `resources/css/super_admin/dashboard.css`, `instansi.css`, `pembimbing.css`, `peserta.css`, `settings.css`
+  - **Admin (Pembimbing)**:
+    - Views: `dashboard/admin/dashboard.blade.php`
+    - JS: `resources/js/admin/dashboard.js`
+    - CSS: `resources/css/admin/dashboard.css`
+  - **Peserta**:
+    - Views: `dashboard/peserta/dashboard.blade.php`
+    - JS: `resources/js/peserta/dashboard.js`
+    - CSS: `resources/css/peserta/dashboard.css`
+- Memperbarui [DashboardController.php](file:///c:/laragon/www/AbsenDJJ/app/Http/Controllers/DashboardController.php) untuk memuat berkas Blade menggunakan referensi path subfolder baru (misal: `dashboard.super_admin.dashboard`).
+- Menyesuaikan import `@vite()` pada masing-masing berkas Blade dan mendaftarkan pembaruan entri path aset ke dalam [vite.config.js](file:///c:/laragon/www/AbsenDJJ/vite.config.js).
+- Memvalidasi keberhasilan reorganisasi dengan melakukan build kompilasi produksi (`npm run build`) dan menjalankan seluruh test suite (`php artisan test`) yang mencatatkan 28/28 pengujian lulus (*passed*).
+
+## Modularisasi Controller (Decoupling Monolithic DashboardController)
+
+- Memecah berkas controller monolitik `DashboardController.php` menjadi beberapa controller yang fokus dan terisolasi berdasarkan fitur dan peran pengguna:
+  - **DashboardController**: Berfungsi sebagai router/delegator umum yang meneruskan request `/dashboard` ke controller spesifik sesuai peran user yang login.
+  - **SuperAdmin\DashboardController**: Menangani logic dan visualisasi data statistik dashboard Super Admin.
+  - **SuperAdmin\PembimbingController**: Menangani CRUD, reset password, dan manajemen akun pembimbing (admin).
+  - **SuperAdmin\PesertaController**: Menangani CRUD, reset password, dan manajemen akun peserta magang.
+  - **SuperAdmin\InstansiController**: Menangani manajemen instansi sekolah/perguruan tinggi.
+  - **SuperAdmin\SettingsController**: Menangani pengaturan parameter global, override jadwal, serta sinkronisasi otomatis/manual hari libur nasional.
+  - **Admin\DashboardController**: Menangani dashboard pembimbing dan data anak bimbingan.
+  - **Peserta\DashboardController**: Menangani dashboard peserta magang beserta status absensi hari ini.
+- Memperbarui berkas rute [web.php](file:///c:/laragon/www/AbsenDJJ/routes/web.php) agar menunjuk ke masing-masing controller baru yang sesuai untuk setiap endpoint rute.
+- Memvalidasi keberhasilan modularisasi controller dengan menjalankan seluruh test suite (`php artisan test`) dan seluruh pengujian (28/28 tests) lulus tanpa kendala (*passed*).
+

@@ -26,30 +26,31 @@ Route::post('/cookie-consent', [CookieConsentController::class, 'store'])->name(
 
 // 3. Role-based Specific Route Groups (For RBAC testing & features)
 Route::middleware(['auth', 'role:super_admin'])->prefix('super-admin')->group(function () {
-    Route::get('/users', [DashboardController::class, 'managePembimbing'])->name('super-admin.users');
-    Route::get('/pembimbing', [DashboardController::class, 'managePembimbing'])->name('super-admin.pembimbing');
-    Route::post('/pembimbing', [DashboardController::class, 'storePembimbing'])->name('super-admin.pembimbing.store');
-    Route::put('/pembimbing/{pembimbing}/reset-password', [DashboardController::class, 'resetPembimbingPassword'])->name('super-admin.pembimbing.reset-password');
-    Route::put('/pembimbing/{pembimbing}', [DashboardController::class, 'updatePembimbing'])->name('super-admin.pembimbing.update');
-    Route::delete('/pembimbing/{pembimbing}', [DashboardController::class, 'destroyPembimbing'])->name('super-admin.pembimbing.destroy');
-    Route::get('/peserta', [DashboardController::class, 'managePeserta'])->name('super-admin.peserta');
-    Route::post('/peserta', [DashboardController::class, 'storePeserta'])->name('super-admin.peserta.store');
-    Route::put('/peserta/{peserta}/reset-password', [DashboardController::class, 'resetPesertaPassword'])->name('super-admin.peserta.reset-password');
-    Route::put('/peserta/{peserta}', [DashboardController::class, 'updatePeserta'])->name('super-admin.peserta.update');
-    Route::delete('/peserta/{peserta}', [DashboardController::class, 'destroyPeserta'])->name('super-admin.peserta.destroy');
+    Route::get('/users', [\App\Http\Controllers\SuperAdmin\PembimbingController::class, 'managePembimbing'])->name('super-admin.users');
+    Route::get('/pembimbing', [\App\Http\Controllers\SuperAdmin\PembimbingController::class, 'managePembimbing'])->name('super-admin.pembimbing');
+    Route::post('/pembimbing', [\App\Http\Controllers\SuperAdmin\PembimbingController::class, 'storePembimbing'])->name('super-admin.pembimbing.store');
+    Route::put('/pembimbing/{pembimbing}/reset-password', [\App\Http\Controllers\SuperAdmin\PembimbingController::class, 'resetPembimbingPassword'])->name('super-admin.pembimbing.reset-password');
+    Route::put('/pembimbing/{pembimbing}', [\App\Http\Controllers\SuperAdmin\PembimbingController::class, 'updatePembimbing'])->name('super-admin.pembimbing.update');
+    Route::delete('/pembimbing/{pembimbing}', [\App\Http\Controllers\SuperAdmin\PembimbingController::class, 'destroyPembimbing'])->name('super-admin.pembimbing.destroy');
+    
+    Route::get('/peserta', [\App\Http\Controllers\SuperAdmin\PesertaController::class, 'managePeserta'])->name('super-admin.peserta');
+    Route::post('/peserta', [\App\Http\Controllers\SuperAdmin\PesertaController::class, 'storePeserta'])->name('super-admin.peserta.store');
+    Route::put('/peserta/{peserta}/reset-password', [\App\Http\Controllers\SuperAdmin\PesertaController::class, 'resetPesertaPassword'])->name('super-admin.peserta.reset-password');
+    Route::put('/peserta/{peserta}', [\App\Http\Controllers\SuperAdmin\PesertaController::class, 'updatePeserta'])->name('super-admin.peserta.update');
+    Route::delete('/peserta/{peserta}', [\App\Http\Controllers\SuperAdmin\PesertaController::class, 'destroyPeserta'])->name('super-admin.peserta.destroy');
 
-    Route::get('/instansi', [DashboardController::class, 'manageInstansi'])->name('super-admin.instansi');
-    Route::post('/instansi', [DashboardController::class, 'storeInstansi'])->name('super-admin.instansi.store');
-    Route::put('/instansi/{instansi}', [DashboardController::class, 'updateInstansi'])->name('super-admin.instansi.update');
-    Route::delete('/instansi/{instansi}', [DashboardController::class, 'destroyInstansi'])->name('super-admin.instansi.destroy');
+    Route::get('/instansi', [\App\Http\Controllers\SuperAdmin\InstansiController::class, 'manageInstansi'])->name('super-admin.instansi');
+    Route::post('/instansi', [\App\Http\Controllers\SuperAdmin\InstansiController::class, 'storeInstansi'])->name('super-admin.instansi.store');
+    Route::put('/instansi/{instansi}', [\App\Http\Controllers\SuperAdmin\InstansiController::class, 'updateInstansi'])->name('super-admin.instansi.update');
+    Route::delete('/instansi/{instansi}', [\App\Http\Controllers\SuperAdmin\InstansiController::class, 'destroyInstansi'])->name('super-admin.instansi.destroy');
 
-    Route::get('/settings', [DashboardController::class, 'editSettings'])->name('super-admin.settings');
-    Route::put('/settings', [DashboardController::class, 'updateSettings'])->name('super-admin.settings.update');
+    Route::get('/settings', [\App\Http\Controllers\SuperAdmin\SettingsController::class, 'editSettings'])->name('super-admin.settings');
+    Route::put('/settings', [\App\Http\Controllers\SuperAdmin\SettingsController::class, 'updateSettings'])->name('super-admin.settings.update');
 
-    Route::post('/schedules', [DashboardController::class, 'storeScheduleOverride'])->name('super-admin.schedules.store');
-    Route::post('/schedules/sync-holidays', [DashboardController::class, 'syncHolidays'])->name('super-admin.schedules.sync-holidays');
-    Route::put('/schedules/{schedule}', [DashboardController::class, 'updateScheduleOverride'])->name('super-admin.schedules.update');
-    Route::delete('/schedules/{schedule}', [DashboardController::class, 'destroyScheduleOverride'])->name('super-admin.schedules.destroy');
+    Route::post('/schedules', [\App\Http\Controllers\SuperAdmin\SettingsController::class, 'storeScheduleOverride'])->name('super-admin.schedules.store');
+    Route::post('/schedules/sync-holidays', [\App\Http\Controllers\SuperAdmin\SettingsController::class, 'syncHolidays'])->name('super-admin.schedules.sync-holidays');
+    Route::put('/schedules/{schedule}', [\App\Http\Controllers\SuperAdmin\SettingsController::class, 'updateScheduleOverride'])->name('super-admin.schedules.update');
+    Route::delete('/schedules/{schedule}', [\App\Http\Controllers\SuperAdmin\SettingsController::class, 'destroyScheduleOverride'])->name('super-admin.schedules.destroy');
 });
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {

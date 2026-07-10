@@ -4,7 +4,7 @@
 @section('header_title', 'Kelola Instansi')
 
 @push('styles')
-    @vite('resources/css/super_admin_instansi.css')
+    @vite('resources/css/super_admin/instansi.css')
 @endpush
 
 @section('content')
@@ -234,5 +234,5 @@
 @endsection
 
 @push('scripts')
-    @vite('resources/js/super_admin_instansi.js')
+    @vite('resources/js/super_admin/instansi.js')
 @endpush

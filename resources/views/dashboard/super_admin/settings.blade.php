@@ -5,7 +5,7 @@
 
 @push('styles')
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-    @vite('resources/css/super_admin_settings.css')
+    @vite('resources/css/super_admin/settings.css')
 @endpush
 
 @section('content')
@@ -539,5 +539,5 @@
             csrfToken: "{{ csrf_token() }}"
         };
     </script>
-    @vite('resources/js/super_admin_settings.js')
+    @vite('resources/js/super_admin/settings.js')
 @endpush
