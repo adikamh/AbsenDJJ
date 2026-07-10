@@ -334,7 +334,27 @@
 - **Reset Password Pembimbing**: Menambahkan tombol **Auto** di modal Reset Password Pembimbing yang mengisi kolom Password Baru & Konfirmasi secara otomatis dengan password acak aman (8-10 karakter).
 - Melengkapi berkas JavaScript [super_admin_pembimbing.js](file:///c:/laragon/www/AbsenDJJ/resources/js/super_admin_pembimbing.js) dengan algoritma generator password acak berbasis NIP & Nama untuk mendukung pembimbing baru maupun proses reset.
 
+## Pemisahan Aset CSS & JS Halaman Pengaturan (System Settings)
 
+- Memisahkan seluruh logika JavaScript dari berkas Blade [super_admin_settings.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/super_admin_settings.blade.php) ke berkas JavaScript eksternal [super_admin_settings.js](file:///c:/laragon/www/AbsenDJJ/resources/js/super_admin_settings.js).
+- Menyediakan objek konfigurasi global `window.settingsConfig` pada berkas Blade untuk mengalirkan data parameter default (`jam_masuk`, `jam_pulang`, `batas_keterlambatan`), data overrides (`dayOverrides`, `dateOverrides`), rute penyimpanan/sync, dan token CSRF ke berkas JS eksternal.
+- Berkas stylesheet pendukung [super_admin_settings.css](file:///c:/laragon/www/AbsenDJJ/resources/css/super_admin_settings.css) sudah terpisah sebelumnya, sehingga aset CSS dan JS halaman pengaturan kini sepenuhnya terisolasi dari berkas Blade.
+- Mendaftarkan berkas JavaScript baru tersebut ke [vite.config.js](file:///c:/laragon/www/AbsenDJJ/vite.config.js) untuk mendukung proses kompilasi otomatis menggunakan Vite.
+- Memverifikasi keberhasilan integrasi aset dengan menjalankan unit test pada `SuperAdminSettingsTest` dan seluruh pengujian (11/11 tests) dinyatakan berhasil (*passed*).
+- Mengimplementasikan alur impor hari libur nasional secara otomatis (pada pemanggilan halaman pengaturan) untuk tahun berjalan saat ini beserta tahun berikutnya (misalnya: 2026 dan 2027) tanpa memerlukan aksi manual atau penekanan tombol oleh pengguna.
+- Menambahkan method pembantu `performSyncHolidaysForYear()` di [DashboardController.php](file:///c:/laragon/www/AbsenDJJ/app/Http/Controllers/DashboardController.php) untuk secara senyap mengunduh data hari libur dari API publik dengan limitasi timeout, mendeteksi duplikasi, dan mengisinya ke tabel `work_schedules`.
+- Menghapus tombol **Import Hari Libur** dari tampilan visual [super_admin_settings.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/super_admin_settings.blade.php) serta menghapus *event listener* terkait dari [super_admin_settings.js](file:///c:/laragon/www/AbsenDJJ/resources/js/super_admin_settings.js) karena sinkronisasi kini sepenuhnya berjalan di latar belakang secara transparan.
+- Memperbarui berkas pengujian [SuperAdminSettingsTest.php](file:///c:/laragon/www/AbsenDJJ/tests/Feature/SuperAdminSettingsTest.php) dengan menyematkan `Http::fake()` pada method `setUp()` guna memastikan seluruh skenario pengujian unit settings berjalan secara luring dan cepat tanpa melakukan koneksi jaringan nyata.
 
+## Validasi Status Aktif pada Autentikasi Login
 
+- Memperbarui method `login()` pada [AuthController.php](file:///c:/laragon/www/AbsenDJJ/app/Http/Controllers/AuthController.php) agar memeriksa nilai kolom `status_aktif` setelah proses autentikasi kredensial pengguna berhasil. Jika akun dalam status nonaktif (`status_aktif = false`), sistem secara otomatis mengeluarkan user, mengembalikan token sesi baru, meningkatkan hit rate limit login, dan melempar eksepsi validasi berisi pesan kesalahan *"Akun Anda dinonaktifkan. Silakan hubungi administrator."*.
+- Membuat berkas test feature baru di [AuthLoginStatusTest.php](file:///c:/laragon/www/AbsenDJJ/tests/Feature/AuthLoginStatusTest.php) untuk secara komprehensif menguji keberhasilan login bagi akun pembimbing dan peserta yang berstatus aktif, serta penolakan login bagi akun yang dinonaktifkan.
+- Memperbarui berkas [login.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/auth/login.blade.php) untuk mengimpor pustaka SweetAlert2 dan menampilkan pop-up alert kesalahan interaktif saat akun yang dinonaktifkan mencoba untuk melakukan login, serta menyembunyikan banner kesalahan default untuk kasus deaktif ini demi menjaga estetika antarmuka.
+- Memverifikasi fungsionalitas dengan menjalankan seluruh test suite (`php artisan test`) dan 26/26 pengujian dinyatakan lulus (*passed*).
 
+## Batasan Login Satu Perangkat (Single Session per Account)
+
+- Memperbarui method `login()` pada [AuthController.php](file:///c:/laragon/www/AbsenDJJ/app/Http/Controllers/AuthController.php) agar menghapus seluruh sesi aktif lainnya di database (tabel `sessions`) bagi akun yang berhasil login (kecuali akun `super_admin`), menyisakan hanya sesi baru yang sedang aktif saat ini.
+- Membuat berkas test feature baru di [AuthSingleSessionTest.php](file:///c:/laragon/www/AbsenDJJ/tests/Feature/AuthSingleSessionTest.php) untuk memverifikasi bahwa login akun pembimbing (admin) secara otomatis menghapus sesi lainnya, sementara akun superadmin tetap dapat mempertahankan beberapa sesi aktif secara bersamaan.
+- Memverifikasi fungsionalitas dengan menjalankan seluruh test suite (`php artisan test`) dan seluruh pengujian (28/28 tests) dinyatakan lulus (*passed*).

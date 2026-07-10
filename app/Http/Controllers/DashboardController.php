@@ -539,10 +539,68 @@ class DashboardController extends Controller
     public function editSettings()
     {
         $settings = app(\App\Settings\GeneralSettings::class);
+
+        // Auto sync current and next year holidays if missing
+        $currentYear = now()->year;
+        $nextYear = $currentYear + 1;
+
+        $hasHolidaysCurrent = \App\Models\WorkSchedule::where('type', 'date')
+            ->where('is_holiday', true)
+            ->whereYear('specific_date', $currentYear)
+            ->exists();
+
+        $hasHolidaysNext = \App\Models\WorkSchedule::where('type', 'date')
+            ->where('is_holiday', true)
+            ->whereYear('specific_date', $nextYear)
+            ->exists();
+
+        if (!$hasHolidaysCurrent) {
+            $this->performSyncHolidaysForYear($currentYear);
+        }
+        if (!$hasHolidaysNext) {
+            $this->performSyncHolidaysForYear($nextYear);
+        }
+
         $dayOverrides = \App\Models\WorkSchedule::where('type', 'day')->get()->keyBy('day_of_week');
         $dateOverrides = \App\Models\WorkSchedule::where('type', 'date')->orderBy('specific_date')->get();
 
         return view('dashboard.super_admin_settings', compact('settings', 'dayOverrides', 'dateOverrides'));
+    }
+
+    /**
+     * Helper to sync holidays for a given year silently.
+     */
+    private function performSyncHolidaysForYear($year)
+    {
+        try {
+            $response = \Illuminate\Support\Facades\Http::timeout(3)->get("https://api-hari-libur.vercel.app/api?year={$year}");
+
+            if ($response->successful()) {
+                $body = $response->json();
+                if (isset($body['status']) && $body['status'] === 'success' && isset($body['data'])) {
+                    $holidays = $body['data'];
+                    foreach ($holidays as $holiday) {
+                        $dateStr = $holiday['date'];
+                        $desc = $holiday['description'];
+
+                        $exists = \App\Models\WorkSchedule::where('type', 'date')
+                            ->where('specific_date', $dateStr)
+                            ->exists();
+
+                        if (!$exists) {
+                            \App\Models\WorkSchedule::create([
+                                'type' => 'date',
+                                'specific_date' => $dateStr,
+                                'is_holiday' => true,
+                                'keterangan' => $desc,
+                            ]);
+                        }
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            // Ignore API failures to ensure settings page loads
+        }
     }
 
     /**
@@ -689,54 +747,69 @@ class DashboardController extends Controller
     public function syncHolidays(Request $request)
     {
         $validated = $request->validate([
-            'year' => ['required', 'integer', 'between:2020,2035'],
+            'year' => ['nullable', 'integer', 'between:2020,2035'],
         ]);
 
-        $year = $validated['year'];
+        $startYear = $validated['year'] ?? now()->year;
+        $yearsToSync = [$startYear, $startYear + 1];
         
-        try {
-            $response = \Illuminate\Support\Facades\Http::get("https://api-hari-libur.vercel.app/api?year={$year}");
+        $importedCount = 0;
+        $successYears = [];
+        $failedYears = [];
 
-            if ($response->failed()) {
-                return redirect()->route('super-admin.settings')
-                    ->with('error', 'Gagal menghubungi API Hari Libur. Silakan coba lagi nanti.');
-            }
+        foreach ($yearsToSync as $year) {
+            try {
+                $response = \Illuminate\Support\Facades\Http::get("https://api-hari-libur.vercel.app/api?year={$year}");
 
-            $body = $response->json();
-            if (!isset($body['status']) || $body['status'] !== 'success' || !isset($body['data'])) {
-                return redirect()->route('super-admin.settings')
-                    ->with('error', 'Format data API Hari Libur tidak valid.');
-            }
-
-            $holidays = $body['data'];
-            $importedCount = 0;
-
-            foreach ($holidays as $holiday) {
-                $dateStr = $holiday['date'];
-                $desc = $holiday['description'];
-
-                // Check duplicate
-                $exists = \App\Models\WorkSchedule::where('type', 'date')
-                    ->where('specific_date', $dateStr)
-                    ->exists();
-
-                if (!$exists) {
-                    \App\Models\WorkSchedule::create([
-                        'type' => 'date',
-                        'specific_date' => $dateStr,
-                        'is_holiday' => true,
-                        'keterangan' => $desc,
-                    ]);
-                    $importedCount++;
+                if ($response->failed()) {
+                    $failedYears[] = $year;
+                    continue;
                 }
-            }
 
-            return redirect()->route('super-admin.settings')
-                ->with('success', "Berhasil mengimpor {$importedCount} hari libur nasional untuk tahun {$year}.");
-        } catch (\Exception $e) {
-            return redirect()->route('super-admin.settings')
-                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+                $body = $response->json();
+                if (!isset($body['status']) || $body['status'] !== 'success' || !isset($body['data'])) {
+                    $failedYears[] = $year;
+                    continue;
+                }
+
+                $holidays = $body['data'];
+                foreach ($holidays as $holiday) {
+                    $dateStr = $holiday['date'];
+                    $desc = $holiday['description'];
+
+                    // Check duplicate
+                    $exists = \App\Models\WorkSchedule::where('type', 'date')
+                        ->where('specific_date', $dateStr)
+                        ->exists();
+
+                    if (!$exists) {
+                        \App\Models\WorkSchedule::create([
+                            'type' => 'date',
+                            'specific_date' => $dateStr,
+                            'is_holiday' => true,
+                            'keterangan' => $desc,
+                        ]);
+                        $importedCount++;
+                    }
+                }
+                $successYears[] = $year;
+            } catch (\Exception $e) {
+                $failedYears[] = $year;
+            }
         }
+
+        if (count($successYears) === 0) {
+            return redirect()->route('super-admin.settings')
+                ->with('error', 'Gagal mengimpor hari libur nasional untuk tahun ' . implode(', ', $failedYears) . '.');
+        }
+
+        $successMsg = "Berhasil mengimpor {$importedCount} hari libur nasional untuk tahun " . implode(' & ', $successYears) . ".";
+        if (count($failedYears) > 0) {
+            $successMsg .= " Namun, gagal untuk tahun " . implode(', ', $failedYears) . ".";
+        }
+
+        return redirect()->route('super-admin.settings')
+            ->with('success', $successMsg);
     }
 }
 
