@@ -60,10 +60,18 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
 });
 
 Route::middleware(['auth', 'role:peserta'])->prefix('peserta')->group(function () {
-    Route::get('/my-attendance', function () {
-        return "Welcome to intern attendance details!";
-    })->name('peserta.attendance');
+    // Absensi & Riwayat
+    Route::get('/my-attendance', [\App\Http\Controllers\Peserta\AttendanceHistoryController::class, 'index'])->name('peserta.attendance');
+    Route::post('/attendance/check-in', [\App\Http\Controllers\AttendanceController::class, 'checkIn'])->name('peserta.attendance.checkin');
+    Route::post('/attendance/check-out', [\App\Http\Controllers\AttendanceController::class, 'checkOut'])->name('peserta.attendance.checkout');
 
-    Route::post('/attendance/check-in', [App\Http\Controllers\AttendanceController::class, 'checkIn'])->name('peserta.attendance.checkin');
-    Route::post('/attendance/check-out', [App\Http\Controllers\AttendanceController::class, 'checkOut'])->name('peserta.attendance.checkout');
+    // Logbook
+    Route::get('/logbook', [\App\Http\Controllers\Peserta\LogbookController::class, 'index'])->name('peserta.logbook');
+    Route::post('/logbook', [\App\Http\Controllers\Peserta\LogbookController::class, 'store'])->name('peserta.logbook.store');
+    Route::put('/logbook/{logbook}', [\App\Http\Controllers\Peserta\LogbookController::class, 'update'])->name('peserta.logbook.update');
+    Route::delete('/logbook/{logbook}', [\App\Http\Controllers\Peserta\LogbookController::class, 'destroy'])->name('peserta.logbook.destroy');
+    Route::get('/logbook/export-pdf', [\App\Http\Controllers\Peserta\LogbookController::class, 'exportPdf'])->name('peserta.logbook.pdf');
+
+    // Izin / Sakit
+    Route::post('/leave-request', [\App\Http\Controllers\Peserta\LeaveRequestController::class, 'store'])->name('peserta.leave.store');
 });

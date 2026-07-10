@@ -87,26 +87,49 @@
     font-weight: bold;
     height: 70px;
     justify-content: center;
-    margin: 0 auto 15px;
+    margin: 0 auto 12px;
     width: 70px;
 }
 
 .supervisor-name {
     font-size: 1rem;
     font-weight: 600;
-    margin-bottom: 5px;
+    margin-bottom: 12px;
 }
 
-.supervisor-email {
+.supervisor-details {
+    width: 100%;
+    text-align: left;
+    border-top: 1px solid var(--glass-border);
+    padding-top: 12px;
+    margin-top: 4px;
+}
+
+.supervisor-detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.supervisor-detail-row:last-child {
+    border-bottom: none;
+}
+
+.supervisor-detail-label {
+    font-size: 0.82rem;
+    font-weight: 600;
     color: var(--text-secondary);
-    font-size: 0.8rem;
+    flex-shrink: 0;
+    min-width: 90px;
 }
 
-.supervisor-organization {
-    color: var(--accent-primary);
-    font-size: 0.75rem;
-    font-weight: 500;
-    margin-top: 10px;
+.supervisor-detail-value {
+    font-size: 0.82rem;
+    color: var(--text-primary);
+    text-align: right;
+    word-break: break-all;
 }
 
 .logbook-description {
@@ -136,13 +159,37 @@
     gap: 12px;
 }
 
-#webcam-video, #selfie-preview {
+.camera-select-input {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+    border-radius: 8px;
+    padding: 8px 12px;
+    outline: none;
+    font-family: inherit;
+    font-size: 0.88rem;
+    cursor: pointer;
     width: 100%;
-    max-width: 280px;
-    border-radius: 16px;
+}
+
+.camera-video-preview {
+    display: none;
+    transform: scaleX(-1);
+    width: 100%;
+    max-width: 240px;
+    border-radius: 12px;
     background: #0f172a;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-    border: 2px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+    border: 2px solid rgba(255, 255, 255, 0.06);
+}
+
+.camera-selfie-result {
+    display: none;
+    max-width: 140px;
+    margin: 8px auto;
+    border-radius: 10px;
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .camera-buttons {
@@ -243,4 +290,14 @@
     padding: 6px 0;
     border-top: 1px solid var(--glass-border);
     margin-top: 4px;
+}
+
+.clickable-selfie {
+    transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.clickable-selfie:hover {
+    transform: scale(1.08);
+    filter: brightness(1.1);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
 }

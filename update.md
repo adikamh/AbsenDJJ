@@ -392,3 +392,148 @@
 - Memperbarui berkas rute [web.php](file:///c:/laragon/www/AbsenDJJ/routes/web.php) agar menunjuk ke masing-masing controller baru yang sesuai untuk setiap endpoint rute.
 - Memvalidasi keberhasilan modularisasi controller dengan menjalankan seluruh test suite (`php artisan test`) dan seluruh pengujian (28/28 tests) lulus tanpa kendala (*passed*).
 
+## Upgrade Dashboard dan Fitur Peserta Magang (Intern)
+
+- **Modul Pencatatan Logbook Kegiatan**:
+  - Mengintegrasikan Modal Popup Tambah Logbook pada dashboard utama peserta magang untuk memasukkan Tanggal, Judul Kegiatan, dan Deskripsi Kegiatan secara langsung.
+  - Membuat halaman khusus baru di `/peserta/logbook` untuk menampilkan seluruh daftar logbook dengan paginasi (10 entri per halaman) serta aksi Edit dan Hapus bagi logbook yang masih berstatus `Pending`.
+  - Membuat layout ekspor logbook cetak di `/peserta/logbook/export-pdf` dengan format KOP Surat resmi Kementerian Pekerjaan Umum dan Perumahan Rakyat (PUPR) yang terintegrasi tombol Cetak (`window.print()`).
+  - Membuat `App\Http\Controllers\Peserta\LogbookController` untuk mengendalikan proses penayangan, penyimpanan, pengubahan, penghapusan, dan ekspor data logbook.
+- **Modul Pengajuan Izin / Sakit**:
+  - Mengintegrasikan Modal Popup Pengajuan Izin/Sakit pada dashboard utama peserta magang untuk memasukkan Tanggal Mulai, Tanggal Selesai, Jenis Pengajuan (Izin / Sakit), Alasan, dan Upload Dokumen Bukti (Surat Dokter / Lampiran).
+  - Membuat `App\Http\Controllers\Peserta\LeaveRequestController` untuk menangani penyimpanan pengajuan izin/sakit beserta upload berkas bukti secara aman ke direktori `public/uploads/leave_proofs/`.
+- **Halaman Visual Riwayat Kehadiran (Attendance Calendar)**:
+  - Mengubah rute halaman `/peserta/my-attendance` yang sebelumnya statis menjadi halaman visualisasi kalender bulanan interaktif.
+  - Setiap sel tanggal pada kalender diberi kode warna sesuai status absensi: Hijau (Hadir), Kuning/Oranye (Terlambat), Biru (Izin/Sakit), Merah (Alfa/Tanpa Keterangan), dan Abu-abu (Hari Libur/Akhir Pekan).
+  - Menghitung statistik akumulatif bulanan (Total Hadir, Terlambat, Izin, Alfa) untuk ditampilkan dalam bentuk widget kartu analitik.
+  - Membuat `App\Http\Controllers\Peserta\AttendanceHistoryController` untuk mengurus rendering data kalender dan statistik kehadiran.
+- **Upgrade Antarmuka Dashboard**:
+  - Menambahkan 3 kartu metrik analitik baru di atas dashboard peserta magang: *Persentase Kehadiran*, *Total Logbook Disetujui*, dan *Izin/Sakit Terpakai*.
+  - Menambahkan menu navigasi sidebar "Logbook Kegiatan" di [layout.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/layout.blade.php) dan menghubungkan "Riwayat Absen" ke halaman kalender baru.
+- **Mendaftarkan Aset ke Vite**:
+  - Mendaftarkan berkas JavaScript baru `resources/js/peserta/logbook.js` ke dalam [vite.config.js](file:///c:/laragon/www/AbsenDJJ/vite.config.js) untuk kompilasi otomatis.
+- **Pengujian Otomatis (Testing)**:
+  - Membuat berkas test feature baru di [PesertaLogbookTest.php](file:///c:/laragon/www/AbsenDJJ/tests/Feature/PesertaLogbookTest.php) untuk memverifikasi fungsionalitas CRUD logbook dan batasan edit/hapus logbook disetujui.
+  - Membuat berkas test feature baru di [PesertaLeaveRequestTest.php](file:///c:/laragon/www/AbsenDJJ/tests/Feature/PesertaLeaveRequestTest.php) untuk memvalidasi alur input form izin, upload berkas bukti, dan validasi rentang tanggal.
+  - Menjalankan seluruh test suite (`php artisan test`) dan seluruh **36/36 pengujian dinyatakan lulus** (*passed*).
+
+## Watermark Kamera Absensi, Geocoding Alamat, dan Peta Lokasi
+
+- **Watermark Logo Kementerian PUPR**:
+  - Menambahkan logo absensi di pojok kiri atas foto selfie (`public/images/Logo/logo_absen.png`) dengan ukuran proporsional (lebar ~45% kanvas) menjaga aspect ratio asli.
+- **Peta Lokasi Mini (Mini Map)**:
+  - Menyematkan peta mini ukuran `140px x 140px` dengan border putih tipis di pojok kiri bawah foto menggunakan Yandex Static Maps API (`https://static-maps.yandex.ru/1.x/`) dengan pin penanda lokasi (`pm2rdm`) berdasarkan GPS peserta secara real-time.
+  - Konfigurasi Yandex API diset `crossOrigin = "anonymous"` agar aman diunduh dan dipasang pada kanvas tanpa memicu SecurityError saat konversi Base64.
+- **Informasi Geocoding Alamat & Waktu**:
+  - Mengintegrasikan Nominatim OpenStreetMap API untuk melakukan reverse geocoding koordinat GPS secara real-time menjadi alamat lengkap (Jalan, Kelurahan/Kecamatan, Kota, Provinsi).
+  - Menggambar kotak informasi semi-transparan (`rgba(15, 23, 42, 0.7)`) dengan sudut membulat (*rounded corners*) di pojok kanan bawah foto untuk menampung teks putih (Tanggal/Waktu, Koordinat Latitude & Longitude, serta Alamat Lengkap) sehingga tulisan tetap kontras dan mudah dibaca di atas latar belakang foto apa pun.
+- **Penanganan Loading & Fallback**:
+  - Mematikan tombol dan mengubah teks menjadi `"Memproses Foto..."` saat asinkronus rendering sedang berlangsung.
+  - Menangani error secara mandiri (*graceful fallback*) sehingga jika koneksi internet terputus atau API maps/geocoding lambat merespon, absensi tetap dapat dilanjutkan dengan data koordinat & timestamp default agar tidak mengganggu operasional pengguna.
+
+## Relokasi dan Pembersihan Kartu Widget Analitik
+
+- **Relokasi Persentase Kehadiran**:
+  - Memindahkan kartu widget analitik "Persentase Kehadiran" dari dashboard utama peserta ke halaman **Riwayat Absen** (`attendance_history.blade.php`).
+  - Memperbarui `AttendanceHistoryController.php` untuk memproses persentase kehadiran kumulatif secara dinamis dan mengalirkannya ke dalam view riwayat absensi.
+- **Relokasi Logbook Disetujui**:
+  - Memindahkan kartu widget analitik "Logbook Disetujui" dari dashboard utama peserta ke halaman **Logbook Kegiatan** (`logbook.blade.php`) di bagian atas daftar tabel.
+  - Memperbarui `LogbookController.php` untuk menghitung berkas logbook berstatus `Approved` milik peserta aktif secara real-time dan mengalirkannya ke view logbook.
+- **Pembersihan Kartu Izin & Sakit (Disetujui)**:
+  - Menghapus kartu widget analitik "Izin & Sakit (Disetujui)" dari dashboard utama peserta magang sesuai instruksi.
+  - Menyederhanakan `DashboardController.php` (Peserta) agar tidak lagi memproses variabel widget yang tidak terpakai sehingga beban query database berkurang dan rendering dashboard menjadi lebih ringan.
+
+## Perbaikan Status Kehadiran Hari Ini pada Dashboard
+
+- **Deteksi Keterlambatan Absen**:
+  - Menyesuaikan visualisasi lencana status pada kartu "Kehadiran Hari Ini" di dashboard utama peserta magang. Jika peserta absen masuk melebihi batas jam kerja hari berjalan yang ditetapkan oleh superadmin, lencana otomatis berubah warna menjadi kuning/oranye dengan keterangan `"Terlambat"`.
+- **Integrasi Status Izin & Sakit**:
+  - Memperbarui `DashboardController.php` (Peserta) untuk memeriksa apakah terdapat pengajuan `LeaveRequest` berstatus `Approved` milik peserta aktif yang mencakup tanggal hari berjalan.
+  - Jika peserta tidak melakukan absen masuk tetapi memiliki surat izin/sakit yang disetujui untuk hari tersebut, kartu "Kehadiran Hari Ini" otomatis menampilkan status `"Izin"` atau `"Sakit"` berwarna biru (`badge-info`) sebagai pengganti teks default `"Belum Absen"`.
+- **Pengujian**:
+  - Menambahkan pengujian unit baru `test_dashboard_displays_today_approved_leave` pada [PesertaLeaveRequestTest.php](file:///c:/laragon/www/AbsenDJJ/tests/Feature/PesertaLeaveRequestTest.php) untuk mengunci keabsahan pemuatan status izin/sakit hari berjalan pada tampilan dashboard utama.
+
+## Jam Masuk & Jam Pulang Berdasarkan Jadwal Kerja
+
+- **Pengambilan Waktu Sesuai Jadwal (Superadmin)**:
+  - Mengubah kartu "Jam Masuk" dan "Jam Pulang" di dashboard peserta agar menampilkan batas jam kerja resmi yang ditetapkan oleh Superadmin untuk hari berjalan.
+  - Alur pembacaan waktu target didasarkan pada prioritasi model `WorkSchedule` (override tanggal khusus atau override hari kerja reguler) dan jika tidak ada override, otomatis menggunakan konfigurasi `GeneralSettings`.
+- **Penanganan Hari Libur / Akhir Pekan**:
+  - Apabila hari berjalan terdeteksi sebagai hari libur (baik berdasarkan kalender libur nasional/khusus yang terdaftar di `WorkSchedule` maupun akhir pekan tanpa jadwal pengganti), kedua kartu jam tersebut otomatis dikosongkan dan menampilkan tanda default (`--:--`) sebagai penanda tidak ada jam wajib hadir pada hari tersebut.
+
+## Tampilan Jam Absen Riil di Samping Jam Jadwal Kerja
+
+- **Informasi Gabungan (Jadwal & Riil)**:
+  - Menyandingkan target jam kerja resmi dengan waktu absen riil peserta di dalam kartu "Jam Masuk" dan "Jam Pulang".
+  - Sebagai contoh, apabila target masuk adalah `08:00` dan peserta absen masuk pukul `07:45`, kartu menampilkan `"08:00 (Absen: 07:45)"`.
+  - Jika peserta belum melakukan absen masuk/pulang, kartu otomatis menampilkan keterangan `(Absen: --:--)` di samping target jam kerja.
+
+## Fitur Pemilih Kamera dan Optimalisasi Ukuran Preview Foto
+
+- **Dropdown Pemilih Kamera (Multiple Cameras)**:
+  - Mengintegrasikan elemen `<select>` dropdown pilihan kamera pada kontrol absen masuk dan absen pulang agar mendukung perangkat handphone yang memiliki lebih dari satu kamera (kamera depan, kamera belakang, wide, dll.).
+  - Menggunakan API `navigator.mediaDevices.enumerateDevices` untuk mendeteksi seluruh perangkat input video yang tersedia secara dinamis dan memicu pembaruan nama kamera secara otomatis setelah izin akses kamera disetujui.
+  - Mengubah stream video secara langsung saat pengguna mengganti pilihan kamera pada dropdown.
+- **Ukuran Preview Foto Selfie yang Ringkas**:
+  - Mengubah tampilan foto selfie hasil potret absensi agar tidak memenuhi layar dengan lebar 100%. Gambar pratinjau selfie (preview) diset berukuran ringkas (`max-width: 160px`) dengan border membulat (*rounded corners*) yang terletak rapi di tengah kontainer.
+
+## Pratinjau Thumbnail Selfie Tersimpan & Modal Popup Pembesaran
+
+- **Thumbnail Foto Tersimpan (80x80px)**:
+  - Menyusun letak foto masuk dan foto pulang yang telah sukses disimpan ke dalam baris berdampingan (`saved-selfies-row`) dengan resolusi mini `80px x 80px`. Hal ini menjaga agar kartu Kontrol Kehadiran Harian tetap padat, responsif, dan tidak melebar secara vertikal.
+  - Menambahkan efek hover `.clickable-selfie:hover` berupa perbesaran skala halus (`scale(1.08)`) dan peningkatan kecerahan agar interaktif.
+- **Popup Modal Pembesaran Foto (Enlarge Selfie Modal)**:
+  - Membuat elemen overlay modal `#selfie-modal` yang memanfaatkan kerangka `.form-modal-backdrop` bawaan sistem agar terlihat menyatu dengan sisa UI lainnya.
+  - Menghubungkan klik thumbnail ke fungsi global `window.showImageModal` untuk menampilkan foto ukuran penuh beserta label keterangan yang sesuai dalam popup modal secara asinkron.
+
+## Integrasi Nama Lokasi Alamat Lengkap pada Panel Kehadiran Utama
+
+- **Penerjemahan Koordinat Menjadi Alamat Jalan**:
+  - Mengintegrasikan Nominatim OpenStreetMap API pada panel utama GPS untuk menerjemahkan koordinat latitude/longitude secara asinkronus menjadi nama jalan dan wilayah administrasi lengkap (Negara/Provinsi/Kota/Kecamatan/Jalan).
+  - Saat memuat halaman atau saat GPS berhasil mengunci koordinat, dashboard akan menampilkan status di bawah koordinat tersebut menggunakan icon SVG penunjuk lokasi (menggantikan penggunaan emoji).
+
+## Perhitungan Jarak Real-Time & Deteksi Zona Radius Kehadiran
+
+- **Parameter Kantor Dinamis**:
+  - Mengalirkan koordinat kantor (`latitude_kantor` dan `longitude_kantor`) serta batas `radius_meter` dari `GeneralSettings` ke dashboard menggunakan atribut data pada elemen HTML.
+- **Kalkulasi Jarak Haversine & Visualisasi Warna**:
+  - Menggunakan rumus Haversine di client-side untuk menghitung jarak presisi (dalam meter) antara koordinat GPS peserta magang dengan koordinat kantor secara dinamis.
+  - Jika posisi peserta berada di dalam batas radius yang diperbolehkan (`distance <= radius`), informasi jarak ditampilkan berwarna hijau (`#34d399`) dengan indikator `"Di dalam zona"` dan ikon centang SVG.
+  - Jika posisi peserta melebihi radius, informasi jarak ditampilkan berwarna merah (`#f87171`) dengan indikator `"Di luar zona"` dan ikon peringatan SVG.
+  - Seluruh emoji dan emotikon pada panel ini telah dihapus sepenuhnya dan digantikan dengan ikon SVG modern.
+
+## Perbaikan Tata Letak Kamera & Foto Tersimpan pada Kartu Kontrol Kehadiran Harian
+
+- **Alur Kamera Terpadu (Buka Kamera → Pilih Kamera → Mulai Kamera)**:
+  - Menggabungkan tombol "Buka Kamera" dan dropdown "Pilih Kamera" menjadi satu alur terpadu. Saat peserta menekan "Buka Kamera", panel pemilih kamera (`#camera-select-wrap` / `#camera-select-out-wrap`) muncul terlebih dahulu beserta daftar perangkat kamera yang terdeteksi. Setelah pengguna memilih kamera dan menekan tombol "Mulai Kamera", baru stream video kamera aktif.
+  - Dropdown pemilih kamera (`select`) disembunyikan secara default (`display: none`) dan hanya ditampilkan saat tombol "Buka Kamera" ditekan, menjaga agar tampilan kartu tetap bersih.
+  - Saat pengguna menekan "Foto Ulang", alur kembali ke panel pemilih kamera agar pengguna dapat mengganti perangkat kamera jika diinginkan.
+- **Ukuran Preview Kamera yang Proporsional**:
+  - Mengatur lebar maksimum video stream preview kamera menjadi `240px` (sebelumnya `280px`) melalui class CSS `.camera-video-preview` agar tidak terlalu besar maupun terlalu kecil, terutama di layar handphone.
+  - Mengatur lebar hasil foto selfie yang sudah dipotret menjadi `140px` melalui class CSS `.camera-selfie-result`.
+- **Foto Masuk & Pulang Bersebelahan**:
+  - Foto check-in dan check-out yang telah tersimpan tetap ditampilkan secara berdampingan (*side-by-side*) menggunakan kontainer `saved-selfies-row` dengan `display: flex` sehingga tidak memanjang ke bawah secara vertikal.
+- **Ikon SVG pada Tombol Kamera**:
+  - Menambahkan ikon kamera SVG di dalam tombol "Buka Kamera" dan "Mulai Kamera" baik untuk absen masuk maupun absen pulang agar tampilan lebih informatif dan konsisten.
+
+## Penyempurnaan Kartu Informasi Pembimbing Lapangan
+
+- **Informasi Pembimbing Lengkap**:
+  - Memperluas kartu "Pembimbing Lapangan" pada dashboard peserta dari hanya menampilkan nama, email, dan instansi menjadi menampilkan informasi lengkap secara terstruktur: NIP, Email, No. Telepon, Instansi, dan Status (Aktif/Nonaktif).
+  - Data Alamat dan Password sengaja tidak ditampilkan sesuai permintaan.
+  - Menggunakan tata letak baris detail (`.supervisor-detail-row`) dengan label di kiri dan nilai di kanan untuk keterbacaan yang rapi dan responsif.
+  - Status pembimbing ditampilkan menggunakan badge berwarna hijau (Aktif) atau merah (Nonaktif).
+  - Jika pembimbing belum ditugaskan, kartu menampilkan pesan fallback "Pembimbing belum ditugaskan."
+
+
+
+
+
+
+
+
+
+
+
+
+
