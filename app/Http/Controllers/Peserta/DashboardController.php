@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Peserta;
 
 use App\Http\Controllers\Controller;
+use App\Models\WorkSchedule;
 use App\Models\User;
 use App\Models\Logbook;
 use App\Models\LeaveRequest;
@@ -30,10 +31,49 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
+        $todayLeave = LeaveRequest::where('user_id', $user->id)
+            ->where('status_approval', 'Approved')
+            ->whereDate('tanggal_mulai', '<=', Carbon::today())
+            ->whereDate('tanggal_selesai', '>=', Carbon::today())
+            ->first();
+
+        // Calculate target schedule hours for today
+        $now = Carbon::now();
+        $schedule = WorkSchedule::getScheduleForDate($now);
+        $settings = app(\App\Settings\GeneralSettings::class);
+
+        $isHoliday = false;
+        if ($schedule) {
+            $isHoliday = $schedule->is_holiday;
+        } else {
+            $isHoliday = $now->isWeekend();
+        }
+
+        if ($isHoliday) {
+            $targetJamMasuk = null;
+            $targetJamPulang = null;
+        } else {
+            $jamMasukRaw = ($schedule && $schedule->jam_masuk) ? $schedule->jam_masuk : $settings->jam_masuk;
+            $jamPulangRaw = ($schedule && $schedule->jam_pulang) ? $schedule->jam_pulang : $settings->jam_pulang;
+            
+            $targetJamMasuk = $jamMasukRaw ? Carbon::parse($jamMasukRaw)->format('H:i') : null;
+            $targetJamPulang = $jamPulangRaw ? Carbon::parse($jamPulangRaw)->format('H:i') : null;
+        }
+
+        $officeLat = $settings->latitude_kantor;
+        $officeLng = $settings->longitude_kantor;
+        $officeRadius = $settings->radius_meter;
+
         return view('dashboard.peserta.dashboard', compact(
             'todayAttendance',
             'recentLogbooks',
-            'recentLeaves'
+            'recentLeaves',
+            'todayLeave',
+            'targetJamMasuk',
+            'targetJamPulang',
+            'officeLat',
+            'officeLng',
+            'officeRadius'
         ));
     }
 }

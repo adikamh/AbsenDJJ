@@ -34,6 +34,7 @@ export default defineConfig({
                 // Peserta
                 'resources/css/peserta/dashboard.css',
                 'resources/js/peserta/dashboard.js',
+                'resources/js/peserta/logbook.js',
             ],
             refresh: true,
             fonts: [
