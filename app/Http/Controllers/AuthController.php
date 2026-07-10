@@ -36,9 +36,30 @@ class AuthController extends Controller
         $remember = $request->has('remember');
 
         if (Auth::attempt($credentials, $remember)) {
+            $user = Auth::user();
+            if (!$user->status_aktif) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                RateLimiter::hit($this->throttleKey($request));
+
+                throw ValidationException::withMessages([
+                    'email' => 'Akun Anda dinonaktifkan. Silakan hubungi administrator.',
+                ]);
+            }
+
             RateLimiter::clear($this->throttleKey($request));
 
             $request->session()->regenerate();
+
+            // Invalidate other sessions for non-super_admin accounts
+            if (!$user->isSuperAdmin()) {
+                \Illuminate\Support\Facades\DB::table('sessions')
+                    ->where('user_id', $user->id)
+                    ->where('id', '!=', $request->session()->getId())
+                    ->delete();
+            }
 
             return redirect()->intended(route('dashboard'));
         }

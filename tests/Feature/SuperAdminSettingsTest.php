@@ -20,6 +20,20 @@ class SuperAdminSettingsTest extends TestCase
     {
         parent::setUp();
 
+        \Illuminate\Support\Facades\Http::fake([
+            'api-hari-libur.vercel.app/*' => \Illuminate\Support\Facades\Http::response([
+                'status' => 'success',
+                'code' => 200,
+                'data' => [
+                    [
+                        'date' => '2026-08-17',
+                        'description' => 'Hari Kemerdekaan RI'
+                    ]
+                ],
+                'message' => 'Holidays Found'
+            ], 200)
+        ]);
+
         // Seed roles
         $roleSuper = Role::create(['nama_role' => 'super_admin']);
         $roleAdmin = Role::create(['nama_role' => 'admin']);

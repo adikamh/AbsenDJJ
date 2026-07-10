@@ -28,6 +28,7 @@ export default defineConfig({
                 'resources/css/super_admin_instansi.css',
                 'resources/js/super_admin_instansi.js',
                 'resources/css/super_admin_settings.css',
+                'resources/js/super_admin_settings.js',
             ],
             refresh: true,
             fonts: [
