@@ -4,7 +4,7 @@
 @section('header_title', 'Kelola Pembimbing')
 
 @push('styles')
-    @vite('resources/css/super_admin_pembimbing.css')
+    @vite('resources/css/super_admin/pembimbing.css')
 @endpush
 
 @section('content')
@@ -471,5 +471,5 @@
 @endsection
 
 @push('scripts')
-    @vite('resources/js/super_admin_pembimbing.js')
+    @vite('resources/js/super_admin/pembimbing.js')
 @endpush

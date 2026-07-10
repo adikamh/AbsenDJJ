@@ -4,11 +4,11 @@
 @section('header_title', 'Dashboard Pembimbing Lapangan')
 
 @push('styles')
-    @vite('resources/css/dashboard-admin.css')
+    @vite('resources/css/admin/dashboard.css')
 @endpush
 
 @push('scripts')
-    @vite('resources/js/dashboard-admin.js')
+    @vite('resources/js/admin/dashboard.js')
 @endpush
 
 @section('content')

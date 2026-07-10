@@ -4,12 +4,12 @@
 @section('header_title', 'Super Admin Overview')
 
 @push('styles')
-    @vite('resources/css/dashboard-super-admin.css')
+    @vite('resources/css/super_admin/dashboard.css')
 @endpush
 
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-    @vite('resources/js/dashboard-super-admin.js')
+    @vite('resources/js/super_admin/dashboard.js')
 @endpush
 
 @section('content')

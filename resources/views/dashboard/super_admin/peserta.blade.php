@@ -4,7 +4,7 @@
 @section('header_title', 'Kelola Peserta')
 
 @push('styles')
-    @vite('resources/css/super_admin_peserta.css')
+    @vite('resources/css/super_admin/peserta.css')
 @endpush
 
 @section('content')
@@ -608,5 +608,5 @@
 @endsection
 
 @push('scripts')
-    @vite('resources/js/super_admin_peserta.js')
+    @vite('resources/js/super_admin/peserta.js')
 @endpush

@@ -4,11 +4,11 @@
 @section('header_title', 'Area Kerja Intern')
 
 @push('styles')
-    @vite('resources/css/dashboard-peserta.css')
+    @vite('resources/css/peserta/dashboard.css')
 @endpush
 
 @push('scripts')
-    @vite('resources/js/dashboard-peserta.js')
+    @vite('resources/js/peserta/dashboard.js')
 @endpush
 
 @section('content')
