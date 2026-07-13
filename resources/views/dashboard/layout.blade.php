@@ -107,6 +107,14 @@
                         <span class="nav-label">Logbook Kegiatan</span>
                     </a>
                 </li>
+                <li class="nav-item {{ request()->routeIs('peserta.leave') ? 'active' : '' }}">
+                    <a href="{{ route('peserta.leave') }}">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="nav-label">Izin / Sakit</span>
+                    </a>
+                </li>
             @endif
         </ul>
 
@@ -133,6 +141,27 @@
         <div class="page-header">
             <h1 class="page-title">@yield('header_title')</h1>
             <div class="page-header-actions">
+                @if(auth()->user()->isPeserta())
+                    <div class="notification-dropdown-wrapper">
+                        <button type="button" class="notification-bell-btn" id="notification-bell-btn" aria-label="Notifikasi">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                            </svg>
+                            <span class="notification-badge" id="notification-badge" style="display: none;">0</span>
+                        </button>
+                        <div class="notification-menu" id="notification-menu">
+                            <div class="notification-header">
+                                <h4>Notifikasi</h4>
+                                <button type="button" class="mark-all-read-btn" id="mark-all-read-btn">Tandai dibaca</button>
+                            </div>
+                            <div class="notification-list" id="notification-list">
+                                <div style="color: var(--text-secondary); text-align: center; padding: 20px 0; font-size: 0.85rem;">Tidak ada notifikasi baru</div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Ganti tema">
                     <span class="theme-toggle-icon">☀️</span>
                     <span class="theme-toggle-text">Light</span>
@@ -162,6 +191,12 @@
             success: @json(session('success')),
             error: @json(session('error')),
             validationError: @json($errors->any()),
+        };
+        window.userAttendanceStatus = {
+            isPeserta: @json(auth()->check() && auth()->user()->isPeserta()),
+            hasCheckedInToday: @json(auth()->check() && auth()->user()->isPeserta() && auth()->user()->attendances()->whereDate('tanggal', \Carbon\Carbon::today())->whereNotNull('jam_masuk')->exists()),
+            hasCheckedOutToday: @json(auth()->check() && auth()->user()->isPeserta() && auth()->user()->attendances()->whereDate('tanggal', \Carbon\Carbon::today())->whereNotNull('jam_pulang')->exists()),
+            isHolidayToday: @json(\App\Models\WorkSchedule::getScheduleForDate(\Carbon\Carbon::today())?->is_holiday ?? \Carbon\Carbon::today()->isWeekend())
         };
     </script>
     @vite('resources/js/dashboard-layout.js')

@@ -4,6 +4,56 @@ document.addEventListener('DOMContentLoaded', () => {
     const locationEl = document.getElementById('location-coordinate');
     let userCoordinates = '';
 
+    // SweetAlert2 Helpers for dynamic theme-matching alerts
+    function getSwalTheme() {
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+        return {
+            background: isLight ? '#ffffff' : '#1e293b',
+            color: isLight ? '#0f172a' : '#f8fafc',
+            confirmButtonColor: isLight ? '#2e4085' : '#ffcc33',
+        };
+    }
+
+    function showSwalAlert(icon, title, text) {
+        if (!window.Swal) {
+            alert(text || title);
+            return Promise.resolve();
+        }
+        return window.Swal.fire({
+            ...getSwalTheme(),
+            icon,
+            title,
+            text,
+            confirmButtonText: 'Mengerti'
+        });
+    }
+
+    function showSwalSuccess(title, text) {
+        return showSwalAlert('success', title, text);
+    }
+
+    function showSwalError(title, text) {
+        return showSwalAlert('error', title, text);
+    }
+
+    async function showSwalConfirm(title, text) {
+        if (!window.Swal) {
+            return confirm(text || title);
+        }
+        const result = await window.Swal.fire({
+            ...getSwalTheme(),
+            icon: 'warning',
+            title,
+            text,
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Lanjutkan',
+            cancelButtonText: 'Batal',
+            cancelButtonColor: '#64748b',
+            reverseButtons: true
+        });
+        return result.isConfirmed;
+    }
+
     // Camera & Attendance elements
     const webcamVideo = document.getElementById('webcam-video');
     const selfiePreview = document.getElementById('selfie-preview');
@@ -355,7 +405,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 await populateCameraDevices(cameraSelect);
             } catch (err) {
                 console.error('Error accessing webcam:', err);
-                alert('Gagal mengakses kamera. Pastikan izin kamera telah diberikan.');
+                showSwalError('Gagal Akses Kamera', 'Gagal mengakses kamera. Pastikan izin kamera telah diberikan.');
             }
         });
     }
@@ -397,7 +447,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } catch (error) {
                 console.error('Error watermarking check-in photo:', error);
-                alert('Gagal memproses foto. Silakan coba kembali.');
+                showSwalError('Gagal Memproses Foto', 'Gagal memproses foto. Silakan coba kembali.');
             } finally {
                 btnCapturePhoto.disabled = false;
                 btnCapturePhoto.textContent = 'Ambil Foto';
@@ -428,11 +478,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnSubmitIn) {
         btnSubmitIn.addEventListener('click', async () => {
             if (!capturedSelfieBase64) {
-                alert('Silakan ambil foto selfie terlebih dahulu.');
+                showSwalError('Data Belum Lengkap', 'Silakan ambil foto selfie terlebih dahulu.');
                 return;
             }
             if (!userCoordinates) {
-                alert('Sedang mendeteksi lokasi, silakan tunggu sebentar.');
+                showSwalError('Lokasi Belum Terkunci', 'Sedang mendeteksi lokasi, silakan tunggu sebentar.');
                 return;
             }
 
@@ -455,16 +505,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await response.json();
 
                 if (result.success) {
-                    alert(result.message);
+                    await showSwalSuccess('Absen Masuk Berhasil', result.message);
                     window.location.reload();
                 } else {
-                    alert(result.message || 'Gagal melakukan absen masuk.');
+                    showSwalError('Gagal Absen Masuk', result.message || 'Gagal melakukan absen masuk.');
                     btnSubmitIn.disabled = false;
                     btnSubmitIn.textContent = 'Absen Masuk';
                 }
             } catch (error) {
                 console.error('Error during check-in:', error);
-                alert('Terjadi kesalahan sistem. Silakan coba kembali.');
+                showSwalError('Terjadi Kesalahan', 'Terjadi kesalahan sistem. Silakan coba kembali.');
                 btnSubmitIn.disabled = false;
                 btnSubmitIn.textContent = 'Absen Masuk';
             }
@@ -495,6 +545,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnStartCameraOut) {
         btnStartCameraOut.addEventListener('click', async () => {
+            // Check if logbook is filled
+            if (btnSubmitOut) {
+                const todayLogbooksCount = parseInt(btnSubmitOut.getAttribute('data-today-logbooks-count') || '0');
+                if (todayLogbooksCount === 0) {
+                    showSwalError('Logbook Belum Diisi', 'Anda wajib mengisi minimal 1 logbook kegiatan hari ini sebelum melakukan absen pulang.');
+                    return;
+                }
+            }
             // Step 1: Show camera selector panel and populate device list
             if (cameraSelectOutWrap) {
                 await populateCameraDevices(cameraSelectOut);
@@ -528,7 +586,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 await populateCameraDevices(cameraSelectOut);
             } catch (err) {
                 console.error('Error accessing webcam (out):', err);
-                alert('Gagal mengakses kamera. Pastikan izin kamera telah diberikan.');
+                showSwalError('Gagal Akses Kamera', 'Gagal mengakses kamera. Pastikan izin kamera telah diberikan.');
             }
         });
     }
@@ -568,7 +626,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } catch (error) {
                 console.error('Error watermarking check-out photo:', error);
-                alert('Gagal memproses foto. Silakan coba kembali.');
+                showSwalError('Gagal Memproses Foto', 'Gagal memproses foto. Silakan coba kembali.');
             } finally {
                 btnCaptureOut.disabled = false;
                 btnCaptureOut.textContent = 'Ambil Foto';
@@ -597,16 +655,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // ─────────────────────────────────────────────
     if (btnSubmitOut) {
         btnSubmitOut.addEventListener('click', async () => {
+            // Check if logbook is filled
+            const todayLogbooksCount = parseInt(btnSubmitOut.getAttribute('data-today-logbooks-count') || '0');
+            if (todayLogbooksCount === 0) {
+                showSwalError('Logbook Belum Diisi', 'Anda wajib mengisi minimal 1 logbook kegiatan hari ini sebelum melakukan absen pulang.');
+                return;
+            }
             // If checkout camera UI exists, selfie is mandatory
             if (btnStartCameraOut && !capturedOutBase64) {
-                alert('Silakan ambil foto selfie untuk absen pulang terlebih dahulu.');
+                showSwalError('Data Belum Lengkap', 'Silakan ambil foto selfie untuk absen pulang terlebih dahulu.');
                 return;
             }
             if (!userCoordinates) {
-                alert('Sedang mendeteksi lokasi, silakan tunggu sebentar.');
+                showSwalError('Lokasi Belum Terkunci', 'Sedang mendeteksi lokasi, silakan tunggu sebentar.');
                 return;
             }
-            if (!confirm('Apakah Anda yakin ingin melakukan absen pulang?')) return;
+            
+            const isConfirmed = await showSwalConfirm('Absen Pulang', 'Apakah Anda yakin ingin melakukan absen pulang?');
+            if (!isConfirmed) return;
 
             btnSubmitOut.disabled = true;
             btnSubmitOut.textContent = 'Memproses...';
@@ -627,66 +693,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await response.json();
 
                 if (result.success) {
-                    alert(result.message);
+                    await showSwalSuccess('Absen Pulang Berhasil', result.message);
                     window.location.reload();
                 } else {
-                    alert(result.message || 'Gagal melakukan absen pulang.');
+                    showSwalError('Gagal Absen Pulang', result.message || 'Gagal melakukan absen pulang.');
                     btnSubmitOut.disabled = false;
                     btnSubmitOut.textContent = 'Absen Pulang';
                 }
             } catch (error) {
                 console.error('Error during check-out:', error);
-                alert('Terjadi kesalahan sistem. Silakan coba kembali.');
+                showSwalError('Terjadi Kesalahan', 'Terjadi kesalahan sistem. Silakan coba kembali.');
                 btnSubmitOut.disabled = false;
                 btnSubmitOut.textContent = 'Absen Pulang';
             }
         });
     }
 
-    // ===== Modal Add Logbook =====
-    const modalAddLogbook = document.getElementById('modal-add-logbook');
-    const btnOpenAddLogbook = document.getElementById('open-add-logbook-modal');
-    const btnCloseAddLogbook = document.getElementById('close-add-logbook-modal');
-    const btnCancelAddLogbook = document.getElementById('cancel-add-logbook-modal');
 
-    const toggleAddLogbookModal = (show) => {
-        if (modalAddLogbook) {
-            modalAddLogbook.classList.toggle('is-open', show);
-        }
-    };
 
-    btnOpenAddLogbook?.addEventListener('click', () => toggleAddLogbookModal(true));
-    btnCloseAddLogbook?.addEventListener('click', () => toggleAddLogbookModal(false));
-    btnCancelAddLogbook?.addEventListener('click', () => toggleAddLogbookModal(false));
 
-    // Close on clicking backdrop
-    modalAddLogbook?.addEventListener('click', (e) => {
-        if (e.target === modalAddLogbook) {
-            toggleAddLogbookModal(false);
-        }
-    });
-
-    // ===== Modal Add Leave Request =====
-    const modalAddLeave = document.getElementById('modal-add-leave');
-    const btnOpenAddLeave = document.getElementById('open-add-leave-modal');
-    const btnCloseAddLeave = document.getElementById('close-add-leave-modal');
-    const btnCancelAddLeave = document.getElementById('cancel-add-leave-modal');
-
-    const toggleAddLeaveModal = (show) => {
-        if (modalAddLeave) {
-            modalAddLeave.classList.toggle('is-open', show);
-        }
-    };
-
-    btnOpenAddLeave?.addEventListener('click', () => toggleAddLeaveModal(true));
-    btnCloseAddLeave?.addEventListener('click', () => toggleAddLeaveModal(false));
-    btnCancelAddLeave?.addEventListener('click', () => toggleAddLeaveModal(false));
-
-    modalAddLeave?.addEventListener('click', (e) => {
-        if (e.target === modalAddLeave) {
-            toggleAddLeaveModal(false);
-        }
-    });
 
     // ===== Selfie Preview Popup Modal =====
     const selfieModal = document.getElementById('selfie-modal');
@@ -710,5 +735,38 @@ document.addEventListener('DOMContentLoaded', () => {
             selfieModal.classList.remove('is-open');
         }
     });
+
+    // Real-time ticking clock synchronized with server time
+    const clockContainer = document.querySelector('.digital-clock-container');
+    const clockEl = document.getElementById('digital-clock');
+    const dateEl = document.getElementById('digital-date');
+
+    if (clockEl && dateEl && clockContainer) {
+        const serverTimestamp = parseInt(clockContainer.getAttribute('data-server-timestamp'));
+        // Calculate the difference between server time and client local time
+        const timeOffset = !isNaN(serverTimestamp) ? (serverTimestamp - Date.now()) : 0;
+
+        function updateClock() {
+            // Apply the offset to get the synchronized current time
+            const now = new Date(Date.now() + timeOffset);
+            const pad = (n) => n.toString().padStart(2, '0');
+            
+            const hours = pad(now.getHours());
+            const minutes = pad(now.getMinutes());
+            const seconds = pad(now.getSeconds());
+            clockEl.textContent = `${hours}:${minutes}:${seconds}`;
+
+            const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            
+            const dayName = days[now.getDay()];
+            const day = pad(now.getDate());
+            const monthName = months[now.getMonth()];
+            const year = now.getFullYear();
+            dateEl.textContent = `${dayName}, ${day} ${monthName} ${year}`;
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+    }
 });
 

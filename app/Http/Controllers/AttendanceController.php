@@ -24,7 +24,7 @@ class AttendanceController extends Controller
 
         // Double check if already checked in today
         $todayAttendance = Attendance::where('user_id', $user->id)
-            ->where('tanggal', Carbon::today()->toDateString())
+            ->whereDate('tanggal', Carbon::today())
             ->first();
 
         if ($todayAttendance) {
@@ -133,7 +133,7 @@ class AttendanceController extends Controller
 
         // Get today's attendance record
         $attendance = Attendance::where('user_id', $user->id)
-            ->where('tanggal', Carbon::today()->toDateString())
+            ->whereDate('tanggal', Carbon::today())
             ->first();
 
         if (!$attendance) {
@@ -147,6 +147,18 @@ class AttendanceController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Anda sudah melakukan absen pulang hari ini.',
+            ], 400);
+        }
+
+        // Verify that the user has filled in at least 1 logbook entry for today
+        $hasLogbook = \App\Models\Logbook::where('user_id', $user->id)
+            ->whereDate('tanggal', Carbon::today())
+            ->exists();
+
+        if (!$hasLogbook) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda wajib mengisi minimal 1 logbook kegiatan hari ini sebelum melakukan absen pulang.',
             ], 400);
         }
 

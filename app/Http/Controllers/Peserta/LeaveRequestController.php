@@ -11,6 +11,48 @@ use Illuminate\Support\Facades\File;
 class LeaveRequestController extends Controller
 {
     /**
+     * Display a listing of the leave requests with pagination and search.
+     */
+    public function index(Request $request)
+    {
+        $user = Auth::user();
+        
+        $query = LeaveRequest::where('user_id', $user->id)
+            ->orderBy('tanggal_mulai', 'desc');
+
+        // Search filter by reason
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where('alasan', 'like', "%{$search}%");
+        }
+
+        // Filter by type (jenis)
+        if ($request->filled('jenis')) {
+            $query->where('jenis', $request->input('jenis'));
+        }
+
+        // Filter by approval status
+        if ($request->filled('status_approval')) {
+            $query->where('status_approval', $request->input('status_approval'));
+        }
+
+        $leaves = $query->paginate(5)->withQueryString();
+
+        // Calculate totals for Approved requests
+        $approvedIzinCount = LeaveRequest::where('user_id', $user->id)
+            ->where('jenis', 'Izin')
+            ->where('status_approval', 'Approved')
+            ->count();
+
+        $approvedSakitCount = LeaveRequest::where('user_id', $user->id)
+            ->where('jenis', 'Sakit')
+            ->where('status_approval', 'Approved')
+            ->count();
+
+        return view('dashboard.peserta.leave', compact('leaves', 'approvedIzinCount', 'approvedSakitCount'));
+    }
+
+    /**
      * Store a new leave request.
      */
     public function store(Request $request)
@@ -48,7 +90,7 @@ class LeaveRequestController extends Controller
         ]);
 
         return redirect()
-            ->route('dashboard')
+            ->route('peserta.leave')
             ->with('success', 'Pengajuan ' . $validated['jenis'] . ' berhasil dikirim.');
     }
 }

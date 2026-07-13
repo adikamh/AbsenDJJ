@@ -56,6 +56,11 @@
         <div class="content-card">
             <div class="card-header">
                 <h2 class="card-title">Kontrol Kehadiran Harian</h2>
+                <!-- Live Digital Clock -->
+                <div class="digital-clock-container" data-server-timestamp="{{ now()->getTimestamp() * 1000 }}">
+                    <div id="digital-clock">00:00:00</div>
+                    <div id="digital-date">Memuat waktu...</div>
+                </div>
             </div>
             
             <div class="attendance-panel">
@@ -193,6 +198,7 @@
                     <button type="button" id="btn-submit-out"
                             class="btn-logout attendance-button attendance-button-out"
                             @disabled(!$todayAttendance || $todayAttendance->jam_pulang)
+                            data-today-logbooks-count="{{ $todayLogbooksCount }}"
                             {{ ($todayAttendance && !$todayAttendance->jam_pulang) ? 'data-needs-selfie=true' : '' }}>
                         Absen Pulang
                     </button>
@@ -253,7 +259,7 @@
         <div class="content-card">
             <div class="card-header">
                 <h2 class="card-title">Logbook Kegiatan Terbaru</h2>
-                <span class="badge badge-info action-badge" id="open-add-logbook-modal" style="cursor: pointer;">Tulis Baru</span>
+                <a href="{{ route('peserta.logbook') }}" class="badge badge-info action-badge" style="text-decoration: none;">Selengkapnya</a>
             </div>
             <div class="table-responsive">
                 <table class="custom-table">
@@ -296,7 +302,7 @@
         <div class="content-card">
             <div class="card-header">
                 <h2 class="card-title">Pengajuan Izin Sakit</h2>
-                <span class="badge badge-info action-badge" id="open-add-leave-modal" style="cursor: pointer;">Ajukan</span>
+                <a href="{{ route('peserta.leave') }}" class="badge badge-info action-badge" style="text-decoration: none;">Selengkapnya</a>
             </div>
             <div class="table-responsive">
                 <table class="custom-table">
@@ -337,77 +343,9 @@
 
     </div>
 
-    {{-- ===== Modal: Tambah Logbook ===== --}}
-    <div class="form-modal-backdrop" id="modal-add-logbook">
-        <div class="form-modal">
-            <div class="form-modal-header">
-                <h3>Tulis Logbook Kegiatan Baru</h3>
-                <button type="button" class="modal-close" id="close-add-logbook-modal">&times;</button>
-            </div>
-            <form action="{{ route('peserta.logbook.store') }}" method="POST" class="modal-form">
-                @csrf
-                <div class="form-group">
-                    <label for="tanggal">Tanggal Kegiatan</label>
-                    <input type="date" id="tanggal" name="tanggal" value="{{ date('Y-m-d') }}" required>
-                </div>
-                <div class="form-group">
-                    <label for="kegiatan">Judul Kegiatan / Tugas</label>
-                    <input type="text" id="kegiatan" name="kegiatan" placeholder="Contoh: Membuat rancangan database absensi" required>
-                </div>
-                <div class="form-group">
-                    <label for="deskripsi">Deskripsi Detail Kegiatan</label>
-                    <textarea id="deskripsi" name="deskripsi" rows="5" placeholder="Jelaskan secara rinci kegiatan yang Anda lakukan hari ini..." required></textarea>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn-secondary" id="cancel-add-logbook-modal">Batal</button>
-                    <button type="submit" class="btn-primary">Simpan Logbook</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
-    {{-- ===== Modal: Pengajuan Izin / Sakit ===== --}}
-    <div class="form-modal-backdrop" id="modal-add-leave">
-        <div class="form-modal">
-            <div class="form-modal-header">
-                <h3>Ajukan Izin / Sakit</h3>
-                <button type="button" class="modal-close" id="close-add-leave-modal">&times;</button>
-            </div>
-            <form action="{{ route('peserta.leave.store') }}" method="POST" class="modal-form" enctype="multipart/form-data">
-                @csrf
-                <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <div class="form-group">
-                        <label for="tanggal_mulai">Tanggal Mulai</label>
-                        <input type="date" id="tanggal_mulai" name="tanggal_mulai" value="{{ date('Y-m-d') }}" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="tanggal_selesai">Tanggal Selesai</label>
-                        <input type="date" id="tanggal_selesai" name="tanggal_selesai" value="{{ date('Y-m-d') }}" required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="jenis">Jenis Pengajuan</label>
-                    <select id="jenis" name="jenis" required>
-                        <option value="Izin">Izin</option>
-                        <option value="Sakit">Sakit</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="alasan">Alasan Pengajuan</label>
-                    <textarea id="alasan" name="alasan" rows="4" placeholder="Jelaskan alasan pengajuan izin atau sakit secara rinci..." required></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="file_bukti">Dokumen Bukti (Surat Dokter / Lampiran)</label>
-                    <input type="file" id="file_bukti" name="file_bukti" accept="image/*,application/pdf">
-                    <span class="muted-small" style="font-size: 0.72rem; color: var(--text-secondary); display: block; margin-top: 4px;">Format: JPG, JPEG, PNG, atau PDF (Maks. 2MB)</span>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn-secondary" id="cancel-add-leave-modal">Batal</button>
-                    <button type="submit" class="btn-primary">Kirim Pengajuan</button>
-                </div>
-            </form>
-        </div>
-    </div>
+
+
 
     {{-- ===== Modal: Selfie Preview Popup ===== --}}
     <div class="form-modal-backdrop" id="selfie-modal">

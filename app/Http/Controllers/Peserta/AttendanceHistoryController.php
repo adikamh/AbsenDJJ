@@ -86,4 +86,137 @@ class AttendanceHistoryController extends Controller
             'attendanceRate'
         ));
     }
+
+    /**
+     * Export monthly report bundle (Attendance + Logbooks) to a printable page.
+     */
+    public function exportMonthlyReport(Request $request)
+    {
+        $user = Auth::user();
+        if ($user->isAdmin() && $request->has('user_id')) {
+            $targetUser = \App\Models\User::findOrFail($request->input('user_id'));
+            if ($targetUser->pembimbing_id !== $user->id) {
+                abort(403, 'Anda tidak memiliki akses ke laporan peserta magang ini.');
+            }
+            $user = $targetUser;
+        }
+        
+        $month = (int) $request->input('month', now()->month);
+        $year = (int) $request->input('year', now()->year);
+        
+        $selectedDate = Carbon::create($year, $month, 1);
+        $startOfMonth = $selectedDate->copy()->startOfMonth();
+        $endOfMonth = $selectedDate->copy()->endOfMonth();
+        
+        // Load User relationships
+        $user->load(['instansi', 'pembimbing']);
+
+        // Fetch attendance records for the selected month
+        $attendances = Attendance::where('user_id', $user->id)
+            ->whereBetween('tanggal', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
+            ->orderBy('tanggal', 'asc')
+            ->get();
+            
+        // Calculate statistics
+        $stats = [
+            'hadir' => 0,
+            'terlambat' => 0,
+            'izin' => 0,
+            'absen' => 0,
+        ];
+
+        foreach ($attendances as $att) {
+            if ($att->status === 'Hadir') {
+                $stats['hadir']++;
+            } elseif ($att->status === 'Terlambat') {
+                $stats['terlambat']++;
+            } elseif (in_array($att->status, ['Izin', 'Sakit'])) {
+                $stats['izin']++;
+            } elseif ($att->status === 'Tanpa Keterangan') {
+                $stats['absen']++;
+            }
+        }
+
+        $totalAttendanceCount = $attendances->count();
+        $attendanceRate = $totalAttendanceCount > 0 
+            ? round((($stats['hadir'] + $stats['terlambat']) / $totalAttendanceCount) * 100) 
+            : 0;
+
+        // Fetch logbook entries for the selected month
+        $logbooks = \App\Models\Logbook::where('user_id', $user->id)
+            ->whereBetween('tanggal', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
+            ->orderBy('tanggal', 'asc')
+            ->get();
+
+        return view('dashboard.peserta.monthly_report_pdf', compact(
+            'user',
+            'month',
+            'year',
+            'selectedDate',
+            'attendances',
+            'stats',
+            'attendanceRate',
+            'logbooks'
+        ));
+    }
+
+    /**
+     * Export selected month's attendance records to a CSV file.
+     */
+    public function exportCsv(Request $request)
+    {
+        $user = Auth::user();
+        if ($user->isAdmin() && $request->has('user_id')) {
+            $targetUser = \App\Models\User::findOrFail($request->input('user_id'));
+            if ($targetUser->pembimbing_id !== $user->id) {
+                abort(403, 'Anda tidak memiliki akses ke laporan peserta magang ini.');
+            }
+            $user = $targetUser;
+        }
+        
+        $month = (int) $request->input('month', now()->month);
+        $year = (int) $request->input('year', now()->year);
+        
+        $selectedDate = Carbon::create($year, $month, 1);
+        $startOfMonth = $selectedDate->copy()->startOfMonth();
+        $endOfMonth = $selectedDate->copy()->endOfMonth();
+        
+        $attendances = Attendance::where('user_id', $user->id)
+            ->whereBetween('tanggal', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
+            ->orderBy('tanggal', 'asc')
+            ->get();
+
+        $filename = "Absensi_" . str_replace(' ', '_', $user->nama_lengkap) . "_" . $selectedDate->format('Y-m') . ".csv";
+
+        $headers = [
+            "Content-type"        => "text/csv; charset=UTF-8",
+            "Content-Disposition" => "attachment; filename=$filename",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
+
+        $columns = ['No', 'Tanggal', 'Jam Masuk', 'Jam Pulang', 'Status Kehadiran'];
+
+        $callback = function() use($attendances, $columns) {
+            $file = fopen('php://output', 'w');
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF)); // UTF-8 BOM
+            fwrite($file, "sep=;\n"); // Force MS Excel to open using semicolon separator
+            fputcsv($file, $columns, ';'); // Use semicolon for better MS Excel local support
+
+            foreach ($attendances as $index => $att) {
+                $row['No'] = $index + 1;
+                $row['Tanggal'] = $att->tanggal;
+                $row['Jam Masuk'] = $att->jam_masuk ? Carbon::parse($att->jam_masuk)->format('H:i:s') : '-';
+                $row['Jam Pulang'] = $att->jam_pulang ? Carbon::parse($att->jam_pulang)->format('H:i:s') : '-';
+                $row['Status Kehadiran'] = $att->status;
+
+                fputcsv($file, array_values($row), ';');
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
 }

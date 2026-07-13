@@ -18,7 +18,7 @@ class DashboardController extends Controller
     public function index(User $user)
     {
         $todayAttendance = Attendance::where('user_id', $user->id)
-            ->where('tanggal', Carbon::today()->toDateString())
+            ->whereDate('tanggal', Carbon::today())
             ->first();
 
         $recentLogbooks = Logbook::where('user_id', $user->id)
@@ -64,6 +64,10 @@ class DashboardController extends Controller
         $officeLng = $settings->longitude_kantor;
         $officeRadius = $settings->radius_meter;
 
+        $todayLogbooksCount = Logbook::where('user_id', $user->id)
+            ->whereDate('tanggal', Carbon::today())
+            ->count();
+
         return view('dashboard.peserta.dashboard', compact(
             'todayAttendance',
             'recentLogbooks',
@@ -73,7 +77,33 @@ class DashboardController extends Controller
             'targetJamPulang',
             'officeLat',
             'officeLng',
-            'officeRadius'
+            'officeRadius',
+            'todayLogbooksCount'
         ));
+    }
+
+    public function getNotifications()
+    {
+        $user = auth()->user();
+        $user->unsetRelation('unreadNotifications');
+        $notifications = $user->unreadNotifications->map(function($notification) {
+            return [
+                'id' => $notification->id,
+                'title' => $notification->data['title'] ?? '',
+                'message' => $notification->data['message'] ?? '',
+                'type' => $notification->data['type'] ?? '',
+                'created_at' => $notification->created_at->diffForHumans(),
+            ];
+        });
+
+        return response()->json($notifications);
+    }
+
+    public function markNotificationsRead()
+    {
+        $user = auth()->user();
+        $user->unreadNotifications->markAsRead();
+
+        return response()->json(['success' => true]);
     }
 }
