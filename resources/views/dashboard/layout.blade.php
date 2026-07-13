@@ -80,12 +80,28 @@
             @endif
 
             @if(auth()->user()->isAdmin())
-                <li class="nav-item">
+                <li class="nav-item {{ request()->routeIs('admin.interns*') ? 'active' : '' }}">
                     <a href="{{ route('admin.interns') }}">
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
                             <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/>
                         </svg>
                         <span class="nav-label">Anak Bimbingan</span>
+                    </a>
+                </li>
+                <li class="nav-item {{ request()->routeIs('admin.logbooks*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.logbooks') }}">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm2 2h2v2H6V6zm2 3H6v2h2V9zm2-3h2v2h-2V6zm2 3h-2v2h2V9z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="nav-label">Logbook Anak Didik</span>
+                    </a>
+                </li>
+                <li class="nav-item {{ request()->routeIs('admin.leaves*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.leaves') }}">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="nav-label">Izin & Sakit Anak Didik</span>
                     </a>
                 </li>
             @endif

@@ -31,6 +31,8 @@ export default defineConfig({
                 'resources/css/admin/dashboard.css',
                 'resources/js/admin/dashboard.js',
                 'resources/css/admin/interns.css',
+                'resources/js/admin/logbooks.js',
+                'resources/js/admin/leaves.js',
 
                 // Peserta
                 'resources/css/peserta/dashboard.css',

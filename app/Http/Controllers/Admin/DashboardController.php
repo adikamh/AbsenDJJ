@@ -18,22 +18,25 @@ class DashboardController extends Controller
     public function index(User $user)
     {
         // Get list of guided interns
-        $interns = $user->anakBimbingan()->with('instansi')->get();
-        $internIds = $interns->pluck('id');
+        $internIds = $user->anakBimbingan()->pluck('id');
+        $totalInternsCount = $internIds->count();
+        $interns = $user->anakBimbingan()->with('instansi')->limit(3)->get();
 
         // Get logbooks pending approval for these interns
-        $pendingLogbooks = Logbook::with('user')
+        $pendingLogbooksQuery = Logbook::with('user')
             ->whereIn('user_id', $internIds)
             ->where('status_approval', 'Pending')
-            ->orderBy('tanggal', 'desc')
-            ->get();
+            ->orderBy('tanggal', 'desc');
+        $totalPendingLogbooksCount = $pendingLogbooksQuery->count();
+        $pendingLogbooks = $pendingLogbooksQuery->limit(3)->get();
 
         // Get leave requests pending approval for these interns
-        $pendingLeaves = LeaveRequest::with('user')
+        $pendingLeavesQuery = LeaveRequest::with('user')
             ->whereIn('user_id', $internIds)
             ->where('status_approval', 'Pending')
-            ->orderBy('tanggal_mulai', 'desc')
-            ->get();
+            ->orderBy('tanggal_mulai', 'desc');
+        $totalPendingLeavesCount = $pendingLeavesQuery->count();
+        $pendingLeaves = $pendingLeavesQuery->limit(3)->get();
 
         // Attendance stats for today
         $hadirTodayCount = Attendance::whereIn('user_id', $internIds)
@@ -45,7 +48,10 @@ class DashboardController extends Controller
             'interns',
             'pendingLogbooks',
             'pendingLeaves',
-            'hadirTodayCount'
+            'hadirTodayCount',
+            'totalInternsCount',
+            'totalPendingLogbooksCount',
+            'totalPendingLeavesCount'
         ));
     }
 
@@ -102,7 +108,7 @@ class DashboardController extends Controller
             'status_approval' => 'Rejected',
             'catatan_pembimbing' => $catatan
         ]);
-
+        
         $intern = $leave->user;
         $intern->notify(new \App\Notifications\AbsenNotification(
             'Izin/Sakit Ditolak',

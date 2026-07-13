@@ -7,6 +7,7 @@ use App\Models\Role;
 use App\Models\Instansi;
 use App\Models\Attendance;
 use App\Models\Logbook;
+use App\Models\LeaveRequest;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -120,5 +121,164 @@ class AdminInternsTest extends TestCase
     {
         $response = $this->actingAs($this->supervisor1)->get("/admin/interns/{$this->intern2->id}");
         $response->assertStatus(403);
+    }
+
+    public function test_supervisor_can_view_interns_logbook_page(): void
+    {
+        Logbook::create([
+            'user_id' => $this->intern1->id,
+            'tanggal' => '2026-07-13',
+            'kegiatan' => 'Implementasi Fitur Admin',
+            'deskripsi' => 'Menambahkan fitur manajemen anak bimbingan.',
+            'status_approval' => 'Pending',
+        ]);
+
+        Logbook::create([
+            'user_id' => $this->intern2->id,
+            'tanggal' => '2026-07-13',
+            'kegiatan' => 'Implementasi Fitur Lain',
+            'deskripsi' => 'Mengerjakan fitur lain.',
+            'status_approval' => 'Pending',
+        ]);
+
+        $response = $this->actingAs($this->supervisor1)->get('/admin/logbooks');
+        $response->assertStatus(200);
+        $response->assertSee('Implementasi Fitur Admin');
+        $response->assertDontSee('Implementasi Fitur Lain');
+        $response->assertViewHas('pendingLogbooksCount', 1);
+        $response->assertViewHas('approvedLogbooksCount', 0);
+        $response->assertViewHas('rejectedLogbooksCount', 0);
+    }
+
+    public function test_supervisor_can_filter_interns_logbooks(): void
+    {
+        Logbook::create([
+            'user_id' => $this->intern1->id,
+            'tanggal' => '2026-07-13',
+            'kegiatan' => 'Fitur A',
+            'deskripsi' => 'Kegiatan A.',
+            'status_approval' => 'Approved',
+        ]);
+
+        Logbook::create([
+            'user_id' => $this->intern1->id,
+            'tanggal' => '2026-07-13',
+            'kegiatan' => 'Fitur B',
+            'deskripsi' => 'Kegiatan B.',
+            'status_approval' => 'Pending',
+        ]);
+
+        $response = $this->actingAs($this->supervisor1)->get('/admin/logbooks?status_approval=Approved');
+        $response->assertStatus(200);
+        $response->assertSee('Fitur A');
+        $response->assertDontSee('Fitur B');
+        $response->assertViewHas('pendingLogbooksCount', 1);
+        $response->assertViewHas('approvedLogbooksCount', 1);
+        $response->assertViewHas('rejectedLogbooksCount', 0);
+    }
+
+    public function test_supervisor_can_view_dashboard_with_correct_highlights(): void
+    {
+        // Let's create 3 more interns (total 4 under supervisor 1)
+        User::create([
+            'nama_lengkap' => 'Intern A',
+            'email' => 'interna@absendjj.com',
+            'password' => bcrypt('password'),
+            'role_id' => $this->intern1->role_id,
+            'pembimbing_id' => $this->supervisor1->id,
+            'instansi_id' => $this->intern1->instansi_id,
+            'status_aktif' => true,
+        ]);
+        User::create([
+            'nama_lengkap' => 'Intern B',
+            'email' => 'internb@absendjj.com',
+            'password' => bcrypt('password'),
+            'role_id' => $this->intern1->role_id,
+            'pembimbing_id' => $this->supervisor1->id,
+            'instansi_id' => $this->intern1->instansi_id,
+            'status_aktif' => true,
+        ]);
+        User::create([
+            'nama_lengkap' => 'Intern C',
+            'email' => 'internc@absendjj.com',
+            'password' => bcrypt('password'),
+            'role_id' => $this->intern1->role_id,
+            'pembimbing_id' => $this->supervisor1->id,
+            'instansi_id' => $this->intern1->instansi_id,
+            'status_aktif' => true,
+        ]);
+
+        $response = $this->actingAs($this->supervisor1)->get('/dashboard');
+        $response->assertStatus(200);
+        $response->assertSee('4 Orang');
+        $response->assertSee('Kelola Semua Intern (4)');
+    }
+
+    public function test_supervisor_can_view_interns_leaves_page(): void
+    {
+        LeaveRequest::create([
+            'user_id' => $this->intern1->id,
+            'tanggal_mulai' => '2026-07-10',
+            'tanggal_selesai' => '2026-07-12',
+            'jenis' => 'Izin',
+            'alasan' => 'Urusan keluarga penting',
+            'status_approval' => 'Pending',
+        ]);
+
+        LeaveRequest::create([
+            'user_id' => $this->intern2->id,
+            'tanggal_mulai' => '2026-07-10',
+            'tanggal_selesai' => '2026-07-12',
+            'jenis' => 'Sakit',
+            'alasan' => 'Sakit kepala hebat',
+            'status_approval' => 'Pending',
+        ]);
+
+        $response = $this->actingAs($this->supervisor1)->get('/admin/leaves');
+        $response->assertStatus(200);
+        $response->assertSee('Urusan keluarga penting');
+        $response->assertDontSee('Sakit kepala hebat');
+        $response->assertViewHas('pendingLeavesCount', 1);
+        $response->assertViewHas('approvedLeavesCount', 0);
+        $response->assertViewHas('rejectedLeavesCount', 0);
+    }
+
+    public function test_supervisor_can_filter_interns_leaves(): void
+    {
+        LeaveRequest::create([
+            'user_id' => $this->intern1->id,
+            'tanggal_mulai' => '2026-07-10',
+            'tanggal_selesai' => '2026-07-12',
+            'jenis' => 'Izin',
+            'alasan' => 'Izin keluarga',
+            'status_approval' => 'Approved',
+        ]);
+
+        LeaveRequest::create([
+            'user_id' => $this->intern1->id,
+            'tanggal_mulai' => '2026-07-10',
+            'tanggal_selesai' => '2026-07-12',
+            'jenis' => 'Sakit',
+            'alasan' => 'Demam tinggi',
+            'status_approval' => 'Pending',
+        ]);
+
+        // Filter by Approved status
+        $response = $this->actingAs($this->supervisor1)->get('/admin/leaves?status_approval=Approved');
+        $response->assertStatus(200);
+        $response->assertSee('Izin keluarga');
+        $response->assertDontSee('Demam tinggi');
+        $response->assertViewHas('pendingLeavesCount', 1);
+        $response->assertViewHas('approvedLeavesCount', 1);
+        $response->assertViewHas('rejectedLeavesCount', 0);
+
+        // Filter by Sakit jenis
+        $response = $this->actingAs($this->supervisor1)->get('/admin/leaves?jenis=Sakit');
+        $response->assertStatus(200);
+        $response->assertSee('Demam tinggi');
+        $response->assertDontSee('Izin keluarga');
+        $response->assertViewHas('pendingLeavesCount', 1);
+        $response->assertViewHas('approvedLeavesCount', 1);
+        $response->assertViewHas('rejectedLeavesCount', 0);
     }
 }

@@ -603,6 +603,39 @@
 - Membangun kembali asset klien (`npm run build`).
 - Menambahkan 3 unit pengujian baru di [NotificationTest.php](file:///c:/laragon/www/AbsenDJJ/tests/Feature/NotificationTest.php) untuk memverifikasi fungsionalitas pengambilan notifikasi, penandaan dibaca, dan pengiriman notifikasi dari pembimbing (Semua 46 test suite dinyatakan **Lulus**).
 
+### Peningkatan Fitur & Halaman Kelola Anak Bimbingan (Pembimbing Lapangan)
+
+- **Halaman Daftar Anak Bimbingan Terpadu ([index.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/admin/interns/index.blade.php)):**
+  - Menyatukan baris filter/pencarian langsung ke dalam header tabel **Daftar Aktivitas Intern** untuk efisiensi ruang layar.
+  - Membatasi daftar bimbingan maksimal **5 data per halaman** menggunakan paginasi server, sementara stat card total bimbingan tetap menghitung keseluruhan data.
+- **Halaman Logbook Anak Didik Khusus ([index.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/admin/logbooks/index.blade.php)):**
+  - Membuat route baru GET `/admin/logbooks` yang dihubungkan ke `InternController@logbooks`.
+  - Menyatukan kolom pencarian/status filter langsung ke dalam header tabel **Daftar Logbook Intern**.
+  - Menyederhanakan kolom tabel utama dengan menyembunyikan kolom *Deskripsi*, *Tag*, dan *Catatan Pembimbing* dari tabel utama.
+  - Menambahkan 3 kartu statistik premium di bagian atas halaman (Logbook Pending, Logbook Disetujui, dan Logbook Ditolak) dengan total riil.
+  - Menambahkan tombol **Detail** yang membuka modal pop-up detail kegiatan logbook lengkap dengan rincian deskripsi, tag label, status, dan catatan pembimbing.
+- **Halaman Izin & Sakit Anak Didik Khusus ([index.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/admin/leaves/index.blade.php)):**
+  - Membuat route baru GET `/admin/leaves` yang dihubungkan ke `InternController@leaves`.
+  - Menyatukan panel filter pencarian, status perizinan, dan jenis permohonan ke header tabel **Daftar Pengajuan Izin / Sakit**.
+  - Menyederhanakan kolom tabel utama dengan menyembunyikan kolom *Alasan*, *Bukti*, dan *Catatan Pembimbing* dari tabel utama.
+  - Menambahkan 3 kartu statistik premium di bagian atas halaman (Izin/Sakit Pending, Izin/Sakit Disetujui, dan Izin/Sakit Ditolak) dengan total riil.
+  - Menambahkan tombol **Detail** yang membuka modal pop-up detail permohonan lengkap dengan rincian tanggal, alasan, tautan unduh bukti, status, dan catatan pembimbing.
+- **Redesain Dashboard Pembimbing ([dashboard.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/admin/dashboard.blade.php)):**
+  - Menyediakan 4 kartu statistik premium dengan indikator total riil dan ikon SVG.
+  - Membatasi seluruh tabel dashboard (Logbook, Intern, Izin/Sakit) hanya menampilkan **maksimal 3 highlight data**, lengkap dengan tautan dinamis "Lihat Semua Pending" di footer kartu jika total data melebihi 3.
+- **Modal Pop-Up Konfirmasi & Catatan Pembimbing:**
+  - Memindahkan input teks *Catatan Pembimbing* yang sebelumnya tersebar di baris tabel menjadi satu **Modal Pop-up Konfirmasi** global yang elegan.
+  - Berlaku pada persetujuan/penolakan logbook dan izin di halaman Dashboard, Logbook review, dan Leaves review.
+  - Kolom catatan bersifat opsional saat tombol "Setujui" diklik, dan bersifat wajib (wajib diisi alasan) saat tombol "Tolak" diklik.
+- **Sinkronisasi Mode Gelap & Terang:**
+  - Mengubah warna teks statis (`#fff`) pada judul modal, data input filter, placeholder, textarea catatan pembimbing, dan nilai statistik pembimbing menggunakan CSS variables dinamis `var(--text-primary)` agar warna teks bertransisi dengan sempurna saat berganti tema dan menjaga keterbacaan penuh.
+- **Pemisahan Script & Style Bersih:**
+  - Memisahkan seluruh kode JavaScript inline di halaman `dashboard.blade.php`, `logbooks/index.blade.php`, dan `leaves/index.blade.php` ke dalam berkas JS tersendiri: `resources/js/admin/dashboard.js`, `resources/js/admin/logbooks.js`, dan `resources/js/admin/leaves.js`.
+  - Memisahkan inline styles `<style>` dari `dashboard.blade.php` ke berkas `resources/css/admin/dashboard.css`.
+  - Mendaftarkan seluruh berkas aset tersebut ke `vite.config.js` sehingga terkompilasi optimal oleh Vite.
+- **Pengujian Fungsional Tambahan:**
+  - Menyusun 9 kasus pengujian baru di berkas [AdminInternsTest.php](file:///c:/laragon/www/AbsenDJJ/tests/Feature/AdminInternsTest.php) untuk memvalidasi paginasi max 5, pencarian, RBAC 403, highlight dashboard max 3, filter approval logbook, filter leaves, dan tindakan persetujuan modal. Seluruh 55 pengujian passed.
+
 
 
 
