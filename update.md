@@ -525,8 +525,83 @@
   - Status pembimbing ditampilkan menggunakan badge berwarna hijau (Aktif) atau merah (Nonaktif).
   - Jika pembimbing belum ditugaskan, kartu menampilkan pesan fallback "Pembimbing belum ditugaskan."
 
+## Update 2026-07-13
 
+### Sinkronisasi Zona Waktu (Server-side & Client-side)
 
+- Mengubah default timezone Laravel di [config/app.php](file:///c:/laragon/www/AbsenDJJ/config/app.php) dari `UTC` ke `'Asia/Jakarta'` (WIB) menggunakan `env('APP_TIMEZONE', 'Asia/Jakarta')`.
+- Menambahkan baris `APP_TIMEZONE=Asia/Jakarta` pada berkas [.env](file:///c:/laragon/www/AbsenDJJ/.env) dan [.env.example](file:///c:/laragon/www/AbsenDJJ/.env.example).
+- Melakukan sinkronisasi pencarian record presensi harian di [AttendanceController.php](file:///c:/laragon/www/AbsenDJJ/app/Http/Controllers/AttendanceController.php) dan dashboard peserta dengan mengubah query dari `where('tanggal', ...)` menjadi `whereDate('tanggal', ...)` guna melindungi database SQLite dari shifting timezone saat test suite berjalan.
+
+### Tampilan Jam Digital Real-time (Live Clock) di Header
+
+- Menyisipkan komponen digital clock (`#digital-clock`) dan tanggal (`#digital-date`) pada `.card-header` kartu Kontrol Kehadiran Harian di halaman [dashboard.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/peserta/dashboard.blade.php).
+- Menghubungkan jam digital ke inisialisasi server timestamp (`data-server-timestamp`) untuk mendeteksi deviasi/offset waktu antara browser klien dengan server, sehingga jam digital berdetak secara real-time sinkron dengan server.
+- Merancang CSS styling `.digital-clock-container` khusus header di [dashboard.css](file:///c:/laragon/www/AbsenDJJ/resources/css/peserta/dashboard.css) agar berpenampilan ringkas, berukuran kecil, dan terposisi rapi di sisi kanan atas header kartu.
+
+### Validasi Wajib Logbook Sebelum Absen Pulang
+
+- Memperbarui method `checkOut` di [AttendanceController.php](file:///c:/laragon/www/AbsenDJJ/app/Http/Controllers/AttendanceController.php) agar memvalidasi apakah peserta sudah mengisi minimal 1 logbook pada hari berjalan. Jika belum, server akan menolak request check-out dan mengembalikan pesan error.
+- Memperbarui dashboard controller peserta [DashboardController.php](file:///c:/laragon/www/AbsenDJJ/app/Http/Controllers/Peserta/DashboardController.php) untuk memproses jumlah logbook hari ini (`todayLogbooksCount`) dan mengalirkannya ke view [dashboard.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/peserta/dashboard.blade.php) pada data atribut tombol `btn-submit-out`.
+- Memodifikasi [dashboard.js](file:///c:/laragon/www/AbsenDJJ/resources/js/peserta/dashboard.js) untuk memeriksa jumlah logbook hari ini di sisi klien saat tombol "Buka Kamera" dan "Absen Pulang" ditekan. Pengguna akan dicegah dari mengambil foto dan melakukan submit dengan menampilkan alert jika logbook masih kosong.
+- Menulis berkas test feature baru [AttendanceCheckOutTest.php](file:///c:/laragon/www/AbsenDJJ/tests/Feature/AttendanceCheckOutTest.php) untuk secara komprehensif memvalidasi aturan check-out (belum check-in, belum mengisi logbook, dan sukses check-out setelah mengisi logbook). Seluruh suite test passed.
+
+### Integrasi Dialog SweetAlert2 di Dashboard Peserta
+
+- Menggantikan semua penggunaan fungsi `alert()` dan `confirm()` bawaan browser pada JavaScript peserta [dashboard.js](file:///c:/laragon/www/AbsenDJJ/resources/js/peserta/dashboard.js) dengan dialog kustom **SweetAlert2** (`Swal.fire`).
+- Merancang helper di Javascript klien (`showSwalSuccess`, `showSwalError`, dan `showSwalConfirm`) yang secara dinamis menyesuaikan skema warna popup (background, warna teks, tombol konfirmasi) berdasarkan tema aktif (light/dark mode) di dashboard.
+- Memperbarui penanganan error kamera, kesalahan reverse geocoding/geofencing, kegagalan request absensi, notifikasi validasi data kosong, serta dialog konfirmasi absen pulang agar seragam menggunakan antarmuka SweetAlert2 premium.
+
+### Fitur Bundel Laporan Bulanan Peserta Magang
+
+- Menambahkan route baru `/peserta/my-attendance/monthly-report` di [routes/web.php](file:///c:/laragon/www/AbsenDJJ/routes/web.php) untuk mengarahkan ke pembuatan laporan bulanan peserta.
+- Mengimplementasikan method `exportMonthlyReport` di [AttendanceHistoryController.php](file:///c:/laragon/www/AbsenDJJ/app/Http/Controllers/Peserta/AttendanceHistoryController.php) yang memproses filter bulan/tahun, menghitung ringkasan statistik kehadiran bulanan (total masuk, terlambat, izin, sakit, alfa, persentase kehadiran), serta memuat semua entri logbook terkait.
+- Merancang halaman cetak PDF premium [monthly_report_pdf.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/peserta/monthly_report_pdf.blade.php) yang dilengkapi kop resmi Kementrian PUPR Direktorat Bina Teknik Jalan dan Jembatan, rekap kehadiran bulanan, rincian absensi harian, laporan kegiatan harian (logbook) bulanan, serta bagian tanda tangan pembimbing lapangan & peserta.
+- Menyediakan tombol "Cetak Laporan" di halaman kalender riwayat kehadiran [attendance_history.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/peserta/attendance_history.blade.php) yang secara dinamis mencetak laporan sesuai bulan dan tahun yang sedang dipilih oleh peserta.
+
+### Fitur Ekspor CSV Mandiri (Logbook & Kehadiran)
+
+- Menambahkan route baru `/peserta/my-attendance/csv` dan `/peserta/logbook/export-csv` di [routes/web.php](file:///c:/laragon/www/AbsenDJJ/routes/web.php).
+- Mengimplementasikan penanganan aliran data (stream response) CSV di [LogbookController.php](file:///c:/laragon/www/AbsenDJJ/app/Http/Controllers/Peserta/LogbookController.php) (`exportCsv`) dan [AttendanceHistoryController.php](file:///c:/laragon/www/AbsenDJJ/app/Http/Controllers/Peserta/AttendanceHistoryController.php) (`exportCsv`).
+- Mendukung filter bulanan dinamis pada ekspor CSV absensi maupun logbook, lengkap dengan penambahan penanda UTF-8 BOM dan direktif pembatas `sep=;` di baris pertama berkas agar dokumen langsung terbaca terbagi menjadi kolom-kolom tabel yang rapi saat dibuka di Microsoft Excel/Google Sheets tanpa penyesuaian manual.
+- Menambahkan tombol **Ekspor CSV Absen** di halaman riwayat absensi [attendance_history.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/peserta/attendance_history.blade.php) dan tombol **Ekspor CSV** di halaman daftar logbook [logbook.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/peserta/logbook.blade.php).
+
+### Fitur Halaman Izin & Sakit Khusus Peserta
+
+- Menambahkan menu **Izin / Sakit** pada sidebar navigasi [layout.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/layout.blade.php) khusus untuk role peserta.
+- Menambahkan route GET `/peserta/leave-request` di [routes/web.php](file:///c:/laragon/www/AbsenDJJ/routes/web.php).
+- Mengimplementasikan method `index` di [LeaveRequestController.php](file:///c:/laragon/www/AbsenDJJ/app/Http/Controllers/Peserta/LeaveRequestController.php) yang memproses daftar permohonan izin/sakit dengan pagination (maksimal 5 entri per halaman) serta menyediakan form pencarian & filter berdasarkan jenis pengajuan dan status persetujuan.
+- Merancang halaman antarmuka [leave.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/peserta/leave.blade.php) yang didalamnya menyatukan tabel riwayat pengajuan dan panel filter pencarian ke dalam satu kartu terintegrasi (*single-card layout*), serta menghilangkan tombol cari manual agar list data melakukan pembaruan otomatis (*auto-refresh*) seketika opsi filter/pencarian diubah.
+- Menambahkan kartu ringkasan statistik **Izin Disetujui** dan **Sakit Disetujui** di bagian atas halaman izin/sakit untuk memantau akumulasi total persetujuan pengajuan secara real-time.
+- Memperbarui pengalihan (redirect) pada proses penyimpanan pengajuan izin/sakit agar mengarah kembali ke halaman riwayat izin/sakit (`peserta.leave`), serta memperbarui assert redirect pada berkas pengujian [PesertaLeaveRequestTest.php](file:///c:/laragon/www/AbsenDJJ/tests/Feature/PesertaLeaveRequestTest.php).
+- Mengubah perilaku kartu "Pengajuan Izin Sakit" di dashboard utama peserta [dashboard.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/peserta/dashboard.blade.php) agar hanya memfungsikan kartu tersebut sebagai ringkasan (highlight) dari 5 data pengajuan terbaru, serta mengubah tombol "Ajukan" di header kartu menjadi link "Selengkapnya" ke halaman izin/sakit baru.
+
+### Fitur Pencarian & Pagination Logbook Kegiatan Peserta
+
+- Memperbarui method `index` di [LogbookController.php](file:///c:/laragon/www/AbsenDJJ/app/Http/Controllers/Peserta/LogbookController.php) agar memproses input pencarian kegiatan/deskripsi dan filter status approval, serta membatasi pagination maksimal **5 entri per halaman**.
+- Merancang ulang antarmuka [logbook.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/peserta/logbook.blade.php) menggunakan *single-card layout* terintegrasi (menyatukan form filter pencarian dan tabel daftar logbook) dan mendukung pembaruan otomatis (*auto-refresh*) pada input pencarian dan select dropdown status.
+- Mengubah perilaku kartu "Logbook Kegiatan Terbaru" di dashboard utama peserta [dashboard.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/peserta/dashboard.blade.php) agar hanya berfungsi sebagai highlight dari 5 data logbook terbaru saja, serta mengubah tombol "Tulis Baru" di header kartu menjadi link "Selengkapnya" ke halaman logbook utama.
+
+### Fitur Draft Logbook (Simpan Sementara) & Tagging Kegiatan
+
+- Membuat database migration `2026_07_13_113329_add_kategori_and_tags_to_logbooks_table.php` untuk menambahkan kolom `tags` pada tabel `logbooks`, lalu menjalankannya.
+- Memperbarui model [Logbook.php](file:///c:/laragon/www/AbsenDJJ/app/Models/Logbook.php) agar field `tags` masuk dalam list fillable attributes.
+- Memperbarui method `store`, `update`, dan `destroy` pada [LogbookController.php](file:///c:/laragon/www/AbsenDJJ/app/Http/Controllers/Peserta/LogbookController.php) agar mendukung penyimpanan status `'Draft'` (Simpan Sementara) jika tombol draft diklik, serta membolehkan pengubahan dan penghapusan data logbook yang berstatus `'Draft'`.
+- Menambahkan field `Tags` pada ekspor berkas CSV dalam method `exportCsv` di [LogbookController.php](file:///c:/laragon/www/AbsenDJJ/app/Http/Controllers/Peserta/LogbookController.php).
+- Memperbarui halaman cetak PDF [logbook_pdf.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/peserta/logbook_pdf.blade.php) untuk menampilkan metadata tags di bawah judul tugas/kegiatan secara rapi.
+- Memperbarui file view [logbook.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/peserta/logbook.blade.php) dengan menyajikan tag-badge di bawah judul kegiatan, menambahkan text input Tag pada modal tambah & edit, serta tombol submit ganda "Simpan Draft" dan "Kirim ke Pembimbing".
+- Menambahkan 3 unit testing baru di [PesertaLogbookTest.php](file:///c:/laragon/www/AbsenDJJ/tests/Feature/PesertaLogbookTest.php) untuk memverifikasi fungsionalitas pembuatan, pembaruan publikasi, dan penghapusan draft logbook.
+
+### Fitur Notifikasi & Pengingat (Reminders)
+
+- Menjalankan migrasi tabel notifikasi bawaan Laravel untuk menyimpan notifikasi persetujuan logbook dan perizinan.
+- Membuat kelas `App\Notifications\AbsenNotification` berbasis database channel untuk mengirim notifikasi secara terstruktur.
+- Memperbarui `App\Http\Controllers\Admin\DashboardController.php` dengan menambahkan metode persetujuan (`approveLogbook`, `rejectLogbook`, `approveLeave`, `rejectLeave`) yang secara otomatis memicu pengiriman notifikasi ke intern yang bersangkutan.
+- Mengubah tampilan tombol Tinjauan Logbook dan Setuju/Tolak Izin di dashboard pembimbing menjadi form submit aksi yang fully-functional.
+- Menambahkan ikon notifikasi lonceng dan dropdown panel notifikasi (*glassmorphic style*) pada top-header [layout.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/layout.blade.php).
+- Mengintegrasikan script penanganan notifikasi real-time via REST API polling (setiap 30 detik) dan fitur **Push Notifications** bawaan browser untuk pengingat absen masuk (jika belum absen setelah jam 07:30) serta pengingat mengisi logbook & absen pulang (jika belum absen pulang setelah jam 15:30) pada [dashboard-layout.js](file:///c:/laragon/www/AbsenDJJ/resources/js/dashboard-layout.js).
+- Membangun kembali asset klien (`npm run build`).
+- Menambahkan 3 unit pengujian baru di [NotificationTest.php](file:///c:/laragon/www/AbsenDJJ/tests/Feature/NotificationTest.php) untuk memverifikasi fungsionalitas pengambilan notifikasi, penandaan dibaca, dan pengiriman notifikasi dari pembimbing (Semua 46 test suite dinyatakan **Lulus**).
 
 
 

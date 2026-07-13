@@ -54,14 +54,21 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('super-admin')->group(fu
 });
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
-    Route::get('/interns', function () {
-        return "Welcome to field supervisor view of all interns!";
-    })->name('admin.interns');
+    Route::get('/interns', [\App\Http\Controllers\Admin\InternController::class, 'index'])->name('admin.interns');
+    Route::get('/interns/{intern}', [\App\Http\Controllers\Admin\InternController::class, 'show'])->name('admin.interns.show');
+    Route::get('/logbooks', [\App\Http\Controllers\Admin\InternController::class, 'logbooks'])->name('admin.logbooks');
+
+    Route::post('/logbook/{logbook}/approve', [\App\Http\Controllers\Admin\DashboardController::class, 'approveLogbook'])->name('admin.logbook.approve');
+    Route::post('/logbook/{logbook}/reject', [\App\Http\Controllers\Admin\DashboardController::class, 'rejectLogbook'])->name('admin.logbook.reject');
+    Route::post('/leave/{leave}/approve', [\App\Http\Controllers\Admin\DashboardController::class, 'approveLeave'])->name('admin.leave.approve');
+    Route::post('/leave/{leave}/reject', [\App\Http\Controllers\Admin\DashboardController::class, 'rejectLeave'])->name('admin.leave.reject');
 });
 
 Route::middleware(['auth', 'role:peserta'])->prefix('peserta')->group(function () {
     // Absensi & Riwayat
     Route::get('/my-attendance', [\App\Http\Controllers\Peserta\AttendanceHistoryController::class, 'index'])->name('peserta.attendance');
+    Route::get('/my-attendance/monthly-report', [\App\Http\Controllers\Peserta\AttendanceHistoryController::class, 'exportMonthlyReport'])->name('peserta.monthly-report');
+    Route::get('/my-attendance/csv', [\App\Http\Controllers\Peserta\AttendanceHistoryController::class, 'exportCsv'])->name('peserta.attendance.csv');
     Route::post('/attendance/check-in', [\App\Http\Controllers\AttendanceController::class, 'checkIn'])->name('peserta.attendance.checkin');
     Route::post('/attendance/check-out', [\App\Http\Controllers\AttendanceController::class, 'checkOut'])->name('peserta.attendance.checkout');
 
@@ -71,7 +78,13 @@ Route::middleware(['auth', 'role:peserta'])->prefix('peserta')->group(function (
     Route::put('/logbook/{logbook}', [\App\Http\Controllers\Peserta\LogbookController::class, 'update'])->name('peserta.logbook.update');
     Route::delete('/logbook/{logbook}', [\App\Http\Controllers\Peserta\LogbookController::class, 'destroy'])->name('peserta.logbook.destroy');
     Route::get('/logbook/export-pdf', [\App\Http\Controllers\Peserta\LogbookController::class, 'exportPdf'])->name('peserta.logbook.pdf');
+    Route::get('/logbook/export-csv', [\App\Http\Controllers\Peserta\LogbookController::class, 'exportCsv'])->name('peserta.logbook.csv');
 
     // Izin / Sakit
+    Route::get('/leave-request', [\App\Http\Controllers\Peserta\LeaveRequestController::class, 'index'])->name('peserta.leave');
     Route::post('/leave-request', [\App\Http\Controllers\Peserta\LeaveRequestController::class, 'store'])->name('peserta.leave.store');
+
+    // Notifications API
+    Route::get('/notifications', [\App\Http\Controllers\Peserta\DashboardController::class, 'getNotifications'])->name('peserta.notifications');
+    Route::post('/notifications/mark-read', [\App\Http\Controllers\Peserta\DashboardController::class, 'markNotificationsRead'])->name('peserta.notifications.markRead');
 });

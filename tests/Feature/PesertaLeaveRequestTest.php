@@ -60,7 +60,7 @@ class PesertaLeaveRequestTest extends TestCase
             'alasan' => 'Ada keperluan keluarga penting.',
         ]);
 
-        $response->assertRedirect('/dashboard');
+        $response->assertRedirect('/peserta/leave-request');
         $this->assertDatabaseHas('leave_requests', [
             'user_id' => $this->peserta->id,
             'jenis' => 'Izin',
@@ -83,7 +83,7 @@ class PesertaLeaveRequestTest extends TestCase
             'file_bukti' => $file,
         ]);
 
-        $response->assertRedirect('/dashboard');
+        $response->assertRedirect('/peserta/leave-request');
         $this->assertDatabaseHas('leave_requests', [
             'user_id' => $this->peserta->id,
             'jenis' => 'Sakit',

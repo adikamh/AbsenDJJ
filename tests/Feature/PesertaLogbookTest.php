@@ -144,4 +144,66 @@ class PesertaLogbookTest extends TestCase
         $response->assertSessionHas('error');
         $this->assertDatabaseHas('logbooks', ['id' => $logbook->id]);
     }
+
+    public function test_peserta_can_create_draft_logbook_with_tags(): void
+    {
+        $response = $this->actingAs($this->peserta)->post('/peserta/logbook', [
+            'tanggal' => '2026-07-10',
+            'kegiatan' => 'Rancang DB',
+            'tags' => 'mysql, schema',
+            'deskripsi' => 'Pekerjaan database schema.',
+            'action' => 'draft',
+        ]);
+
+        $response->assertRedirect('/peserta/logbook');
+        $this->assertDatabaseHas('logbooks', [
+            'user_id' => $this->peserta->id,
+            'kegiatan' => 'Rancang DB',
+            'tags' => 'mysql, schema',
+            'status_approval' => 'Draft',
+        ]);
+    }
+
+    public function test_peserta_can_edit_draft_logbook_and_publish_it(): void
+    {
+        $logbook = Logbook::create([
+            'user_id' => $this->peserta->id,
+            'tanggal' => '2026-07-10',
+            'kegiatan' => 'Rancang DB',
+            'tags' => 'mysql',
+            'deskripsi' => 'Draft description',
+            'status_approval' => 'Draft',
+        ]);
+
+        $response = $this->actingAs($this->peserta)->put('/peserta/logbook/' . $logbook->id, [
+            'kegiatan' => 'Rancang DB Final',
+            'tags' => 'mysql, index',
+            'deskripsi' => 'Final description',
+            'action' => 'submit',
+        ]);
+
+        $response->assertRedirect('/peserta/logbook');
+        $this->assertDatabaseHas('logbooks', [
+            'id' => $logbook->id,
+            'kegiatan' => 'Rancang DB Final',
+            'tags' => 'mysql, index',
+            'status_approval' => 'Pending', // published
+        ]);
+    }
+
+    public function test_peserta_can_delete_draft_logbook(): void
+    {
+        $logbook = Logbook::create([
+            'user_id' => $this->peserta->id,
+            'tanggal' => '2026-07-10',
+            'kegiatan' => 'Draft Kegiatan',
+            'deskripsi' => 'Draft desc',
+            'status_approval' => 'Draft',
+        ]);
+
+        $response = $this->actingAs($this->peserta)->delete('/peserta/logbook/' . $logbook->id);
+
+        $response->assertRedirect('/peserta/logbook');
+        $this->assertDatabaseMissing('logbooks', ['id' => $logbook->id]);
+    }
 }

@@ -164,22 +164,37 @@
         <div class="calendar-header">
             <h2 class="card-title">{{ $selectedDate->translatedFormat('F Y') }}</h2>
             
-            <form action="{{ route('peserta.attendance') }}" method="GET" class="calendar-filter">
-                <select name="month" onchange="this.form.submit()">
-                    @for($m = 1; $m <= 12; $m++)
-                        <option value="{{ $m }}" {{ $m == $month ? 'selected' : '' }}>
-                            {{ \Carbon\Carbon::create(null, $m, 1)->translatedFormat('F') }}
-                        </option>
-                    @endfor
-                </select>
-                <select name="year" onchange="this.form.submit()">
-                    @for($y = now()->year - 2; $y <= now()->year + 1; $y++)
-                        <option value="{{ $y }}" {{ $y == $year ? 'selected' : '' }}>
-                            {{ $y }}
-                        </option>
-                    @endfor
-                </select>
-            </form>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <form action="{{ route('peserta.attendance') }}" method="GET" class="calendar-filter" style="margin: 0;">
+                    <select name="month" onchange="this.form.submit()">
+                        @for($m = 1; $m <= 12; $m++)
+                            <option value="{{ $m }}" {{ $m == $month ? 'selected' : '' }}>
+                                {{ \Carbon\Carbon::create(null, $m, 1)->translatedFormat('F') }}
+                            </option>
+                        @endfor
+                    </select>
+                    <select name="year" onchange="this.form.submit()">
+                        @for($y = now()->year - 2; $y <= now()->year + 1; $y++)
+                            <option value="{{ $y }}" {{ $y == $year ? 'selected' : '' }}>
+                                {{ $y }}
+                            </option>
+                        @endfor
+                    </select>
+                </form>
+                <a href="{{ route('peserta.monthly-report', ['month' => $month, 'year' => $year]) }}" 
+                   target="_blank" 
+                   class="btn-primary" 
+                   style="display: inline-flex; align-items: center; gap: 6px; text-decoration: none; font-size: 0.85rem; padding: 8px 16px; border-radius: 8px; line-height: 1.2;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    Cetak Laporan
+                </a>
+                <a href="{{ route('peserta.attendance.csv', ['month' => $month, 'year' => $year]) }}" 
+                   class="btn-secondary" 
+                   style="display: inline-flex; align-items: center; gap: 6px; text-decoration: none; font-size: 0.85rem; padding: 8px 16px; border-radius: 8px; line-height: 1.2;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    Ekspor CSV Absen
+                </a>
+            </div>
         </div>
 
         <div class="calendar-wrapper">

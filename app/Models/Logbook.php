@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['user_id', 'tanggal', 'kegiatan', 'deskripsi', 'status_approval', 'catatan_pembimbing'])]
+#[Fillable(['user_id', 'tanggal', 'kegiatan', 'tags', 'deskripsi', 'status_approval', 'catatan_pembimbing'])]
 class Logbook extends Model
 {
     /**

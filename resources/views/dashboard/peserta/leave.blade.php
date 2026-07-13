@@ -1,0 +1,268 @@
+@extends('dashboard.layout')
+
+@section('title', 'Izin / Sakit')
+@section('header_title', 'Pengajuan Izin / Sakit')
+
+@push('styles')
+    @vite('resources/css/peserta/dashboard.css')
+    <style>
+        .filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        .filter-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-item label {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .filter-select, .filter-search {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        .filter-select:focus, .filter-search:focus {
+            border-color: var(--accent-primary);
+            background: rgba(255, 255, 255, 0.05);
+            outline: none;
+        }
+
+        .btn-filter-reset {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .btn-filter-reset:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        .document-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            color: var(--accent-primary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .document-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+@endpush
+
+@section('content')
+    <!-- Statistics Cards -->
+    <div class="stats-grid" style="margin-bottom: 24px;">
+        <div class="stat-card hover-lift">
+            <div class="stat-label">Izin Disetujui</div>
+            <div class="stat-value" style="color: #fbbf24;">{{ $approvedIzinCount }} Pengajuan</div>
+        </div>
+        <div class="stat-card hover-lift">
+            <div class="stat-label">Sakit Disetujui</div>
+            <div class="stat-value" style="color: #f87171;">{{ $approvedSakitCount }} Pengajuan</div>
+        </div>
+    </div>
+
+    <div class="content-card">
+        <div class="card-header">
+            <h2 class="card-title">Riwayat Pengajuan Izin & Sakit</h2>
+            <button type="button" class="btn-primary" id="open-add-leave-modal">
+                Buat Pengajuan
+            </button>
+        </div>
+
+        @if(session('success'))
+            <div class="alert alert-success" style="margin: 15px 20px; padding: 12px 16px; border-radius: 8px; background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #10b981; font-weight: 500;">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        <!-- Integrated Filter Form -->
+        <form action="{{ route('peserta.leave') }}" method="GET" class="filter-row">
+            <div class="filter-item">
+                <label for="search">Cari</label>
+                <input type="text" id="search" name="search" value="{{ request('search') }}" class="filter-search" placeholder="Cari alasan... (Tekan Enter)" onchange="this.form.submit()">
+            </div>
+            <div class="filter-item">
+                <label for="jenis">Jenis</label>
+                <select id="jenis" name="jenis" class="filter-select" onchange="this.form.submit()">
+                    <option value="">Semua Jenis</option>
+                    <option value="Izin" {{ request('jenis') === 'Izin' ? 'selected' : '' }}>Izin</option>
+                    <option value="Sakit" {{ request('jenis') === 'Sakit' ? 'selected' : '' }}>Sakit</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <label for="status_approval">Status</label>
+                <select id="status_approval" name="status_approval" class="filter-select" onchange="this.form.submit()">
+                    <option value="">Semua Status</option>
+                    <option value="Pending" {{ request('status_approval') === 'Pending' ? 'selected' : '' }}>Pending</option>
+                    <option value="Approved" {{ request('status_approval') === 'Approved' ? 'selected' : '' }}>Disetujui</option>
+                    <option value="Rejected" {{ request('status_approval') === 'Rejected' ? 'selected' : '' }}>Ditolak</option>
+                </select>
+            </div>
+            @if(request()->anyFilled(['search', 'jenis', 'status_approval']))
+                <a href="{{ route('peserta.leave') }}" class="btn-filter-reset">Reset Filter</a>
+            @endif
+        </form>
+
+        <div class="table-responsive">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th style="width: 5%;">No</th>
+                        <th>Tanggal Mulai</th>
+                        <th>Tanggal Selesai</th>
+                        <th>Jenis</th>
+                        <th>Alasan</th>
+                        <th>Bukti Lampiran</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($leaves as $index => $leave)
+                        <tr>
+                            <td>{{ $leaves->firstItem() + $index }}</td>
+                            <td>{{ $leave->tanggal_mulai->format('d M Y') }}</td>
+                            <td>{{ $leave->tanggal_selesai->format('d M Y') }}</td>
+                            <td>
+                                <span class="badge {{ $leave->jenis === 'Sakit' ? 'badge-danger' : 'badge-warning' }}">
+                                    {{ $leave->jenis }}
+                                </span>
+                            </td>
+                            <td>
+                                <div style="max-width: 300px; white-space: normal; word-break: break-all;">
+                                    {{ $leave->alasan }}
+                                </div>
+                            </td>
+                            <td>
+                                @if($leave->file_bukti)
+                                    <a href="{{ asset($leave->file_bukti) }}" target="_blank" class="document-link">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                        Lihat Berkas
+                                    </a>
+                                @else
+                                    <span style="color: var(--text-secondary); font-size: 0.85rem;">Tidak ada bukti</span>
+                                @endif
+                            </td>
+                            <td>
+                                <span class="badge {{ $leave->status_approval === 'Approved' ? 'badge-success' : ($leave->status_approval === 'Rejected' ? 'badge-danger' : 'badge-warning') }}">
+                                    {{ $leave->status_approval }}
+                                </span>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="7" class="empty-state">Belum ada pengajuan izin atau sakit.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        @if($leaves->hasPages())
+            {{ $leaves->links('partials.pagination') }}
+        @endif
+    </div>
+
+    {{-- ===== Modal: Pengajuan Izin / Sakit ===== --}}
+    <div class="form-modal-backdrop" id="modal-add-leave">
+        <div class="form-modal">
+            <div class="form-modal-header">
+                <h3>Ajukan Izin / Sakit</h3>
+                <button type="button" class="modal-close" id="close-add-leave-modal">&times;</button>
+            </div>
+            <form action="{{ route('peserta.leave.store') }}" method="POST" class="modal-form" enctype="multipart/form-data">
+                @csrf
+                <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label for="tanggal_mulai">Tanggal Mulai</label>
+                        <input type="date" id="tanggal_mulai" name="tanggal_mulai" value="{{ date('Y-m-d') }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="tanggal_selesai">Tanggal Selesai</label>
+                        <input type="date" id="tanggal_selesai" name="tanggal_selesai" value="{{ date('Y-m-d') }}" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="jenis">Jenis Pengajuan</label>
+                    <select id="jenis" name="jenis" required>
+                        <option value="Izin">Izin</option>
+                        <option value="Sakit">Sakit</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="alasan">Alasan Pengajuan</label>
+                    <textarea id="alasan" name="alasan" rows="4" placeholder="Jelaskan alasan pengajuan izin atau sakit secara rinci..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="file_bukti">Dokumen Bukti (Surat Dokter / Lampiran)</label>
+                    <input type="file" id="file_bukti" name="file_bukti" accept="image/*,application/pdf">
+                    <span class="muted-small" style="font-size: 0.72rem; color: var(--text-secondary); display: block; margin-top: 4px;">Format: JPG, JPEG, PNG, atau PDF (Maks. 2MB)</span>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" id="cancel-add-leave-modal">Batal</button>
+                    <button type="submit" class="btn-primary">Kirim Pengajuan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+@endsection
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const modalAddLeave = document.getElementById('modal-add-leave');
+            const btnOpenAddLeave = document.getElementById('open-add-leave-modal');
+            const btnCloseAddLeave = document.getElementById('close-add-leave-modal');
+            const btnCancelAddLeave = document.getElementById('cancel-add-leave-modal');
+
+            const toggleAddLeaveModal = (show) => {
+                if (modalAddLeave) {
+                    modalAddLeave.classList.toggle('is-open', show);
+                }
+            };
+
+            btnOpenAddLeave?.addEventListener('click', () => toggleAddLeaveModal(true));
+            btnCloseAddLeave?.addEventListener('click', () => toggleAddLeaveModal(false));
+            btnCancelAddLeave?.addEventListener('click', () => toggleAddLeaveModal(false));
+
+            modalAddLeave?.addEventListener('click', (e) => {
+                if (e.target === modalAddLeave) {
+                    toggleAddLeaveModal(false);
+                }
+            });
+        });
+    </script>
+@endpush

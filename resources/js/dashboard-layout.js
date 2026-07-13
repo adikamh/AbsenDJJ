@@ -208,3 +208,141 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// Notifications & Reminders feature
+document.addEventListener('DOMContentLoaded', () => {
+    const status = window.userAttendanceStatus || {};
+    
+    if (status.isPeserta) {
+        // --- 1. Notification Dropdown Panel ---
+        const bellBtn = document.getElementById('notification-bell-btn');
+        const menu = document.getElementById('notification-menu');
+        const list = document.getElementById('notification-list');
+        const badge = document.getElementById('notification-badge');
+        const markAllRead = document.getElementById('mark-all-read-btn');
+
+        if (bellBtn && menu) {
+            bellBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isVisible = menu.style.display === 'block';
+                menu.style.display = isVisible ? 'none' : 'block';
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!menu.contains(e.target) && !bellBtn.contains(e.target)) {
+                    menu.style.display = 'none';
+                }
+            });
+        }
+
+        async function fetchNotifications() {
+            try {
+                const response = await fetch('/peserta/notifications');
+                if (!response.ok) return;
+                const data = await response.json();
+                
+                if (data.length > 0) {
+                    badge.textContent = data.length;
+                    badge.style.display = 'block';
+
+                    list.innerHTML = '';
+                    data.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'notification-item notification-item-unread';
+                        div.innerHTML = `
+                            <div class="notification-item-title">${item.title}</div>
+                            <div class="notification-item-desc">${item.message}</div>
+                            <div class="notification-item-time">${item.created_at}</div>
+                        `;
+                        list.appendChild(div);
+                    });
+                } else {
+                    badge.style.display = 'none';
+                    list.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 20px 0; font-size: 0.85rem;">Tidak ada notifikasi baru</div>';
+                }
+            } catch (err) {
+                console.error('Error fetching notifications:', err);
+            }
+        }
+
+        if (markAllRead) {
+            markAllRead.addEventListener('click', async () => {
+                try {
+                    const response = await fetch('/peserta/notifications/mark-read', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                        }
+                    });
+                    if (response.ok) {
+                        badge.style.display = 'none';
+                        badge.textContent = '0';
+                        list.querySelectorAll('.notification-item-unread').forEach(item => {
+                            item.classList.remove('notification-item-unread');
+                        });
+                        fetchNotifications();
+                    }
+                } catch (err) {
+                    console.error('Error marking notifications as read:', err);
+                }
+            });
+        }
+
+        // Fetch initially and poll every 30 seconds
+        fetchNotifications();
+        setInterval(fetchNotifications, 30000);
+
+        // --- 2. Push Notifications & Reminders ---
+        if ('Notification' in window) {
+            // Request permission if not already granted or denied
+            if (Notification.permission === 'default') {
+                // Request politely on first user interaction or on load
+                setTimeout(() => {
+                    Notification.requestPermission();
+                }, 2000);
+            }
+
+            const todayStr = new Date().toISOString().slice(0, 10);
+            
+            // Check if it's not a holiday
+            if (!status.isHolidayToday) {
+                const now = new Date();
+                const currentHour = now.getHours();
+                const currentMinutes = now.getMinutes();
+
+                // A. Check-in Reminder (past 07:30 AM)
+                if (!status.hasCheckedInToday) {
+                    if (currentHour > 7 || (currentHour === 7 && currentMinutes >= 30)) {
+                        const checkinReminded = localStorage.getItem('absen_checkin_reminded_date');
+                        if (checkinReminded !== todayStr) {
+                            if (Notification.permission === 'granted') {
+                                new Notification('Pengingat Absen Masuk', {
+                                    body: 'Halo! Anda belum melakukan absen masuk hari ini. Silakan segera absen masuk.',
+                                    icon: '/favicon.ico'
+                                });
+                                localStorage.setItem('absen_checkin_reminded_date', todayStr);
+                            }
+                        }
+                    }
+                }
+
+                // B. Check-out Reminder (past 15:30 PM)
+                if (status.hasCheckedInToday && !status.hasCheckedOutToday) {
+                    if (currentHour > 15 || (currentHour === 15 && currentMinutes >= 30)) {
+                        const checkoutReminded = localStorage.getItem('absen_checkout_reminded_date');
+                        if (checkoutReminded !== todayStr) {
+                            if (Notification.permission === 'granted') {
+                                new Notification('Pengingat Absen Pulang', {
+                                    body: 'Halo! Jam kerja Anda akan segera berakhir. Jangan lupa mengisi logbook kegiatan dan melakukan absen pulang.',
+                                    icon: '/favicon.ico'
+                                });
+                                localStorage.setItem('absen_checkout_reminded_date', todayStr);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+});
+

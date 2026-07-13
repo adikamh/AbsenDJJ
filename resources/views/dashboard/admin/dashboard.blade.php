@@ -52,7 +52,17 @@
                                 <td>{{ $logbook->kegiatan }}</td>
                                 <td><span class="muted-small">{{ Str::limit($logbook->deskripsi, 60) }}</span></td>
                                 <td>
-                                    <span class="badge badge-warning action-badge">Tinjau</span>
+                                    <div style="display: flex; gap: 6px; align-items: center;">
+                                        <form action="{{ route('admin.logbook.approve', $logbook->id) }}" method="POST" style="margin: 0;">
+                                            @csrf
+                                            <button type="submit" class="badge badge-success" style="border: none; cursor: pointer; padding: 4px 8px; font-weight: 600;">Setujui</button>
+                                        </form>
+                                        <form action="{{ route('admin.logbook.reject', $logbook->id) }}" method="POST" style="margin: 0; display: flex; align-items: center; gap: 4px;">
+                                            @csrf
+                                            <input type="text" name="catatan_pembimbing" placeholder="Catatan..." style="font-size: 0.72rem; padding: 4px; border: 1px solid var(--glass-border); border-radius: 4px; background: rgba(255,255,255,0.05); color: #fff; width: 100px;" required>
+                                            <button type="submit" class="badge badge-danger" style="border: none; cursor: pointer; padding: 4px 8px; font-weight: 600;">Tolak</button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
@@ -127,14 +137,23 @@
                             <td>{{ $leave->alasan }}</td>
                             <td>
                                 @if($leave->file_bukti)
-                                    <a href="#" class="badge badge-info download-link">Unduh Bukti</a>
+                                    <a href="{{ asset($leave->file_bukti) }}" target="_blank" class="badge badge-info download-link">Unduh Bukti</a>
                                 @else
                                     -
                                 @endif
                             </td>
                             <td>
-                                <span class="badge badge-success action-badge action-badge-spaced">Setujui</span>
-                                <span class="badge badge-danger action-badge">Tolak</span>
+                                <div style="display: flex; gap: 6px; align-items: center;">
+                                    <form action="{{ route('admin.leave.approve', $leave->id) }}" method="POST" style="margin: 0;">
+                                        @csrf
+                                        <button type="submit" class="badge badge-success" style="border: none; cursor: pointer; padding: 4px 8px; font-weight: 600;">Setujui</button>
+                                    </form>
+                                    <form action="{{ route('admin.leave.reject', $leave->id) }}" method="POST" style="margin: 0; display: flex; align-items: center; gap: 4px;">
+                                        @csrf
+                                        <input type="text" name="catatan_pembimbing" placeholder="Catatan..." style="font-size: 0.72rem; padding: 4px; border: 1px solid var(--glass-border); border-radius: 4px; background: rgba(255,255,255,0.05); color: #fff; width: 100px;" required>
+                                        <button type="submit" class="badge badge-danger" style="border: none; cursor: pointer; padding: 4px 8px; font-weight: 600;">Tolak</button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     @empty

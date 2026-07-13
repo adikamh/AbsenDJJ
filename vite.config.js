@@ -30,6 +30,7 @@ export default defineConfig({
                 // Admin
                 'resources/css/admin/dashboard.css',
                 'resources/js/admin/dashboard.js',
+                'resources/css/admin/interns.css',
 
                 // Peserta
                 'resources/css/peserta/dashboard.css',
