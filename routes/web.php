@@ -57,6 +57,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/interns', [\App\Http\Controllers\Admin\InternController::class, 'index'])->name('admin.interns');
     Route::get('/interns/{intern}', [\App\Http\Controllers\Admin\InternController::class, 'show'])->name('admin.interns.show');
     Route::get('/logbooks', [\App\Http\Controllers\Admin\InternController::class, 'logbooks'])->name('admin.logbooks');
+    Route::get('/leaves', [\App\Http\Controllers\Admin\InternController::class, 'leaves'])->name('admin.leaves');
 
     Route::post('/logbook/{logbook}/approve', [\App\Http\Controllers\Admin\DashboardController::class, 'approveLogbook'])->name('admin.logbook.approve');
     Route::post('/logbook/{logbook}/reject', [\App\Http\Controllers\Admin\DashboardController::class, 'rejectLogbook'])->name('admin.logbook.reject');

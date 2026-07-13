@@ -18,13 +18,40 @@ class InternController extends Controller
     public function index(Request $request)
     {
         $pembimbing = auth()->user();
+        
+        // 1. Calculate overall stats for cards
+        $allInterns = $pembimbing->anakBimbingan()->get();
+        $totalInternsCount = $allInterns->count();
+        
+        $activeTodayCount = 0;
+        $onLeaveTodayCount = 0;
+        
+        foreach ($allInterns as $intern) {
+            $todayAttendance = $intern->attendances()->whereDate('tanggal', Carbon::today())->first();
+            if ($todayAttendance) {
+                if (in_array($todayAttendance->status, ['Hadir', 'Terlambat'])) {
+                    $activeTodayCount++;
+                }
+            } else {
+                $todayLeave = $intern->leaveRequests()
+                    ->where('status_approval', 'Approved')
+                    ->whereDate('tanggal_mulai', '<=', Carbon::today())
+                    ->whereDate('tanggal_selesai', '>=', Carbon::today())
+                    ->first();
+                if ($todayLeave && in_array($todayLeave->jenis, ['Izin', 'Sakit'])) {
+                    $onLeaveTodayCount++;
+                }
+            }
+        }
+
+        // 2. Query with search filter and pagination
         $query = $pembimbing->anakBimbingan()->with('instansi');
 
         if ($request->filled('search')) {
             $query->where('nama_lengkap', 'like', '%' . $request->input('search') . '%');
         }
 
-        $interns = $query->get()->map(function ($intern) {
+        $interns = $query->paginate(5)->withQueryString()->through(function ($intern) {
             // Get today's attendance status
             $todayAttendance = $intern->attendances()->whereDate('tanggal', Carbon::today())->first();
             $todayStatus = 'Belum Absen';
@@ -46,7 +73,7 @@ class InternController extends Controller
             $totalPresent = $intern->attendances()->whereIn('status', ['Hadir', 'Terlambat'])->count();
             $totalLogbook = $intern->logbooks()->where('status_approval', 'Approved')->count();
 
-            // Calculate attendance rate (e.g. out of total attendance records or standard 20 days max)
+            // Calculate attendance rate
             $totalRecords = $intern->attendances()->count();
             $attendanceRate = $totalRecords > 0 ? round(($totalPresent / $totalRecords) * 100) : 0;
 
@@ -57,11 +84,6 @@ class InternController extends Controller
 
             return $intern;
         });
-
-        // Overall stats for cards
-        $totalInternsCount = $interns->count();
-        $activeTodayCount = $interns->whereIn('today_status', ['Hadir', 'Terlambat'])->count();
-        $onLeaveTodayCount = $interns->whereIn('today_status', ['Izin', 'Sakit'])->count();
 
         return view('dashboard.admin.interns.index', compact(
             'interns',
@@ -141,8 +163,66 @@ class InternController extends Controller
             $query->where('status_approval', $request->input('status_approval'));
         }
 
+        // Get overall stats counts (unfiltered)
+        $pendingLogbooksCount = Logbook::whereIn('user_id', $internIds)->where('status_approval', 'Pending')->count();
+        $approvedLogbooksCount = Logbook::whereIn('user_id', $internIds)->where('status_approval', 'Approved')->count();
+        $rejectedLogbooksCount = Logbook::whereIn('user_id', $internIds)->where('status_approval', 'Rejected')->count();
+
         $logbooks = $query->paginate(5)->withQueryString();
 
-        return view('dashboard.admin.logbooks.index', compact('logbooks'));
+        return view('dashboard.admin.logbooks.index', compact(
+            'logbooks',
+            'pendingLogbooksCount',
+            'approvedLogbooksCount',
+            'rejectedLogbooksCount'
+        ));
+    }
+
+    /**
+     * Display a listing of all leave requests from guided interns.
+     */
+    public function leaves(Request $request)
+    {
+        $pembimbing = auth()->user();
+        
+        // Get user IDs of guided interns
+        $internIds = $pembimbing->anakBimbingan()->pluck('id');
+
+        $query = LeaveRequest::whereIn('user_id', $internIds)
+            ->with('user')
+            ->orderBy('tanggal_mulai', 'desc');
+
+        // Apply filters
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function($q) use ($search) {
+                $q->where('alasan', 'like', '%' . $search . '%')
+                  ->orWhereHas('user', function($qu) use ($search) {
+                      $qu->where('nama_lengkap', 'like', '%' . $search . '%');
+                  });
+            });
+        }
+
+        if ($request->filled('status_approval')) {
+            $query->where('status_approval', $request->input('status_approval'));
+        }
+
+        if ($request->filled('jenis')) {
+            $query->where('jenis', $request->input('jenis'));
+        }
+
+        // Get overall stats counts (unfiltered)
+        $pendingLeavesCount = LeaveRequest::whereIn('user_id', $internIds)->where('status_approval', 'Pending')->count();
+        $approvedLeavesCount = LeaveRequest::whereIn('user_id', $internIds)->where('status_approval', 'Approved')->count();
+        $rejectedLeavesCount = LeaveRequest::whereIn('user_id', $internIds)->where('status_approval', 'Rejected')->count();
+
+        $leaves = $query->paginate(5)->withQueryString();
+
+        return view('dashboard.admin.leaves.index', compact(
+            'leaves',
+            'pendingLeavesCount',
+            'approvedLeavesCount',
+            'rejectedLeavesCount'
+        ));
     }
 }

@@ -12,26 +12,79 @@
 @endpush
 
 @section('content')
+    <!-- Premium Stats Grid -->
     <div class="stats-grid">
+        <!-- Card 1: Guided Interns -->
         <div class="stat-card hover-lift">
-            <div class="stat-label">Anak Bimbingan Aktif</div>
-            <div class="stat-value">{{ $interns->count() }} Orang</div>
+            <div class="stat-info">
+                <span class="stat-label">Anak Bimbingan Aktif</span>
+                <span class="stat-value">{{ $totalInternsCount }} Orang</span>
+            </div>
+            <div class="stat-icon-wrapper">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+            </div>
         </div>
+
+        <!-- Card 2: Hadir Today -->
         <div class="stat-card hover-lift">
-            <div class="stat-label">Intern Hadir Hari Ini</div>
-            <div class="stat-value">{{ $hadirTodayCount }} Orang</div>
+            <div class="stat-info">
+                <span class="stat-label">Intern Hadir Hari Ini</span>
+                <span class="stat-value">{{ $hadirTodayCount }} Orang</span>
+            </div>
+            <div class="stat-icon-wrapper">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+            </div>
         </div>
+
+        <!-- Card 3: Pending Logbooks -->
         <div class="stat-card hover-lift">
-            <div class="stat-label">Persetujuan Logbook Pending</div>
-            <div class="stat-value">{{ $pendingLogbooks->count() }} Item</div>
+            <div class="stat-info">
+                <span class="stat-label">Pending Logbook</span>
+                <span class="stat-value">{{ $totalPendingLogbooksCount }} Item</span>
+            </div>
+            <div class="stat-icon-wrapper">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Card 4: Pending Leaves -->
+        <div class="stat-card hover-lift">
+            <div class="stat-info">
+                <span class="stat-label">Pending Izin / Sakit</span>
+                <span class="stat-value">{{ $totalPendingLeavesCount }} Permohonan</span>
+            </div>
+            <div class="stat-icon-wrapper">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+            </div>
         </div>
     </div>
 
+    <!-- Main Dashboard Rows -->
     <div class="admin-dashboard-row">
-        <!-- Logbooks Pending Section -->
+        <!-- Logbooks Pending Section (Highlight Max 3) -->
         <div class="content-card">
-            <div class="card-header">
-                <h2 class="card-title">Persetujuan Logbook Harian</h2>
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; padding: 20px;">
+                <h2 class="card-title" style="margin: 0;">Persetujuan Logbook Harian</h2>
+                <span class="badge badge-warning">{{ $totalPendingLogbooksCount }} Pending</span>
             </div>
             <div class="table-responsive">
                 <table class="custom-table">
@@ -40,45 +93,50 @@
                             <th>Intern</th>
                             <th>Tanggal</th>
                             <th>Kegiatan</th>
-                            <th>Deskripsi</th>
                             <th>Tindakan</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($pendingLogbooks as $logbook)
                             <tr>
-                                <td><strong>{{ $logbook->user->nama_lengkap }}</strong></td>
-                                <td>{{ $logbook->tanggal->format('d M Y') }}</td>
-                                <td>{{ $logbook->kegiatan }}</td>
-                                <td><span class="muted-small">{{ Str::limit($logbook->deskripsi, 60) }}</span></td>
                                 <td>
-                                    <div style="display: flex; gap: 6px; align-items: center;">
-                                        <form action="{{ route('admin.logbook.approve', $logbook->id) }}" method="POST" style="margin: 0;">
-                                            @csrf
-                                            <button type="submit" class="badge badge-success" style="border: none; cursor: pointer; padding: 4px 8px; font-weight: 600;">Setujui</button>
-                                        </form>
-                                        <form action="{{ route('admin.logbook.reject', $logbook->id) }}" method="POST" style="margin: 0; display: flex; align-items: center; gap: 4px;">
-                                            @csrf
-                                            <input type="text" name="catatan_pembimbing" placeholder="Catatan..." style="font-size: 0.72rem; padding: 4px; border: 1px solid var(--glass-border); border-radius: 4px; background: rgba(255,255,255,0.05); color: #fff; width: 100px;" required>
-                                            <button type="submit" class="badge badge-danger" style="border: none; cursor: pointer; padding: 4px 8px; font-weight: 600;">Tolak</button>
-                                        </form>
+                                    <strong>{{ $logbook->user->nama_lengkap }}</strong>
+                                    <br>
+                                    <span class="muted-small">{{ $logbook->user->instansi?->nama_instansi ?? '-' }}</span>
+                                </td>
+                                <td>{{ $logbook->tanggal->format('d M Y') }}</td>
+                                <td>
+                                    <strong>{{ $logbook->kegiatan }}</strong>
+                                    <br>
+                                    <span class="muted-small">{{ Str::limit($logbook->deskripsi, 45) }}</span>
+                                </td>
+                                <td>
+                                    <div style="display: flex; gap: 6px; flex-direction: column;">
+                                        <button type="button" class="badge badge-success approve-btn" style="border: none; cursor: pointer; padding: 4px 8px; font-weight: 600; width: 100%; text-align: center;" data-type="Logbook" data-action-url="{{ route('admin.logbook.approve', $logbook->id) }}">Setujui</button>
+                                        <button type="button" class="badge badge-danger reject-btn" style="border: none; cursor: pointer; padding: 4px 8px; font-weight: 600; width: 100%; text-align: center;" data-type="Logbook" data-action-url="{{ route('admin.logbook.reject', $logbook->id) }}">Tolak</button>
                                     </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="empty-state">Tidak ada logbook yang membutuhkan persetujuan.</td>
+                                <td colspan="4" class="empty-state">Tidak ada logbook yang membutuhkan persetujuan.</td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
+            @if($totalPendingLogbooksCount > 3)
+                <div class="card-footer" style="padding: 15px; text-align: center; border-top: 1px solid var(--glass-border);">
+                    <a href="{{ route('admin.logbooks', ['status_approval' => 'Pending']) }}" class="btn-secondary" style="font-size: 0.85rem; text-decoration: none; padding: 8px 16px; display: inline-block;">Lihat Semua Pending ({{ $totalPendingLogbooksCount }}) &rarr;</a>
+                </div>
+            @endif
         </div>
 
-        <!-- Guided Interns List -->
+        <!-- Guided Interns List (Highlight Max 3) -->
         <div class="content-card">
-            <div class="card-header">
-                <h2 class="card-title">Daftar Intern Anda</h2>
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; padding: 20px;">
+                <h2 class="card-title" style="margin: 0;">Daftar Intern Anda</h2>
+                <span class="badge badge-info">{{ $totalInternsCount }} Total</span>
             </div>
             <div class="table-responsive">
                 <table class="custom-table">
@@ -86,6 +144,7 @@
                         <tr>
                             <th>Nama</th>
                             <th>Instansi</th>
+                            <th>Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -93,22 +152,31 @@
                             <tr>
                                 <td><strong>{{ $intern->nama_lengkap }}</strong></td>
                                 <td><span class="muted-small">{{ $intern->instansi?->nama_instansi ?? '-' }}</span></td>
+                                <td>
+                                    <a href="{{ route('admin.interns.show', $intern->id) }}" class="badge badge-info" style="text-decoration: none; display: inline-block;">Lihat Profil</a>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="2" class="empty-state">Belum ada peserta yang dibimbing.</td>
+                                <td colspan="3" class="empty-state">Belum ada peserta yang dibimbing.</td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
+            @if($totalInternsCount > 3)
+                <div class="card-footer" style="padding: 15px; text-align: center; border-top: 1px solid var(--glass-border);">
+                    <a href="{{ route('admin.interns') }}" class="btn-secondary" style="font-size: 0.85rem; text-decoration: none; padding: 8px 16px; display: inline-block;">Kelola Semua Intern ({{ $totalInternsCount }}) &rarr;</a>
+                </div>
+            @endif
         </div>
     </div>
 
-    <!-- Leave Requests Section -->
-    <div class="content-card">
-        <div class="card-header">
-            <h2 class="card-title">Pengajuan Izin / Sakit</h2>
+    <!-- Leave Requests Section (Highlight Max 3) -->
+    <div class="content-card" style="margin-top: 30px;">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; padding: 20px;">
+            <h2 class="card-title" style="margin: 0;">Pengajuan Izin / Sakit Terbaru</h2>
+            <span class="badge badge-danger">{{ $totalPendingLeavesCount }} Tertunda</span>
         </div>
         <div class="table-responsive">
             <table class="custom-table">
@@ -126,7 +194,11 @@
                 <tbody>
                     @forelse($pendingLeaves as $leave)
                         <tr>
-                            <td><strong>{{ $leave->user->nama_lengkap }}</strong></td>
+                            <td>
+                                <strong>{{ $leave->user->nama_lengkap }}</strong>
+                                <br>
+                                <span class="muted-small">{{ $leave->user->instansi?->nama_instansi ?? '-' }}</span>
+                            </td>
                             <td>{{ $leave->tanggal_mulai->format('d M Y') }}</td>
                             <td>{{ $leave->tanggal_selesai->format('d M Y') }}</td>
                             <td>
@@ -137,22 +209,15 @@
                             <td>{{ $leave->alasan }}</td>
                             <td>
                                 @if($leave->file_bukti)
-                                    <a href="{{ asset($leave->file_bukti) }}" target="_blank" class="badge badge-info download-link">Unduh Bukti</a>
+                                    <a href="{{ asset($leave->file_bukti) }}" target="_blank" class="badge badge-info download-link" style="text-decoration: none;">Unduh Bukti</a>
                                 @else
                                     -
                                 @endif
                             </td>
                             <td>
-                                <div style="display: flex; gap: 6px; align-items: center;">
-                                    <form action="{{ route('admin.leave.approve', $leave->id) }}" method="POST" style="margin: 0;">
-                                        @csrf
-                                        <button type="submit" class="badge badge-success" style="border: none; cursor: pointer; padding: 4px 8px; font-weight: 600;">Setujui</button>
-                                    </form>
-                                    <form action="{{ route('admin.leave.reject', $leave->id) }}" method="POST" style="margin: 0; display: flex; align-items: center; gap: 4px;">
-                                        @csrf
-                                        <input type="text" name="catatan_pembimbing" placeholder="Catatan..." style="font-size: 0.72rem; padding: 4px; border: 1px solid var(--glass-border); border-radius: 4px; background: rgba(255,255,255,0.05); color: #fff; width: 100px;" required>
-                                        <button type="submit" class="badge badge-danger" style="border: none; cursor: pointer; padding: 4px 8px; font-weight: 600;">Tolak</button>
-                                    </form>
+                                <div style="display: flex; gap: 6px; flex-direction: column;">
+                                    <button type="button" class="badge badge-success approve-btn" style="border: none; cursor: pointer; padding: 4px 8px; font-weight: 600; text-align: center;" data-type="Izin/Sakit" data-action-url="{{ route('admin.leave.approve', $leave->id) }}">Setujui</button>
+                                    <button type="button" class="badge badge-danger reject-btn" style="border: none; cursor: pointer; padding: 4px 8px; font-weight: 600; text-align: center;" data-type="Izin/Sakit" data-action-url="{{ route('admin.leave.reject', $leave->id) }}">Tolak</button>
                                 </div>
                             </td>
                         </tr>
@@ -164,5 +229,35 @@
                 </tbody>
             </table>
         </div>
+        @if($totalPendingLeavesCount > 3)
+            <div class="card-footer" style="padding: 15px; text-align: center; border-top: 1px solid var(--glass-border);">
+                <a href="{{ route('admin.leaves', ['status_approval' => 'Pending']) }}" class="btn-secondary" style="font-size: 0.85rem; text-decoration: none; padding: 8px 16px; display: inline-block;">Lihat Semua Pending ({{ $totalPendingLeavesCount }}) &rarr;</a>
+            </div>
+        @endif
+    </div>
+
+    <!-- Action Confirmation Modal -->
+    <div id="action-confirm-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 1100; align-items: center; justify-content: center; padding: 20px;">
+        <div style="background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; width: 100%; max-width: 450px; padding: 24px; position: relative; color: var(--text-primary); box-shadow: 0 15px 35px rgba(0,0,0,0.5); backdrop-filter: blur(20px);">
+            <h3 id="confirm-modal-title" style="margin: 0 0 12px 0; font-size: 1.15rem; font-weight: 700; color: var(--text-primary);">Konfirmasi Tindakan</h3>
+            <p id="confirm-modal-text" style="margin: 0 0 20px 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5;"></p>
+            
+            <form id="confirm-action-form" method="POST" style="display: flex; flex-direction: column; gap: 15px; margin: 0;">
+                @csrf
+                <div id="confirm-comment-group" style="display: flex; flex-direction: column; gap: 8px;">
+                    <label id="confirm-comment-label" for="confirm-catatan" style="font-weight: 600; font-size: 0.85rem; color: var(--text-secondary);">Catatan Pembimbing</label>
+                    <textarea id="confirm-catatan" name="catatan_pembimbing" placeholder="Tulis catatan (opsional)..." style="padding: 10px; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: var(--text-primary); width: 100%; min-height: 80px; resize: vertical; font-family: inherit; font-size: 0.9rem;"></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
+                    <button type="button" id="confirm-modal-cancel" class="btn-secondary" style="padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; cursor: pointer;">Batal</button>
+                    <button type="submit" id="confirm-modal-submit" class="btn-primary" style="padding: 8px 16px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; color: #fff; font-size: 0.85rem;"></button>
+                </div>
+            </form>
+        </div>
     </div>
 @endsection
+
+@push('scripts')
+    @vite('resources/js/admin/dashboard.js')
+@endpush

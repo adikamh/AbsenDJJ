@@ -8,41 +8,45 @@
 @endpush
 
 @section('content')
-    <!-- Filter & Search Card -->
-    <div class="content-card" style="margin-bottom: 30px;">
-        <div class="card-header">
-            <h2 class="card-title">Filter & Pencarian Logbook</h2>
+    <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px;">
+        <div class="stat-card hover-lift" style="background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 12px; padding: 20px; backdrop-filter: blur(10px);">
+            <div class="stat-label" style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">Logbook Pending</div>
+            <div class="stat-value" style="font-size: 1.6rem; font-weight: 700; color: #fbbf24; margin-top: 6px;">{{ $pendingLogbooksCount }} Item</div>
         </div>
-        <form action="{{ route('admin.logbooks') }}" method="GET" class="filter-row" style="padding: 20px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
-            <div class="filter-group" style="flex: 2; min-width: 250px; display: flex; flex-direction: column; gap: 8px;">
-                <label for="search" style="font-weight: 500; font-size: 0.85rem; color: var(--text-secondary);">Cari (Nama Intern / Kegiatan / Deskripsi)</label>
-                <input type="text" id="search" name="search" value="{{ request('search') }}" class="filter-input" placeholder="Masukkan nama intern atau kata kunci kegiatan..." style="width: 100%;" onchange="this.form.submit()">
-            </div>
+        <div class="stat-card hover-lift" style="background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 12px; padding: 20px; backdrop-filter: blur(10px);">
+            <div class="stat-label" style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">Logbook Disetujui</div>
+            <div class="stat-value" style="font-size: 1.6rem; font-weight: 700; color: #34d399; margin-top: 6px;">{{ $approvedLogbooksCount }} Item</div>
+        </div>
+        <div class="stat-card hover-lift" style="background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 12px; padding: 20px; backdrop-filter: blur(10px);">
+            <div class="stat-label" style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 500;">Logbook Ditolak</div>
+            <div class="stat-value" style="font-size: 1.6rem; font-weight: 700; color: #f87171; margin-top: 6px;">{{ $rejectedLogbooksCount }} Item</div>
+        </div>
+    </div>
+
+    <!-- Logbooks List Card (Unified Search, Filter, and Table) -->
+    <div class="content-card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; padding: 20px; border-bottom: 1px solid var(--glass-border);">
+            <h2 class="card-title" style="margin: 0;">Daftar Logbook Intern</h2>
             
-            <div class="filter-group" style="flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 8px;">
-                <label for="status_approval" style="font-weight: 500; font-size: 0.85rem; color: var(--text-secondary);">Status Approval</label>
-                <select id="status_approval" name="status_approval" class="filter-select" style="width: 100%;" onchange="this.form.submit()">
+            <form action="{{ route('admin.logbooks') }}" method="GET" style="margin: 0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <!-- Search input -->
+                <input type="text" name="search" value="{{ request('search') }}" class="filter-input" placeholder="Cari nama/kegiatan..." style="padding: 8px 12px; font-size: 0.85rem; width: 220px; border: 1px solid var(--glass-border); border-radius: 6px; background: rgba(255,255,255,0.05); color: var(--text-primary);" onchange="this.form.submit()">
+                
+                <!-- Status approval select -->
+                <select name="status_approval" class="filter-select" style="padding: 8px 12px; font-size: 0.85rem; border: 1px solid var(--glass-border); border-radius: 6px; background: rgba(0,0,0,0.2); color: var(--text-primary); width: 140px;" onchange="this.form.submit()">
                     <option value="">Semua Status</option>
                     <option value="Pending" {{ request('status_approval') === 'Pending' ? 'selected' : '' }}>Pending</option>
                     <option value="Approved" {{ request('status_approval') === 'Approved' ? 'selected' : '' }}>Disetujui</option>
                     <option value="Rejected" {{ request('status_approval') === 'Rejected' ? 'selected' : '' }}>Ditolak</option>
                 </select>
-            </div>
 
-            <div class="filter-actions" style="margin-top: 26px; display: flex; gap: 8px;">
-                <button type="submit" class="btn-primary" style="padding: 10px 20px;">Filter</button>
+                <button type="submit" class="btn-primary" style="padding: 8px 16px; font-size: 0.85rem; border-radius: 6px; cursor: pointer;">Filter</button>
                 @if(request()->anyFilled(['search', 'status_approval']))
-                    <a href="{{ route('admin.logbooks') }}" class="btn-secondary" style="padding: 10px 20px; text-decoration: none; display: inline-block;">Reset</a>
+                    <a href="{{ route('admin.logbooks') }}" class="btn-secondary" style="padding: 8px 16px; font-size: 0.85rem; text-decoration: none; border-radius: 6px; display: inline-block;">Reset</a>
                 @endif
-            </div>
-        </form>
-    </div>
-
-    <!-- Logbooks List Card -->
-    <div class="content-card">
-        <div class="card-header">
-            <h2 class="card-title">Daftar Logbook Intern</h2>
+            </form>
         </div>
+
         <div class="table-responsive">
             <table class="custom-table">
                 <thead>
@@ -50,10 +54,7 @@
                         <th>Tanggal</th>
                         <th>Nama Intern</th>
                         <th>Kegiatan</th>
-                        <th>Deskripsi</th>
-                        <th>Tag</th>
                         <th>Status</th>
-                        <th>Catatan Pembimbing</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
@@ -68,46 +69,34 @@
                             </td>
                             <td><strong>{{ $logbook->kegiatan }}</strong></td>
                             <td>
-                                <span class="muted-small" style="display: block; max-width: 250px; white-space: normal; line-height: 1.4;">
-                                    {{ $logbook->deskripsi }}
-                                </span>
-                            </td>
-                            <td>
-                                @if($logbook->tags)
-                                    @foreach(explode(',', $logbook->tags) as $tag)
-                                        <span class="badge badge-info" style="font-size: 0.7rem; padding: 2px 6px; margin: 1px;">#{{ trim($tag) }}</span>
-                                    @endforeach
-                                @else
-                                    -
-                                @endif
-                            </td>
-                            <td>
                                 <span class="badge {{ $logbook->status_approval === 'Approved' ? 'badge-success' : ($logbook->status_approval === 'Rejected' ? 'badge-danger' : 'badge-warning') }}">
                                     {{ $logbook->status_approval }}
                                 </span>
                             </td>
-                            <td>{{ $logbook->catatan_pembimbing ?? '-' }}</td>
                             <td>
-                                @if($logbook->status_approval === 'Pending')
-                                    <div style="display: flex; gap: 6px; flex-direction: column;">
-                                        <form action="{{ route('admin.logbook.approve', $logbook->id) }}" method="POST" style="margin: 0;">
-                                            @csrf
-                                            <button type="submit" class="badge badge-success" style="border: none; cursor: pointer; padding: 4px 8px; font-weight: 600; width: 100%;">Setujui</button>
-                                        </form>
-                                        <form action="{{ route('admin.logbook.reject', $logbook->id) }}" method="POST" style="margin: 0; display: flex; flex-direction: column; gap: 4px;">
-                                            @csrf
-                                            <input type="text" name="catatan_pembimbing" placeholder="Catatan..." style="font-size: 0.7rem; padding: 4px; border: 1px solid var(--glass-border); border-radius: 4px; background: rgba(255,255,255,0.05); color: #fff; width: 90px;" required>
-                                            <button type="submit" class="badge badge-danger" style="border: none; cursor: pointer; padding: 4px 8px; font-weight: 600;">Tolak</button>
-                                        </form>
-                                    </div>
-                                @else
-                                    <span class="muted-small">-</span>
-                                @endif
+                                <div style="display: flex; gap: 6px; flex-direction: column;">
+                                    <button type="button" class="badge badge-info logbook-detail-trigger" style="border: none; cursor: pointer; padding: 4px 8px; font-weight: 600; width: 100%; text-align: center;"
+                                        data-id="{{ $logbook->id }}"
+                                        data-name="{{ $logbook->user?->nama_lengkap }}"
+                                        data-instansi="{{ $logbook->user?->instansi?->nama_instansi ?? '-' }}"
+                                        data-date="{{ $logbook->tanggal->format('d M Y') }}"
+                                        data-kegiatan="{{ $logbook->kegiatan }}"
+                                        data-description="{{ $logbook->deskripsi }}"
+                                        data-tags="{{ $logbook->tags }}"
+                                        data-status="{{ $logbook->status_approval }}"
+                                        data-comment="{{ $logbook->catatan_pembimbing ?? '-' }}">
+                                        Detail
+                                    </button>
+                                    @if($logbook->status_approval === 'Pending')
+                                        <button type="button" class="badge badge-success logbook-approve-btn" style="border: none; cursor: pointer; padding: 4px 8px; font-weight: 600; width: 100%; text-align: center;" data-action-url="{{ route('admin.logbook.approve', $logbook->id) }}">Setujui</button>
+                                        <button type="button" class="badge badge-danger logbook-reject-btn" style="border: none; cursor: pointer; padding: 4px 8px; font-weight: 600; width: 100%; text-align: center;" data-action-url="{{ route('admin.logbook.reject', $logbook->id) }}">Tolak</button>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="empty-state">Tidak ada logbook anak didik yang ditemukan.</td>
+                            <td colspan="5" class="empty-state">Tidak ada logbook anak didik yang ditemukan.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -118,4 +107,82 @@
             {{ $logbooks->links('partials.pagination') }}
         @endif
     </div>
+
+    <!-- Logbook Detail Modal -->
+    <div id="logbook-detail-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 1000; align-items: center; justify-content: center; padding: 20px;">
+        <div style="background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; padding: 30px; position: relative; color: var(--text-primary); box-shadow: 0 15px 35px rgba(0,0,0,0.5); backdrop-filter: blur(20px);">
+            <button id="close-modal-btn" style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer;">&times;</button>
+            
+            <div style="margin-bottom: 24px; border-bottom: 1px solid var(--glass-border); padding-bottom: 15px;">
+                <h3 style="margin: 0; font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">Detail Logbook Kegiatan</h3>
+                <p id="modal-intern-info" class="muted-small" style="margin: 6px 0 0 0; color: var(--text-secondary);"></p>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                <div>
+                    <span style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase;">Tanggal</span>
+                    <p id="modal-date" style="margin: 6px 0 0 0; font-weight: 500;"></p>
+                </div>
+                
+                <div>
+                    <span style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase;">Kegiatan</span>
+                    <p id="modal-kegiatan" style="margin: 6px 0 0 0; font-weight: 700; font-size: 1.1rem; color: var(--accent-primary);"></p>
+                </div>
+                
+                <div>
+                    <span style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase;">Deskripsi Detail</span>
+                    <p id="modal-description" style="margin: 6px 0 0 0; white-space: pre-wrap; line-height: 1.6; color: var(--text-primary); background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--glass-border);"></p>
+                </div>
+
+                <div>
+                    <span style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase;">Tags / Label</span>
+                    <div id="modal-tags" style="margin-top: 6px; display: flex; flex-wrap: wrap; gap: 6px;"></div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div>
+                        <span style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase;">Status Approval</span>
+                        <div style="margin-top: 6px;">
+                            <span id="modal-status" class="badge"></span>
+                        </div>
+                    </div>
+                    <div>
+                        <span style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase;">Catatan Pembimbing</span>
+                        <p id="modal-comment" style="margin: 6px 0 0 0; color: var(--text-primary); font-style: italic;"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action buttons if pending -->
+            <div id="modal-actions" style="margin-top: 30px; border-top: 1px solid var(--glass-border); padding-top: 20px; display: flex; gap: 12px; justify-content: flex-end;">
+                <button type="button" id="modal-approve-btn" class="btn-primary" style="padding: 10px 20px; border-radius: 8px; background: #10b981; border: none; font-weight: 600; cursor: pointer; color: #fff;">Setujui Logbook</button>
+                <button type="button" id="modal-reject-btn" class="btn-secondary" style="padding: 10px 20px; border-radius: 8px; border: 1px solid #ef4444; color: #ef4444; background: none; font-weight: 600; cursor: pointer;">Tolak Logbook</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Confirmation Modal -->
+    <div id="action-confirm-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 1100; align-items: center; justify-content: center; padding: 20px;">
+        <div style="background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; width: 100%; max-width: 450px; padding: 24px; position: relative; color: var(--text-primary); box-shadow: 0 15px 35px rgba(0,0,0,0.5); backdrop-filter: blur(20px);">
+            <h3 id="confirm-modal-title" style="margin: 0 0 12px 0; font-size: 1.15rem; font-weight: 700; color: var(--text-primary);">Konfirmasi Tindakan</h3>
+            <p id="confirm-modal-text" style="margin: 0 0 20px 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5;"></p>
+            
+            <form id="confirm-action-form" method="POST" style="display: flex; flex-direction: column; gap: 15px; margin: 0;">
+                @csrf
+                <div id="confirm-comment-group" style="display: flex; flex-direction: column; gap: 8px;">
+                    <label id="confirm-comment-label" for="confirm-catatan" style="font-weight: 600; font-size: 0.85rem; color: var(--text-secondary);">Catatan Pembimbing</label>
+                    <textarea id="confirm-catatan" name="catatan_pembimbing" placeholder="Tulis catatan (opsional)..." style="padding: 10px; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: var(--text-primary); width: 100%; min-height: 80px; resize: vertical; font-family: inherit; font-size: 0.9rem;"></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
+                    <button type="button" id="confirm-modal-cancel" class="btn-secondary" style="padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; cursor: pointer;">Batal</button>
+                    <button type="submit" id="confirm-modal-submit" class="btn-primary" style="padding: 8px 16px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; color: #fff; font-size: 0.85rem;"></button>
+                </div>
+            </form>
+        </div>
+    </div>
 @endsection
+
+@push('scripts')
+    @vite('resources/js/admin/logbooks.js')
+@endpush
