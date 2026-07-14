@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laporan Bulanan - {{ $user->nama_lengkap }} - {{ $selectedDate->translatedFormat('F Y') }}</title>
+    <title>Rekap Laporan Keseluruhan - {{ $user->nama_lengkap }} - {{ $selectedDate->translatedFormat('F Y') }}</title>
     <style>
         body {
             font-family: 'Times New Roman', Times, serif;
@@ -172,14 +172,14 @@
             font-size: 11pt;
             font-weight: bold;
             color: #fff;
-            background-color: #2e4085;
+            background-color: #059669;
             border: none;
             border-radius: 4px;
             cursor: pointer;
         }
 
         .btn-print:hover {
-            background-color: #1e295d;
+            background-color: #047857;
         }
 
         .page-break {
@@ -202,7 +202,7 @@
         <button onclick="window.print()" class="btn-print">Cetak Laporan / Simpan PDF</button>
     </div>
 
-    <!-- Halaman 1: Rekap Absensi & Kehadiran -->
+    <!-- Halaman 1: Rekap Absensi & Rincian Kehadiran -->
     <div class="header-container">
         <img src="{{ asset('images/Logo/Logo_PU.png') }}" class="logo-pu" alt="Logo PU">
         <div class="header-text">
@@ -214,7 +214,7 @@
     </div>
 
     <div class="title-report">
-        LAPORAN KEHADIRAN BULANAN MAHASISWA / SISWA MAGANG
+        REKAP LAPORAN KESELURUHAN MAHASISWA / SISWA MAGANG
     </div>
 
     <div class="meta-info">
@@ -265,7 +265,7 @@
                 <td><strong>{{ $stats['terlambat'] }} Hari</strong></td>
                 <td><strong>{{ $stats['izin'] }} Hari</strong></td>
                 <td><strong>{{ $stats['absen'] }} Hari</strong></td>
-                <td><strong style="color: #2e4085;">{{ $attendanceRate }}%</strong></td>
+                <td><strong style="color: #059669;">{{ $attendanceRate }}%</strong></td>
             </tr>
         </tbody>
     </table>
@@ -306,6 +306,106 @@
             @empty
                 <tr>
                     <td colspan="6" style="text-align: center; font-style: italic;">Tidak ada riwayat kehadiran pada bulan ini.</td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
+
+    <!-- Pindah Halaman untuk Logbook Kegiatan -->
+    <div class="page-break"></div>
+
+    <div class="header-container" style="margin-top: 20px;">
+        <img src="{{ asset('images/Logo/Logo_PU.png') }}" class="logo-pu" alt="Logo PU">
+        <div class="header-text">
+            <h1>KEMENTERIAN PEKERJAAN UMUM DAN PERUMAHAN RAKYAT</h1>
+            <h2>DIREKTORAT JENDERAL BINA MARGA</h2>
+            <h2>DIREKTORAT BINA TEKNIK JALAN DAN JEMBATAN</h2>
+            <p>Jl. Timur Indah No. 2, Bandung, Telp/Fax. (022) 7802251</p>
+        </div>
+    </div>
+
+    <div class="title-report" style="margin-top: 15px;">
+        REKAP LAPORAN KEGIATAN HARIAN (LOGBOOK)
+    </div>
+
+    <div class="section-title">III. Rincian Kegiatan Harian</div>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width: 5%;">No</th>
+                <th style="width: 15%;">Tanggal</th>
+                <th style="width: 25%;">Nama Tugas / Kegiatan</th>
+                <th style="width: 45%;">Uraian / Deskripsi Kegiatan</th>
+                <th style="width: 10%;">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($logbooks as $index => $logbook)
+                <tr>
+                    <td class="center">{{ $index + 1 }}</td>
+                    <td class="center">{{ \Carbon\Carbon::parse($logbook->tanggal)->translatedFormat('d/m/Y') }}</td>
+                    <td><strong>{{ $logbook->kegiatan }}</strong></td>
+                    <td>{!! nl2br(e($logbook->deskripsi)) !!}</td>
+                    <td class="center">
+                        {{ $logbook->status_approval }}
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="5" style="text-align: center; font-style: italic;">Belum ada entri logbook kegiatan untuk bulan ini.</td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
+
+    <!-- Pindah Halaman untuk Laporan Izin/Sakit -->
+    <div class="page-break"></div>
+
+    <div class="header-container" style="margin-top: 20px;">
+        <img src="{{ asset('images/Logo/Logo_PU.png') }}" class="logo-pu" alt="Logo PU">
+        <div class="header-text">
+            <h1>KEMENTERIAN PEKERJAAN UMUM DAN PERUMAHAN RAKYAT</h1>
+            <h2>DIREKTORAT JENDERAL BINA MARGA</h2>
+            <h2>DIREKTORAT BINA TEKNIK JALAN DAN JEMBATAN</h2>
+            <p>Jl. Timur Indah No. 2, Bandung, Telp/Fax. (022) 7802251</p>
+        </div>
+    </div>
+
+    <div class="title-report" style="margin-top: 15px;">
+        REKAP LAPORAN PENGAJUAN IZIN / SAKIT
+    </div>
+
+    <div class="section-title">IV. Rincian Izin & Sakit Resmi</div>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width: 5%;">No</th>
+                <th style="width: 30%;">Rentang Tanggal</th>
+                <th style="width: 15%;">Jenis Pengajuan</th>
+                <th style="width: 35%;">Alasan Pengajuan</th>
+                <th style="width: 15%;">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($leaves as $index => $leave)
+                <tr>
+                    <td class="center">{{ $index + 1 }}</td>
+                    <td class="center">
+                        {{ $leave->tanggal_mulai->format('d/m/Y') }} s/d {{ $leave->tanggal_selesai->format('d/m/Y') }}
+                    </td>
+                    <td class="center">
+                        <strong>{{ $leave->jenis }}</strong>
+                    </td>
+                    <td>{{ $leave->alasan }}</td>
+                    <td class="center">
+                        {{ $leave->status_approval }}
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="5" style="text-align: center; font-style: italic;">Belum ada pengajuan izin / sakit yang disetujui pada bulan ini.</td>
                 </tr>
             @endforelse
         </tbody>

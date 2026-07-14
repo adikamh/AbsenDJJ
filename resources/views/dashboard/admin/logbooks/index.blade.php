@@ -23,6 +23,57 @@
         </div>
     </div>
 
+    <!-- Cetak & Rekap Logbook Card -->
+    <div class="content-card" style="margin-bottom: 30px;">
+        <div class="card-header" style="padding: 20px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: flex-start !important; align-items: center; gap: 10px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            <h2 class="card-title" style="margin: 0; font-size: 1.1rem; color: var(--text-primary); text-align: left;">Cetak & Rekap Logbook Anak Didik</h2>
+        </div>
+        <div style="padding: 24px;">
+            <form method="GET" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; align-items: flex-end;">
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <label style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; letter-spacing: 0.5px;">PILIH ANAK DIDIK</label>
+                    <select name="user_id" required style="padding: 10px 14px; font-size: 0.88rem; border: 1px solid var(--glass-border); border-radius: 8px; background: rgba(0,0,0,0.15); color: var(--text-primary); width: 100%; transition: all 0.3s ease; outline: none; cursor: pointer;">
+                        <option value="" style="background: #1a1a2e; color: #fff;">-- Pilih Peserta --</option>
+                        @foreach($guidedInterns as $intern)
+                            <option value="{{ $intern->id }}" style="background: #1a1a2e; color: #fff;">{{ $intern->nama_lengkap }} ({{ $intern->instansi?->nama_instansi ?? '-' }})</option>
+                        @endforeach
+                    </select>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <label style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; letter-spacing: 0.5px;">PILIH BULAN</label>
+                    <select name="month" style="padding: 10px 14px; font-size: 0.88rem; border: 1px solid var(--glass-border); border-radius: 8px; background: rgba(0,0,0,0.15); color: var(--text-primary); width: 100%; transition: all 0.3s ease; outline: none; cursor: pointer;">
+                        <option value="" style="background: #1a1a2e; color: #fff;">Semua Bulan</option>
+                        @for($m = 1; $m <= 12; $m++)
+                            <option value="{{ $m }}" style="background: #1a1a2e; color: #fff;">{{ \Carbon\Carbon::create(now()->year, $m, 1)->translatedFormat('F') }}</option>
+                        @endfor
+                    </select>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <label style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; letter-spacing: 0.5px;">PILIH TAHUN</label>
+                    <select name="year" style="padding: 10px 14px; font-size: 0.88rem; border: 1px solid var(--glass-border); border-radius: 8px; background: rgba(0,0,0,0.15); color: var(--text-primary); width: 100%; transition: all 0.3s ease; outline: none; cursor: pointer;">
+                        @for($y = now()->year - 2; $y <= now()->year + 1; $y++)
+                            <option value="{{ $y }}" {{ $y == now()->year ? 'selected' : '' }} style="background: #1a1a2e; color: #fff;">{{ $y }}</option>
+                        @endfor
+                    </select>
+                </div>
+
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                    <button type="submit" formaction="{{ route('peserta.logbook.pdf') }}" formtarget="_blank" class="btn-primary hover-lift" style="padding: 10px 20px; font-size: 0.88rem; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: var(--accent-primary); border-color: var(--accent-primary); font-weight: 600; flex: 1; min-width: 140px; height: 42px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        Cetak PDF
+                    </button>
+                    <button type="submit" formaction="{{ route('peserta.logbook.csv') }}" class="btn-secondary hover-lift" style="padding: 10px 20px; font-size: 0.88rem; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; flex: 1; min-width: 140px; height: 42px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        Rekap CSV
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Logbooks List Card (Unified Search, Filter, and Table) -->
     <div class="content-card">
         <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; padding: 20px; border-bottom: 1px solid var(--glass-border);">

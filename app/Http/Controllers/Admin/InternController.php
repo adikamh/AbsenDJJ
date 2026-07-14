@@ -96,7 +96,7 @@ class InternController extends Controller
     /**
      * Display details of a specific guided intern.
      */
-    public function show(User $intern)
+    public function show(Request $request, User $intern)
     {
         // Security check: must be guided by current admin
         if ($intern->pembimbing_id !== auth()->id()) {
@@ -121,6 +121,30 @@ class InternController extends Controller
             ->paginate(5, ['*'], 'logbook_page')
             ->withQueryString();
 
+        // Calendar variables
+        $month = (int) $request->input('month', now()->month);
+        $year = (int) $request->input('year', now()->year);
+        
+        $selectedDate = Carbon::create($year, $month, 1);
+        $startOfMonth = $selectedDate->copy()->startOfMonth();
+        $endOfMonth = $selectedDate->copy()->endOfMonth();
+
+        // Fetch all attendance records for the selected month to be keyed by date for calendar
+        $calendarAttendances = $intern->attendances()
+            ->whereBetween('tanggal', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
+            ->get()
+            ->keyBy(function($item) {
+                return \Carbon\Carbon::parse($item->tanggal)->toDateString();
+            });
+
+        // Fetch work schedule overrides for the selected month to show custom holidays
+        $schedules = \App\Models\WorkSchedule::where('type', 'date')
+            ->whereBetween('specific_date', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
+            ->get()
+            ->keyBy(function($item) {
+                return \Carbon\Carbon::parse($item->specific_date)->toDateString();
+            });
+
         return view('dashboard.admin.interns.show', compact(
             'intern',
             'presentCount',
@@ -129,7 +153,12 @@ class InternController extends Controller
             'sickCount',
             'approvedLogbooksCount',
             'attendances',
-            'logbooks'
+            'logbooks',
+            'month',
+            'year',
+            'selectedDate',
+            'calendarAttendances',
+            'schedules'
         ));
     }
 
@@ -169,12 +198,15 @@ class InternController extends Controller
         $rejectedLogbooksCount = Logbook::whereIn('user_id', $internIds)->where('status_approval', 'Rejected')->count();
 
         $logbooks = $query->paginate(5)->withQueryString();
+        
+        $guidedInterns = $pembimbing->anakBimbingan()->orderBy('nama_lengkap', 'asc')->get();
 
         return view('dashboard.admin.logbooks.index', compact(
             'logbooks',
             'pendingLogbooksCount',
             'approvedLogbooksCount',
-            'rejectedLogbooksCount'
+            'rejectedLogbooksCount',
+            'guidedInterns'
         ));
     }
 

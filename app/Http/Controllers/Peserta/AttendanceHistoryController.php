@@ -142,12 +142,6 @@ class AttendanceHistoryController extends Controller
             ? round((($stats['hadir'] + $stats['terlambat']) / $totalAttendanceCount) * 100) 
             : 0;
 
-        // Fetch logbook entries for the selected month
-        $logbooks = \App\Models\Logbook::where('user_id', $user->id)
-            ->whereBetween('tanggal', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
-            ->orderBy('tanggal', 'asc')
-            ->get();
-
         return view('dashboard.peserta.monthly_report_pdf', compact(
             'user',
             'month',
@@ -155,8 +149,91 @@ class AttendanceHistoryController extends Controller
             'selectedDate',
             'attendances',
             'stats',
+            'attendanceRate'
+        ));
+    }
+
+    /**
+     * Export consolidated monthly report bundle (Attendance + Logbooks + Leave Requests) to a printable page.
+     */
+    public function exportConsolidatedReport(Request $request)
+    {
+        $user = Auth::user();
+        if ($user->isAdmin() && $request->has('user_id')) {
+            $targetUser = \App\Models\User::findOrFail($request->input('user_id'));
+            if ($targetUser->pembimbing_id !== $user->id) {
+                abort(403, 'Anda tidak memiliki akses ke laporan peserta magang ini.');
+            }
+            $user = $targetUser;
+        }
+        
+        $month = (int) $request->input('month', now()->month);
+        $year = (int) $request->input('year', now()->year);
+        
+        $selectedDate = Carbon::create($year, $month, 1);
+        $startOfMonth = $selectedDate->copy()->startOfMonth();
+        $endOfMonth = $selectedDate->copy()->endOfMonth();
+        
+        // Load User relationships
+        $user->load(['instansi', 'pembimbing']);
+
+        // Fetch attendance records for the selected month
+        $attendances = Attendance::where('user_id', $user->id)
+            ->whereBetween('tanggal', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
+            ->orderBy('tanggal', 'asc')
+            ->get();
+            
+        // Calculate statistics
+        $stats = [
+            'hadir' => 0,
+            'terlambat' => 0,
+            'izin' => 0,
+            'absen' => 0,
+        ];
+
+        foreach ($attendances as $att) {
+            if ($att->status === 'Hadir') {
+                $stats['hadir']++;
+            } elseif ($att->status === 'Terlambat') {
+                $stats['terlambat']++;
+            } elseif (in_array($att->status, ['Izin', 'Sakit'])) {
+                $stats['izin']++;
+            } elseif ($att->status === 'Tanpa Keterangan') {
+                $stats['absen']++;
+            }
+        }
+
+        $totalAttendanceCount = $attendances->count();
+        $attendanceRate = $totalAttendanceCount > 0 
+            ? round((($stats['hadir'] + $stats['terlambat']) / $totalAttendanceCount) * 100) 
+            : 0;
+
+        // Fetch logbook entries for the selected month
+        $logbooks = \App\Models\Logbook::where('user_id', $user->id)
+            ->whereBetween('tanggal', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
+            ->orderBy('tanggal', 'asc')
+            ->get();
+
+        // Fetch approved leave requests that start or end in this month
+        $leaves = \App\Models\LeaveRequest::where('user_id', $user->id)
+            ->where('status_approval', 'Approved')
+            ->where(function($q) use ($startOfMonth, $endOfMonth) {
+                $q->whereBetween('tanggal_mulai', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
+                  ->orWhereBetween('tanggal_selesai', [$startOfMonth->toDateString(), $endOfMonth->toDateString()]);
+            })
+            ->orderBy('tanggal_mulai', 'asc')
+            ->get();
+
+        return view('dashboard.peserta.consolidated_report_pdf', compact(
+            'user',
+            'month',
+            'year',
+            'selectedDate',
+            'attendances',
+            'stats',
             'attendanceRate',
-            'logbooks'
+            'logbooks',
+            'leaves'
         ));
     }
 

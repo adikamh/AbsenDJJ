@@ -52,7 +52,7 @@ class LogbookController extends Controller
 
         $status = $request->input('action') === 'draft' ? 'Draft' : 'Pending';
 
-        Logbook::create([
+        $logbook = Logbook::create([
             'user_id' => Auth::id(),
             'tanggal' => $validated['tanggal'],
             'kegiatan' => $validated['kegiatan'],
@@ -60,6 +60,17 @@ class LogbookController extends Controller
             'deskripsi' => $validated['deskripsi'],
             'status_approval' => $status,
         ]);
+
+        if ($status === 'Pending') {
+            $pembimbing = Auth::user()->pembimbing;
+            if ($pembimbing) {
+                $pembimbing->notify(new \App\Notifications\AbsenNotification(
+                    'Pengisian Logbook Baru',
+                    Auth::user()->nama_lengkap . ' telah mengisi logbook baru untuk tanggal ' . \Carbon\Carbon::parse($validated['tanggal'])->format('d M Y') . '.',
+                    'info'
+                ));
+            }
+        }
 
         $msg = $status === 'Draft' ? 'Logbook berhasil disimpan sebagai draft sementara.' : 'Logbook baru berhasil ditambahkan.';
 
@@ -95,6 +106,17 @@ class LogbookController extends Controller
             'deskripsi' => $validated['deskripsi'],
             'status_approval' => $status,
         ]);
+
+        if ($status === 'Pending') {
+            $pembimbing = Auth::user()->pembimbing;
+            if ($pembimbing) {
+                $pembimbing->notify(new \App\Notifications\AbsenNotification(
+                    'Pengisian Logbook Baru',
+                    Auth::user()->nama_lengkap . ' telah mengisi logbook baru untuk tanggal ' . \Carbon\Carbon::parse($logbook->tanggal)->format('d M Y') . '.',
+                    'info'
+                ));
+            }
+        }
 
         $msg = $status === 'Draft' ? 'Logbook berhasil disimpan sebagai draft sementara.' : 'Logbook berhasil diperbarui.';
 
@@ -136,9 +158,17 @@ class LogbookController extends Controller
             }
             $user = $targetUser;
         }
-        $logbooks = Logbook::where('user_id', $user->id)
-            ->orderBy('tanggal', 'asc')
-            ->get();
+        
+        $query = Logbook::where('user_id', $user->id)->orderBy('tanggal', 'asc');
+        
+        if ($request->filled('month') && $request->filled('year')) {
+            $month = (int) $request->input('month');
+            $year = (int) $request->input('year');
+            $selectedDate = \Carbon\Carbon::create($year, $month, 1);
+            $query->whereBetween('tanggal', [$selectedDate->startOfMonth()->toDateString(), $selectedDate->endOfMonth()->toDateString()]);
+        }
+        
+        $logbooks = $query->get();
 
         return view('dashboard.peserta.logbook_pdf', compact('logbooks', 'user'));
     }

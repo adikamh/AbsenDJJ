@@ -39,30 +39,76 @@ class DashboardController extends Controller
         $pendingLeaves = $pendingLeavesQuery->limit(3)->get();
 
         // Attendance stats for today
+        $today = Carbon::today()->toDateString();
         $hadirTodayCount = Attendance::whereIn('user_id', $internIds)
-            ->where('tanggal', Carbon::today()->toDateString())
-            ->whereIn('status', ['Hadir', 'Terlambat'])
+            ->where('tanggal', $today)
+            ->where('status', 'Hadir')
             ->count();
+
+        $terlambatTodayCount = Attendance::whereIn('user_id', $internIds)
+            ->where('tanggal', $today)
+            ->where('status', 'Terlambat')
+            ->count();
+
+        $izinSakitTodayCount = LeaveRequest::whereIn('user_id', $internIds)
+            ->where('status_approval', 'Approved')
+            ->whereDate('tanggal_mulai', '<=', $today)
+            ->whereDate('tanggal_selesai', '>=', $today)
+            ->count();
+
+        $checkedInIds = Attendance::whereIn('user_id', $internIds)->where('tanggal', $today)->pluck('user_id');
+        $onLeaveIds = LeaveRequest::whereIn('user_id', $internIds)->where('status_approval', 'Approved')->whereDate('tanggal_mulai', '<=', $today)->whereDate('tanggal_selesai', '>=', $today)->pluck('user_id');
+        $alfaTodayCount = User::whereIn('id', $internIds)
+            ->whereNotIn('id', $checkedInIds)
+            ->whereNotIn('id', $onLeaveIds)
+            ->count();
+
+        // Calculate attendance rates per intern
+        $internAttendanceData = User::whereIn('id', $internIds)
+            ->withCount(['attendances as present_count' => function($q) {
+                $q->whereIn('status', ['Hadir', 'Terlambat']);
+            }])
+            ->withCount('attendances')
+            ->get()
+            ->map(function($i) {
+                $rate = $i->attendances_count > 0 ? round(($i->present_count / $i->attendances_count) * 100) : 100;
+                return [
+                    'name' => $i->nama_lengkap,
+                    'rate' => $rate
+                ];
+            });
+
+        // Combined count for stat card header
+        $totalHadirToday = $hadirTodayCount + $terlambatTodayCount;
 
         return view('dashboard.admin.dashboard', compact(
             'interns',
             'pendingLogbooks',
             'pendingLeaves',
             'hadirTodayCount',
+            'terlambatTodayCount',
+            'izinSakitTodayCount',
+            'alfaTodayCount',
+            'internAttendanceData',
+            'totalHadirToday',
             'totalInternsCount',
             'totalPendingLogbooksCount',
             'totalPendingLeavesCount'
         ));
     }
 
-    public function approveLogbook(Logbook $logbook)
+    public function approveLogbook(Request $request, Logbook $logbook)
     {
-        $logbook->update(['status_approval' => 'Approved']);
+        $catatan = $request->input('catatan_pembimbing');
+        $logbook->update([
+            'status_approval' => 'Approved',
+            'catatan_pembimbing' => $catatan
+        ]);
         
         $intern = $logbook->user;
         $intern->notify(new \App\Notifications\AbsenNotification(
             'Logbook Disetujui',
-            'Logbook kegiatan Anda pada tanggal ' . $logbook->tanggal->format('d M Y') . ' telah disetujui.',
+            'Logbook kegiatan Anda pada tanggal ' . $logbook->tanggal->format('d M Y') . ' telah disetujui.' . ($catatan ? ' Catatan: ' . $catatan : ''),
             'logbook_approved'
         ));
 
@@ -87,14 +133,18 @@ class DashboardController extends Controller
         return redirect()->back()->with('success', 'Logbook berhasil ditolak.');
     }
 
-    public function approveLeave(LeaveRequest $leave)
+    public function approveLeave(Request $request, LeaveRequest $leave)
     {
-        $leave->update(['status_approval' => 'Approved']);
+        $catatan = $request->input('catatan_pembimbing');
+        $leave->update([
+            'status_approval' => 'Approved',
+            'catatan_pembimbing' => $catatan
+        ]);
 
         $intern = $leave->user;
         $intern->notify(new \App\Notifications\AbsenNotification(
             'Izin/Sakit Disetujui',
-            'Pengajuan ' . $leave->jenis . ' Anda mulai tanggal ' . $leave->tanggal_mulai->format('d M Y') . ' telah disetujui.',
+            'Pengajuan ' . $leave->jenis . ' Anda mulai tanggal ' . $leave->tanggal_mulai->format('d M Y') . ' telah disetujui.' . ($catatan ? ' Catatan: ' . $catatan : ''),
             'leave_approved'
         ));
 

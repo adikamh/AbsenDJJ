@@ -636,12 +636,67 @@
 - **Pengujian Fungsional Tambahan:**
   - Menyusun 9 kasus pengujian baru di berkas [AdminInternsTest.php](file:///c:/laragon/www/AbsenDJJ/tests/Feature/AdminInternsTest.php) untuk memvalidasi paginasi max 5, pencarian, RBAC 403, highlight dashboard max 3, filter approval logbook, filter leaves, dan tindakan persetujuan modal. Seluruh 55 pengujian passed.
 
+## Update Tambahan (PWA, Cookie Consent, & Keamanan Akses)
 
+### Dukungan Progressive Web Application (PWA / WPA)
+- **Manifestasi Aplikasi**: Membuat berkas [manifest.json](file:///c:/laragon/www/AbsenDJJ/public/manifest.json) untuk mendefinisikan metadata PWA (nama aplikasi "Absen Magang", URL awal, warna tema, display standalone, dan ikon aplikasi).
+- **Service Worker**: Menyediakan berkas [sw.js](file:///c:/laragon/www/AbsenDJJ/public/sw.js) untuk menangani caching aset utama (`/`, `/css/app.css`, `/js/app.js`) dengan strategi cache-first.
+- **Registrasi Service Worker**: Menyisipkan skrip registrasi Service Worker pada bagian bawah berkas layout utama [layout.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/layout.blade.php).
+- **Meta Tags & Aset PWA**: Menghubungkan manifest serta menambahkan meta tag `theme-color` dan tautan `apple-touch-icon` pada layout dashboard dan halaman depan [welcome.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/welcome.blade.php).
 
+### Sistem Kebijakan & Persetujuan Cookie (Cookie Consent)
+- **Backend Controller & Sesi**: Membuat [CookieConsentController.php](file:///c:/laragon/www/AbsenDJJ/app/Http/Controllers/CookieConsentController.php) untuk menyimpan status persetujuan cookie (accepted/declined) ke dalam data sesi dan cookie HTTP terenkripsi dengan masa kedaluwarsa 1 tahun.
+- **Rute API Cookie**: Menambahkan endpoint POST `/cookie-consent` pada berkas rute [web.php](file:///c:/laragon/www/AbsenDJJ/routes/web.php).
+- **Modal Dialog Banner**: Menyematkan antarmuka modal dialog Kebijakan Cookie kustom pada [layout.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/layout.blade.php) yang otomatis muncul jika pengguna belum memberikan persetujuan.
+- **Logika AJAX Frontend**: Mengintegrasikan event listener pada berkas [dashboard-layout.js](file:///c:/laragon/www/AbsenDJJ/resources/js/dashboard-layout.js) untuk mengirimkan pilihan persetujuan pengguna secara asinkron (AJAX) ke backend dan menutup modal banner secara dinamis.
+- **Pengujian Unit**: Menyusun berkas pengujian [CookieConsentTest.php](file:///c:/laragon/www/AbsenDJJ/tests/Feature/CookieConsentTest.php) guna memverifikasi penyimpanan data persetujuan cookie di session dan cookie HTTP.
 
+### Proteksi Bruteforce Login & Middleware Otorisasi Peran
+- **Pembatasan Rate Limit Login**: Mengimplementasikan pembatasan percobaan login (throttling) pada method `login` di [AuthController.php](file:///c:/laragon/www/AbsenDJJ/app/Http/Controllers/AuthController.php) berdasarkan email dan IP Address guna melindungi aplikasi dari serangan bruteforce.
+- **Pengujian Rate Limit**: Menyusun berkas pengujian [AuthLoginRateLimitTest.php](file:///c:/laragon/www/AbsenDJJ/tests/Feature/AuthLoginRateLimitTest.php) untuk menguji keandalan sistem pembatasan login saat terdapat rentetan kegagalan login.
+- **Middleware Otorisasi Role**: Membuat berkas [RoleMiddleware.php](file:///c:/laragon/www/AbsenDJJ/app/Http/Middleware/RoleMiddleware.php) untuk memeriksa hak akses rute berdasarkan nama peran user (`super_admin`, `admin`, `peserta`) dan membatasi akses ilegal dengan respon status 403 Forbidden.
+- **Registrasi Middleware**: Mendaftarkan alias middleware `'role'` pada konfigurasi middleware di berkas inisialisasi aplikasi [bootstrap/app.php](file:///c:/laragon/www/AbsenDJJ/bootstrap/app.php).
 
+## Update Tampilan Responsif Mobile (HP Support)
 
+### Off-Canvas Sidebar Navigation
+- **HTML Modification ([layout.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/layout.blade.php))**:
+  - Menambahkan overlay `<div class="sidebar-backdrop">` agar pengguna mobile dapat menutup sidebar dengan mengetuk area di luar menu.
+  - Menambahkan tombol menu hamburger responsif `<button class="mobile-toggle-btn">` pada header halaman.
+- **Javascript Logic ([dashboard-layout.js](file:///c:/laragon/www/AbsenDJJ/resources/js/dashboard-layout.js))**:
+  - Mengimplementasikan event listener untuk menambah/menghapus kelas `sidebar-mobile-open` pada elemen `body`.
+  - Menutup sidebar secara otomatis ketika tautan menu navigasi diklik atau backdrop disentuh.
+- **CSS Layout Styling ([dashboard-layout.css](file:///c:/laragon/www/AbsenDJJ/resources/css/dashboard-layout.css))**:
+  - Menyembunyikan sidebar off-screen (`transform: translateX(-100%)`) pada lebar layar <= 768px.
+  - Menambahkan efek bayangan drawer dan blur kaca glassmorphism yang premium pada mobile drawer.
+  - Mengurangi padding kontainer konten utama (`.main-content`) menjadi `20px 16px` di mobile agar ruang layar lebih maksimal.
 
+### Form, Table & Widget Grid Optimizations
+- **Responsif Form & Table ([dashboard-layout.css](file:///c:/laragon/www/AbsenDJJ/resources/css/dashboard-layout.css))**:
+  - Grid form input pada modal box (`.form-grid`) otomatis berubah menjadi 1 kolom di mobile.
+  - Ukuran padding baris tabel (`.custom-table`) disesuaikan agar lebih rapat dan kompak di layar sempit.
+  - Penyesuaian responsif scrollable horizontal pada kontainer tabel `.table-responsive`.
 
+### Responsif Kalender Kehadiran & Kamera
+- **Kalender Peserta ([dashboard.css](file:///c:/laragon/www/AbsenDJJ/resources/css/peserta/dashboard.css))**:
+  - Sel kalender riwayat kehadiran menyusut (tinggi minimal `60px`) dengan ukuran font nomor hari dan badge status yang disesuaikan pada mobile.
+  - Menyembunyikan teks keterangan acara/libur (`.cell-desc`) pada kalender mobile untuk mencegah penumpukan teks.
+  - Preview area video webcam dan hasil foto selfie absensi disesuaikan ukurannya agar pas di layar HP.
+- **Kalender Admin Settings ([settings.css](file:///c:/laragon/www/AbsenDJJ/resources/css/super_admin/settings.css))**:
+  - Sel kalender parameter setelan global menyusut menjadi `min-height: 55px` dengan penyesuaian font dan margin.
+  - Leaflet map koordinat geofencing disesuaikan tingginya menjadi `240px` dengan grid input koordinat flex vertical.
 
+## Update Relokasi Cetak Logbook & Detail Absensi
 
+### Relokasi Tombol Cetak/Rekap Logbook
+- **Pembersihan Halaman Detail & Tata Letak Sekuensial ([show.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/admin/interns/show.blade.php))**:
+  - Menghapus tombol `Cetak Logbook (PDF)` dan `Rekap Logbook (CSV)` dari kartu "Kontak Darurat & Unduhan" untuk merampingkan antarmuka detail aktivitas.
+  - Menghapus kartu statistik "Logbook Disetujui" dari barisan atas kartu ringkasan aktivitas (hadir, terlambat, izin, sakit) agar dashboard pembimbing lebih bersih dan fokus pada visualisasi kehadiran.
+  - Menghilangkan navigasi tab (Tabs Container) pada halaman Detail Aktivitas Intern, dan menggantinya dengan susunan kartu sekuensial yang tampil langsung secara berurutan ke bawah: **Visual Kalender Kehadiran** (teratas), diikuti oleh **Tabel Riwayat Absensi**, dan kemudian **Logbook Harian Kegiatan**. Hal ini mempermudah pembimbing untuk melihat seluruh data penting dalam satu halaman gulir tanpa perlu berpindah tab.
+- **Penyediaan Dropdown Dropdown Pilihan Anak Didik ([InternController.php](file:///c:/laragon/www/AbsenDJJ/app/Http/Controllers/Admin/InternController.php))**:
+  - Memperbarui method `logbooks()` untuk mengambil daftar semua anak bimbingan aktif (`$guidedInterns`) dan mengirimkannya ke tampilan index logbook pembimbing.
+- **Penyaringan Laporan Ekspor ([LogbookController.php](file:///c:/laragon/www/AbsenDJJ/app/Http/Controllers/Peserta/LogbookController.php))**:
+  - Memperbarui method `exportPdf()` agar mendukung penyaringan bulan dan tahun opsional, serupa dengan fitur `exportCsv()` sehingga laporan logbook yang dicetak dapat disesuaikan per bulan.
+- **Form Cetak & Rekap Logbook ([index.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/admin/logbooks/index.blade.php))**:
+  - Menyediakan widget kartu baru "Cetak & Rekap Logbook Anak Didik" di bagian atas halaman Logbook Kegiatan Anak Didik.
+  - Form ini dilengkapi dropdown pemilihan anak didik, bulan, dan tahun, serta menggunakan atribut HTML5 `formaction` dan `formtarget` guna mengarahkan ekspor PDF/CSV secara asinkron dan presisi.

@@ -4,14 +4,23 @@
 @section('header_title', 'Detail Aktivitas Intern: ' . $intern->nama_lengkap)
 
 @push('styles')
-    @vite('resources/css/admin/interns.css')
+    @vite(['resources/css/admin/interns.css', 'resources/css/peserta/dashboard.css'])
+    <style>
+        .has-selfie-photo:hover {
+            background: rgba(124, 58, 237, 0.08) !important;
+            border-color: var(--accent-primary) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.15);
+        }
+    </style>
 @endpush
 
 @section('content')
     <!-- Back Button -->
     <div style="margin-bottom: 20px;">
         <a href="{{ route('admin.interns') }}" class="btn-secondary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px;">
-            &larr; Kembali ke Daftar
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            Kembali ke Daftar
         </a>
     </div>
 
@@ -26,16 +35,8 @@
             <div class="stat-value" style="color: var(--accent-warning);">{{ $lateCount }} Hari</div>
         </div>
         <div class="stat-card hover-lift">
-            <div class="stat-label">Izin</div>
-            <div class="stat-value" style="color: var(--accent-info);">{{ $leaveCount }} Hari</div>
-        </div>
-        <div class="stat-card hover-lift">
-            <div class="stat-label">Sakit</div>
-            <div class="stat-value" style="color: #ef4444;">{{ $sickCount }} Hari</div>
-        </div>
-        <div class="stat-card hover-lift">
-            <div class="stat-label">Logbook Disetujui</div>
-            <div class="stat-value" style="color: var(--accent-primary);">{{ $approvedLogbooksCount }} Hari</div>
+            <div class="stat-label">Izin / Sakit</div>
+            <div class="stat-value" style="color: var(--accent-info);">{{ $leaveCount + $sickCount }} Hari</div>
         </div>
     </div>
 
@@ -87,16 +88,13 @@
                     <span style="font-weight: 600; color: var(--text-secondary); font-size: 0.85rem;">Cetak Laporan / Rekap Kegiatan</span>
                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                         <a href="{{ route('peserta.monthly-report', ['user_id' => $intern->id]) }}" target="_blank" class="btn-primary" style="padding: 8px 16px; font-size: 0.85rem; text-decoration: none; font-weight: 600;">
-                            Cetak Laporan Bulanan (PDF)
+                            Cetak Laporan Kehadiran (PDF)
+                        </a>
+                        <a href="{{ route('peserta.consolidated-report', ['user_id' => $intern->id]) }}" target="_blank" class="btn-primary" style="padding: 8px 16px; font-size: 0.85rem; text-decoration: none; font-weight: 600; background: #059669; border-color: #059669;">
+                            Cetak Rekap Keseluruhan (PDF)
                         </a>
                         <a href="{{ route('peserta.attendance.csv', ['user_id' => $intern->id]) }}" class="btn-secondary" style="padding: 8px 16px; font-size: 0.85rem; text-decoration: none; font-weight: 600;">
                             Rekap Absen (CSV)
-                        </a>
-                        <a href="{{ route('peserta.logbook.pdf', ['user_id' => $intern->id]) }}" target="_blank" class="btn-primary" style="padding: 8px 16px; font-size: 0.85rem; text-decoration: none; font-weight: 600;">
-                            Cetak Logbook (PDF)
-                        </a>
-                        <a href="{{ route('peserta.logbook.csv', ['user_id' => $intern->id]) }}" class="btn-secondary" style="padding: 8px 16px; font-size: 0.85rem; text-decoration: none; font-weight: 600;">
-                            Rekap Logbook (CSV)
                         </a>
                     </div>
                 </div>
@@ -104,160 +102,323 @@
         </div>
     </div>
 
-    <!-- Tabbed Navigation -->
-    <div class="tabs-container">
-        <div class="tabs-header">
-            <button class="tab-btn active" data-tab="tab-attendance">Riwayat Absensi</button>
-            <button class="tab-btn" data-tab="tab-logbooks">Logbook Harian</button>
+    <!-- 1. Visual Kalender Card -->
+    <div class="content-card" style="margin-bottom: 30px; padding: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; border-bottom: 1px solid var(--glass-border); padding-bottom: 15px;">
+            <h3 style="margin: 0; font-size: 1.1rem; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                Visual Kalender Kehadiran: {{ $selectedDate->translatedFormat('F Y') }}
+            </h3>
+            <form action="{{ route('admin.interns.show', $intern->id) }}" method="GET" style="margin: 0; display: flex; gap: 10px;">
+                <select name="month" onchange="this.form.submit()" style="padding: 6px 12px; font-size: 0.85rem; border: 1px solid var(--glass-border); border-radius: 6px; background: rgba(0,0,0,0.2); color: var(--text-primary);">
+                    @for($m = 1; $m <= 12; $m++)
+                        <option value="{{ $m }}" {{ $m == $month ? 'selected' : '' }}>
+                            {{ \Carbon\Carbon::create(now()->year, $m, 1)->translatedFormat('F') }}
+                        </option>
+                    @endfor
+                </select>
+                <select name="year" onchange="this.form.submit()" style="padding: 6px 12px; font-size: 0.85rem; border: 1px solid var(--glass-border); border-radius: 6px; background: rgba(0,0,0,0.2); color: var(--text-primary);">
+                    @for($y = now()->year - 2; $y <= now()->year + 1; $y++)
+                        <option value="{{ $y }}" {{ $y == $year ? 'selected' : '' }}>
+                            {{ $y }}
+                        </option>
+                    @endfor
+                </select>
+            </form>
         </div>
 
-        <!-- Tab 1: Attendance -->
-        <div class="tab-content active" id="tab-attendance">
-            <div class="table-responsive">
-                <table class="custom-table">
-                    <thead>
-                        <tr>
-                            <th>Tanggal</th>
-                            <th>Jam Masuk</th>
-                            <th>Jam Pulang</th>
-                            <th>Status</th>
-                            <th>Jarak Absen</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($attendances as $attendance)
-                            <tr>
-                                <td>{{ $attendance->tanggal->format('d M Y') }}</td>
-                                <td>{{ $attendance->jam_masuk ? $attendance->jam_masuk->format('H:i:s') : '-' }}</td>
-                                <td>{{ $attendance->jam_pulang ? $attendance->jam_pulang->format('H:i:s') : '-' }}</td>
-                                <td>
-                                    @if($attendance->status === 'Hadir')
-                                        <span class="badge badge-success">Hadir</span>
-                                    @elseif($attendance->status === 'Terlambat')
-                                        <span class="badge badge-warning">Terlambat</span>
-                                    @elseif($attendance->status === 'Izin' || $attendance->status === 'Sakit')
-                                        <span class="badge badge-info">{{ $attendance->status }}</span>
-                                    @else
-                                        <span class="badge badge-danger">{{ $attendance->status }}</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    @if($attendance->jarak_meter_masuk)
-                                        Masuk: {{ round($attendance->jarak_meter_masuk) }}m
-                                        @if($attendance->jarak_meter_pulang)
-                                            | Pulang: {{ round($attendance->jarak_meter_pulang) }}m
-                                        @endif
-                                    @else
-                                        -
-                                    @endif
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" class="empty-state">Belum ada riwayat absensi.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-            
-            @if($attendances->hasPages())
-                {{ $attendances->links('partials.pagination') }}
-            @endif
-        </div>
+        <div class="calendar-wrapper">
+            <div class="calendar-grid">
+                <!-- Day Headers -->
+                <div class="calendar-day-header">Sen</div>
+                <div class="calendar-day-header">Sel</div>
+                <div class="calendar-day-header">Rab</div>
+                <div class="calendar-day-header">Kam</div>
+                <div class="calendar-day-header">Jum</div>
+                <div class="calendar-day-header">Sab</div>
+                <div class="calendar-day-header">Min</div>
 
-        <!-- Tab 2: Logbooks -->
-        <div class="tab-content" id="tab-logbooks">
-            <div class="table-responsive">
-                <table class="custom-table">
-                    <thead>
-                        <tr>
-                            <th>Tanggal</th>
-                            <th>Kegiatan</th>
-                            <th>Deskripsi</th>
-                            <th>Tag</th>
-                            <th>Status</th>
-                            <th>Catatan Pembimbing</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($logbooks as $logbook)
-                            <tr>
-                                <td>{{ $logbook->tanggal->format('d M Y') }}</td>
-                                <td><strong>{{ $logbook->kegiatan }}</strong></td>
-                                <td>
-                                    <span class="muted-small" style="display: block; max-width: 250px; white-space: normal; line-height: 1.4;">
-                                        {{ $logbook->deskripsi }}
-                                    </span>
-                                </td>
-                                <td>
-                                    @if($logbook->tags)
-                                        @foreach(explode(',', $logbook->tags) as $tag)
-                                            <span class="badge badge-info" style="font-size: 0.7rem; padding: 2px 6px; margin: 1px;">#{{ trim($tag) }}</span>
-                                        @endforeach
-                                    @else
-                                        -
-                                    @endif
-                                </td>
-                                <td>
-                                    <span class="badge {{ $logbook->status_approval === 'Approved' ? 'badge-success' : ($logbook->status_approval === 'Rejected' ? 'badge-danger' : 'badge-warning') }}">
-                                        {{ $logbook->status_approval }}
-                                    </span>
-                                </td>
-                                <td>{{ $logbook->catatan_pembimbing ?? '-' }}</td>
-                                <td>
-                                    @if($logbook->status_approval === 'Pending')
-                                        <div style="display: flex; gap: 6px; flex-direction: column;">
-                                            <form action="{{ route('admin.logbook.approve', $logbook->id) }}" method="POST" style="margin: 0;">
-                                                @csrf
-                                                <button type="submit" class="badge badge-success" style="border: none; cursor: pointer; padding: 4px 8px; font-weight: 600; width: 100%;">Setujui</button>
-                                            </form>
-                                            <form action="{{ route('admin.logbook.reject', $logbook->id) }}" method="POST" style="margin: 0; display: flex; flex-direction: column; gap: 4px;">
-                                                @csrf
-                                                <input type="text" name="catatan_pembimbing" placeholder="Catatan..." style="font-size: 0.7rem; padding: 4px; border: 1px solid var(--glass-border); border-radius: 4px; background: rgba(255,255,255,0.05); color: #fff; width: 90px;" required>
-                                                <button type="submit" class="badge badge-danger" style="border: none; cursor: pointer; padding: 4px 8px; font-weight: 600;">Tolak</button>
-                                            </form>
+                <!-- Empty cells before first day of month -->
+                @php
+                    $firstDayOfWeek = $selectedDate->copy()->startOfMonth()->dayOfWeekIso;
+                    $daysInMonth = $selectedDate->daysInMonth;
+                    $todayDate = now()->toDateString();
+                @endphp
+
+                @for($i = 1; $i < $firstDayOfWeek; $i++)
+                    <div class="calendar-day empty"></div>
+                @endfor
+
+                <!-- Days of month -->
+                @for($day = 1; $day <= $daysInMonth; $day++)
+                    @php
+                        $loopDate = Carbon\Carbon::create($year, $month, $day);
+                        $loopDateStr = $loopDate->toDateString();
+                        $isWeekend = $loopDate->isWeekend();
+                        $isToday = $loopDateStr === $todayDate;
+                        
+                        $customSchedule = $schedules->get($loopDateStr);
+                        $isHoliday = $isWeekend || ($customSchedule && $customSchedule->is_holiday);
+                        $holidayName = ($customSchedule && $customSchedule->is_holiday) ? $customSchedule->keterangan : ($isWeekend ? 'Akhir Pekan' : null);
+
+                        $attendance = $calendarAttendances->get($loopDateStr);
+                        $hasSelfie = $attendance && ($attendance->foto_masuk || $attendance->foto_pulang);
+                    @endphp
+
+                    <div class="calendar-day {{ $isToday ? 'today' : '' }} {{ $hasSelfie ? 'has-selfie-photo' : '' }}" 
+                         style="{{ $isHoliday ? 'background: rgba(156, 163, 175, 0.02);' : '' }} {{ $hasSelfie ? 'cursor: pointer;' : '' }}"
+                         @if($hasSelfie)
+                            onclick="showSelfiePopup('{{ $attendance->foto_masuk ? asset($attendance->foto_masuk) : '' }}', '{{ $attendance->foto_pulang ? asset($attendance->foto_pulang) : '' }}', '{{ $loopDate->translatedFormat('d M Y') }}')"
+                         @endif>
+                        <div class="day-number">{{ $day }}</div>
+                        
+                        <div class="day-status">
+                            @if($attendance)
+                                <span class="badge {{ $attendance->status === 'Hadir' ? 'badge-success' : ($attendance->status === 'Terlambat' ? 'badge-warning' : ($attendance->status === 'Tanpa Keterangan' ? 'badge-danger' : 'badge-info')) }}">
+                                    {{ $attendance->status }}
+                                    @if($attendance->jam_masuk)
+                                        <div style="font-size: 0.65rem; font-weight: normal; margin-top: 2px;">
+                                            {{ \Carbon\Carbon::parse($attendance->jam_masuk)->format('H:i') }}
                                         </div>
-                                    @else
-                                        <span class="muted-small">-</span>
                                     @endif
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="7" class="empty-state">Belum ada riwayat logbook kegiatan.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                                </span>
+                                
+                                @if($hasSelfie)
+                                    <div style="display: flex; justify-content: center; margin-top: 8px; color: var(--accent-primary);">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" title="Klik untuk lihat foto"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                                    </div>
+                                @endif
+                            @elseif($isHoliday)
+                                <span class="badge" style="background: rgba(156, 163, 175, 0.1); border: 1px solid #9ca3af; color: #9ca3af;" title="{{ $holidayName }}">
+                                    Libur
+                                </span>
+                            @elseif($loopDate->lessThan(now()->startOfDay()))
+                                <span class="badge badge-danger">
+                                    Alfa
+                                </span>
+                            @else
+                                <span class="badge" style="background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border); color: var(--text-secondary);">
+                                    -
+                                </span>
+                            @endif
+                        </div>
+                    </div>
+                @endfor
             </div>
+        </div>
 
-            @if($logbooks->hasPages())
-                {{ $logbooks->links('partials.pagination') }}
-            @endif
+        <!-- Legend Explanation Card -->
+        <div class="legend-card" style="margin-top: 20px; background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border); border-radius: 12px; padding: 15px;">
+            <h4 style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary); margin: 0 0 10px 0;">Keterangan Status Absensi</h4>
+            <div class="legend-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--text-secondary);">
+                    <div style="width: 12px; height: 12px; border-radius: 3px; background: #10b981;"></div>
+                    <span>Hadir Tepat Waktu</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--text-secondary);">
+                    <div style="width: 12px; height: 12px; border-radius: 3px; background: #fbbf24;"></div>
+                    <span>Terlambat Masuk</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--text-secondary);">
+                    <div style="width: 12px; height: 12px; border-radius: 3px; background: #3b82f6;"></div>
+                    <span>Izin / Sakit Resmi</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--text-secondary);">
+                    <div style="width: 12px; height: 12px; border-radius: 3px; background: #ef4444;"></div>
+                    <span>Alfa / Tanpa Keterangan</span>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- JS script for tab swapping -->
+    <!-- 2. Tabel Riwayat Absensi Card -->
+    <div class="content-card" style="margin-bottom: 30px; padding: 24px;">
+        <div style="border-bottom: 1px solid var(--glass-border); padding-bottom: 15px; margin-bottom: 20px;">
+            <h3 style="margin: 0; font-size: 1.1rem; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                Tabel Riwayat Absensi
+            </h3>
+        </div>
+        <div class="table-responsive">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Tanggal</th>
+                        <th>Jam Masuk</th>
+                        <th>Jam Pulang</th>
+                        <th>Status</th>
+                        <th>Jarak Absen</th>
+                        <th>Foto Absen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($attendances as $attendance)
+                        <tr>
+                            <td>{{ $attendance->tanggal->format('d M Y') }}</td>
+                            <td>{{ $attendance->jam_masuk ? $attendance->jam_masuk->format('H:i:s') : '-' }}</td>
+                            <td>{{ $attendance->jam_pulang ? $attendance->jam_pulang->format('H:i:s') : '-' }}</td>
+                            <td>
+                                @if($attendance->status === 'Hadir')
+                                    <span class="badge badge-success">Hadir</span>
+                                @elseif($attendance->status === 'Terlambat')
+                                    <span class="badge badge-warning">Terlambat</span>
+                                @elseif($attendance->status === 'Izin' || $attendance->status === 'Sakit')
+                                    <span class="badge badge-info">{{ $attendance->status }}</span>
+                                @else
+                                    <span class="badge badge-danger">{{ $attendance->status }}</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($attendance->jarak_meter_masuk)
+                                    Masuk: {{ round($attendance->jarak_meter_masuk) }}m
+                                    @if($attendance->jarak_meter_pulang)
+                                        | Pulang: {{ round($attendance->jarak_meter_pulang) }}m
+                                    @endif
+                                @else
+                                    -
+                                @endif
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: 8px;">
+                                    @if($attendance->foto_masuk)
+                                        <button type="button" 
+                                                class="badge badge-success clickable-selfie" 
+                                                style="border: none; cursor: pointer; padding: 4px 8px;" 
+                                                onclick="showImageModal('{{ asset($attendance->foto_masuk) }}', 'Selfie Masuk - {{ $attendance->tanggal->format('d M Y') }}')">
+                                            Masuk
+                                        </button>
+                                    @else
+                                        <span class="muted-small">-</span>
+                                    @endif
+
+                                    @if($attendance->foto_pulang)
+                                        <button type="button" 
+                                                class="badge badge-warning clickable-selfie" 
+                                                style="border: none; cursor: pointer; padding: 4px 8px;" 
+                                                onclick="showImageModal('{{ asset($attendance->foto_pulang) }}', 'Selfie Pulang - {{ $attendance->tanggal->format('d M Y') }}')">
+                                            Pulang
+                                        </button>
+                                    @else
+                                        <span class="muted-small">-</span>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="empty-state">Belum ada riwayat absensi.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        
+        @if($attendances->hasPages())
+            {{ $attendances->links('partials.pagination') }}
+        @endif
+    </div>
+
+
+    {{-- ===== Modal: Selfie Preview Popup ===== --}}
+    <div class="form-modal-backdrop" id="selfie-modal" oncontextmenu="return false;">
+        <div class="form-modal-content" style="position: relative; max-width: 360px; padding: 15px; border-radius: 20px;">
+            <button type="button" id="close-selfie-modal" class="modal-close" style="position: absolute; top: -5px; right: -5px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; z-index: 10;">&times;</button>
+            <img id="modal-selfie-img" src="" alt="Enlarged Selfie" draggable="false" oncontextmenu="return false;" style="width: 100%; max-height: 420px; object-fit: contain; border-radius: 16px; border: 1px solid var(--glass-border); box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: block; pointer-events: none; user-select: none;">
+            <div id="modal-selfie-title" style="text-align: center; margin-top: 12px; font-weight: 600; color: #fff; font-size: 0.95rem; font-family: 'Outfit', sans-serif;"></div>
+        </div>
+    </div>
+
+    {{-- ===== Modal: Daily Selfie Photos Popup ===== --}}
+    <div class="form-modal-backdrop" id="daily-photos-modal" oncontextmenu="return false;">
+        <div class="form-modal-content" style="position: relative; max-width: 520px; padding: 24px; border-radius: 20px; background: rgba(30, 30, 50, 0.95); border: 1px solid var(--glass-border); backdrop-filter: blur(20px);">
+            <button type="button" id="close-photos-modal" class="modal-close" style="position: absolute; top: 12px; right: 12px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; z-index: 10; border: none; background: rgba(255,255,255,0.1); color: #fff; border-radius: 50%; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            <h3 id="modal-photos-title" style="margin-top: 0; margin-bottom: 20px; font-weight: 600; color: #fff; font-size: 1.1rem; font-family: 'Outfit', sans-serif; text-align: center;"></h3>
+            
+            <div style="display: flex; gap: 20px; justify-content: center; align-items: center; flex-wrap: nowrap; margin-top: 15px;">
+                <!-- Selfie Masuk container -->
+                <div id="modal-masuk-container" style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                    <span style="font-size: 0.85rem; font-weight: 600; color: #34d399;">Selfie Masuk</span>
+                    <img id="modal-foto-masuk" src="" alt="Selfie Masuk" draggable="false" oncontextmenu="return false;" style="max-width: 220px; max-height: 280px; width: auto; height: auto; border-radius: 12px; border: 1px solid var(--glass-border); object-fit: contain; display: block; pointer-events: none; user-select: none;">
+                </div>
+                
+                <!-- Selfie Pulang container -->
+                <div id="modal-pulang-container" style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                    <span style="font-size: 0.85rem; font-weight: 600; color: #fbbf24;">Selfie Pulang</span>
+                    <img id="modal-foto-pulang" src="" alt="Selfie Pulang" draggable="false" oncontextmenu="return false;" style="max-width: 220px; max-height: 280px; width: auto; height: auto; border-radius: 12px; border: 1px solid var(--glass-border); object-fit: contain; display: block; pointer-events: none; user-select: none;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JS script for selfie preview -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const tabs = document.querySelectorAll('.tab-btn');
-            const contents = document.querySelectorAll('.tab-content');
+            // Selfie Modal controls
+            const selfieModal = document.getElementById('selfie-modal');
+            const modalSelfieImg = document.getElementById('modal-selfie-img');
+            const modalSelfieTitle = document.getElementById('modal-selfie-title');
+            const closeSelfieModal = document.getElementById('close-selfie-modal');
 
-            tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    const target = tab.getAttribute('data-tab');
+            window.showImageModal = function(src, title) {
+                if (!selfieModal || !modalSelfieImg || !modalSelfieTitle) return;
+                modalSelfieImg.src = src;
+                modalSelfieTitle.textContent = title;
+                selfieModal.classList.add('is-open');
+            };
 
-                    tabs.forEach(t => t.classList.remove('active'));
-                    contents.forEach(c => c.classList.remove('active'));
+            closeSelfieModal?.addEventListener('click', () => {
+                selfieModal?.classList.remove('is-open');
+            });
 
-                    tab.classList.add('active');
-                    const targetEl = document.getElementById(target);
-                    if (targetEl) {
-                        targetEl.classList.add('active');
-                    }
-                });
+            selfieModal?.addEventListener('click', (e) => {
+                if (e.target === selfieModal) {
+                    selfieModal.classList.remove('is-open');
+                }
+            });
+
+            // Daily Photos Modal controls
+            const photosModal = document.getElementById('daily-photos-modal');
+            const imgMasuk = document.getElementById('modal-foto-masuk');
+            const imgPulang = document.getElementById('modal-foto-pulang');
+            const containerMasuk = document.getElementById('modal-masuk-container');
+            const containerPulang = document.getElementById('modal-pulang-container');
+            const modalPhotosTitle = document.getElementById('modal-photos-title');
+            const closePhotosModal = document.getElementById('close-photos-modal');
+
+            window.showSelfiePopup = function(fotoMasuk, fotoPulang, formattedDate) {
+                if (!photosModal || !modalPhotosTitle || !imgMasuk || !imgPulang) return;
+
+                modalPhotosTitle.textContent = `Foto Absensi - ${formattedDate}`;
+
+                // Set check-in photo
+                if (fotoMasuk) {
+                    imgMasuk.src = fotoMasuk;
+                    containerMasuk.style.display = 'flex';
+                } else {
+                    imgMasuk.src = '';
+                    containerMasuk.style.display = 'none';
+                }
+
+                // Set check-out photo
+                if (fotoPulang) {
+                    imgPulang.src = fotoPulang;
+                    containerPulang.style.display = 'flex';
+                } else {
+                    imgPulang.src = '';
+                    containerPulang.style.display = 'none';
+                }
+
+                photosModal.classList.add('is-open');
+            };
+
+            closePhotosModal?.addEventListener('click', () => {
+                photosModal?.classList.remove('is-open');
+            });
+
+            photosModal?.addEventListener('click', (e) => {
+                if (e.target === photosModal) {
+                    photosModal.classList.remove('is-open');
+                }
             });
         });
     </script>

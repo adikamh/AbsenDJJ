@@ -357,3 +357,224 @@
     margin-top: 2px;
     letter-spacing: 0.2px;
 }
+
+/* ===== Responsive Mobile Adjustments for Participant Views ===== */
+
+@media (max-width: 768px) {
+    /* Calendar Grid Adjustments */
+    .calendar-grid {
+        gap: 4px !important;
+    }
+
+    .calendar-day-header {
+        padding: 6px 2px !important;
+        font-size: 0.75rem !important;
+    }
+
+    .calendar-day {
+        min-height: 60px !important;
+        padding: 4px !important;
+        border-radius: 8px !important;
+    }
+
+    .day-number {
+        font-size: 0.8rem !important;
+    }
+
+    .day-status {
+        margin-top: 4px !important;
+    }
+
+    .day-status .badge {
+        font-size: 0.6rem !important;
+        padding: 2px 2px !important;
+        border-radius: 4px !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .cell-desc {
+        display: none !important; /* Hide details description on mobile to avoid clutter */
+    }
+
+    /* Stats Grid inside Attendance page */
+    .calendar-wrapper + .legend-card {
+        padding: 14px !important;
+        margin-top: 16px !important;
+    }
+
+    .legend-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+    }
+
+    /* Selfie cameras and webcam sizes */
+    .camera-video-preview {
+        max-width: 100% !important;
+    }
+
+    .camera-selfie-result {
+        max-width: 120px !important;
+    }
+
+    .attendance-actions {
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+
+    .attendance-button {
+        width: 100% !important;
+    }
+    
+    .selfie-row {
+        flex-direction: row !important;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px !important;
+    }
+    
+    .selfie-thumb {
+        max-width: 110px !important;
+    }
+}
+
+/* ===== Base Calendar Layout ===== */
+.calendar-wrapper {
+    margin-top: 20px;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.calendar-filter {
+    display: flex;
+    gap: 10px;
+}
+
+.calendar-filter select {
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+    font-family: inherit;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.calendar-day-header {
+    text-align: center;
+    font-weight: 600;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.calendar-day {
+    min-height: 100px;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.01);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.2s ease;
+}
+
+.calendar-day:hover {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.calendar-day.empty {
+    background: transparent;
+    border: none;
+    pointer-events: none;
+}
+
+.day-number {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.calendar-day.today {
+    border-color: var(--accent-primary);
+    background: rgba(124, 58, 237, 0.05);
+}
+
+.calendar-day.today .day-number {
+    color: var(--accent-primary);
+    font-weight: bold;
+}
+
+.day-status {
+    margin-top: 10px;
+}
+
+.day-status .badge {
+    display: block;
+    text-align: center;
+    font-size: 0.72rem;
+    padding: 4px 6px;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+.legend-card {
+    background: rgba(255, 255, 255, 0.01);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-top: 24px;
+}
+
+.legend-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.legend-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+}
+
+.legend-color.hadir {
+    background: #10b981;
+}
+
+.legend-color.terlambat {
+    background: #fbbf24;
+}
+
+.legend-color.izin {
+    background: #3b82f6;
+}
+
+.legend-color.alfa {
+    background: #ef4444;
+}
+

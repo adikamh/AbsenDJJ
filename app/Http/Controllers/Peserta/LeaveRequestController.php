@@ -79,7 +79,7 @@ class LeaveRequestController extends Controller
             $filePath = 'uploads/leave_proofs/' . $fileName;
         }
 
-        LeaveRequest::create([
+        $leave = LeaveRequest::create([
             'user_id' => Auth::id(),
             'tanggal_mulai' => $validated['tanggal_mulai'],
             'tanggal_selesai' => $validated['tanggal_selesai'],
@@ -88,6 +88,15 @@ class LeaveRequestController extends Controller
             'file_bukti' => $filePath,
             'status_approval' => 'Pending',
         ]);
+
+        $pembimbing = Auth::user()->pembimbing;
+        if ($pembimbing) {
+            $pembimbing->notify(new \App\Notifications\AbsenNotification(
+                'Pengajuan ' . $leave->jenis . ' Baru',
+                Auth::user()->nama_lengkap . ' telah mengajukan permohonan ' . strtolower($leave->jenis) . ' mulai tanggal ' . \Carbon\Carbon::parse($leave->tanggal_mulai)->format('d M Y') . '.',
+                'info'
+            ));
+        }
 
         return redirect()
             ->route('peserta.leave')

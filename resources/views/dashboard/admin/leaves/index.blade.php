@@ -160,7 +160,10 @@
                 <div id="modal-bukti-group">
                     <span style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase;">Berkas Bukti</span>
                     <div style="margin-top: 6px;">
-                        <a id="modal-bukti-link" href="#" target="_blank" class="badge badge-info" style="text-decoration: none; padding: 6px 12px; font-weight: 600; display: inline-block;">Unduh Berkas Bukti &rarr;</a>
+                        <a id="modal-bukti-link" href="#" target="_blank" class="badge badge-info" style="text-decoration: none; padding: 6px 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                            Unduh Berkas Bukti
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                        </a>
                         <span id="modal-no-bukti" style="color: var(--text-secondary); font-style: italic; display: none;">Tidak melampirkan berkas bukti</span>
                     </div>
                 </div>

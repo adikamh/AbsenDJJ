@@ -109,6 +109,17 @@ class AttendanceController extends Controller
             'status' => $status,
         ]);
 
+        // Notify supervisor
+        $pembimbing = $user->pembimbing;
+        if ($pembimbing) {
+            $msgType = $status === 'Terlambat' ? 'warning' : 'success';
+            $pembimbing->notify(new \App\Notifications\AbsenNotification(
+                'Kehadiran Intern ' . ($status === 'Terlambat' ? 'Terlambat' : 'Masuk'),
+                $user->nama_lengkap . ' telah melakukan absen masuk pada pukul ' . $now->format('H:i') . ' (Status: ' . $status . ').',
+                $msgType
+            ));
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Absen masuk berhasil dilakukan!',
@@ -208,6 +219,16 @@ class AttendanceController extends Controller
             'koordinat_pulang' => $request->input('koordinat'),
             'foto_pulang'      => $fotoPath,
         ]);
+
+        // Notify supervisor
+        $pembimbing = $user->pembimbing;
+        if ($pembimbing) {
+            $pembimbing->notify(new \App\Notifications\AbsenNotification(
+                'Kehadiran Intern Pulang',
+                $user->nama_lengkap . ' telah melakukan absen pulang pada pukul ' . $now->format('H:i') . '.',
+                'info'
+            ));
+        }
 
         return response()->json([
             'success' => true,
