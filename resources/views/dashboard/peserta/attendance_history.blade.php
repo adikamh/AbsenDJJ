@@ -5,133 +5,6 @@
 
 @push('styles')
     @vite('resources/css/peserta/dashboard.css')
-    <style>
-        .calendar-wrapper {
-            margin-top: 20px;
-        }
-
-        .calendar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .calendar-filter {
-            display: flex;
-            gap: 10px;
-        }
-
-        .calendar-filter select {
-            padding: 8px 12px;
-            border-radius: 8px;
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            color: var(--text-primary);
-            font-family: inherit;
-        }
-
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .calendar-day-header {
-            text-align: center;
-            font-weight: 600;
-            padding: 10px;
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 8px;
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-        }
-
-        .calendar-day {
-            min-height: 100px;
-            padding: 8px;
-            background: rgba(255, 255, 255, 0.01);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            transition: all 0.2s ease;
-        }
-
-        .calendar-day:hover {
-            background: rgba(255, 255, 255, 0.03);
-            border-color: rgba(255, 255, 255, 0.15);
-        }
-
-        .calendar-day.empty {
-            background: transparent;
-            border: none;
-            pointer-events: none;
-        }
-
-        .day-number {
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-        }
-
-        .calendar-day.today .day-number {
-            color: var(--accent-primary);
-            font-weight: bold;
-        }
-
-        .day-status {
-            margin-top: 10px;
-        }
-
-        .day-status .badge {
-            display: block;
-            text-align: center;
-            font-size: 0.72rem;
-            padding: 4px 6px;
-            border-radius: 6px;
-            font-weight: 600;
-        }
-
-        .legend-card {
-            background: rgba(255, 255, 255, 0.01);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            padding: 20px;
-            margin-top: 24px;
-        }
-
-        .legend-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-top: 12px;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-        }
-
-        .legend-color {
-            width: 16px;
-            height: 16px;
-            border-radius: 4px;
-        }
-
-        .legend-color.hadir { background: rgba(52, 211, 153, 0.15); border: 1px solid #34d399; }
-        .legend-color.terlambat { background: rgba(251, 191, 36, 0.15); border: 1px solid #fbbf24; }
-        .legend-color.izin { background: rgba(96, 165, 250, 0.15); border: 1px solid #60a5fa; }
-        .legend-color.alfa { background: rgba(248, 113, 113, 0.15); border: 1px solid #f87171; }
-        .legend-color.holiday { background: rgba(156, 163, 175, 0.15); border: 1px solid #9ca3af; }
-    </style>
 @endpush
 
 @section('content')
@@ -186,7 +59,14 @@
                    class="btn-primary" 
                    style="display: inline-flex; align-items: center; gap: 6px; text-decoration: none; font-size: 0.85rem; padding: 8px 16px; border-radius: 8px; line-height: 1.2;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                    Cetak Laporan
+                    Cetak Laporan Kehadiran
+                </a>
+                <a href="{{ route('peserta.consolidated-report', ['month' => $month, 'year' => $year]) }}" 
+                   target="_blank" 
+                   class="btn-primary" 
+                   style="display: inline-flex; align-items: center; gap: 6px; text-decoration: none; font-size: 0.85rem; padding: 8px 16px; border-radius: 8px; line-height: 1.2; background: #059669; border-color: #059669;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    Cetak Rekap Keseluruhan
                 </a>
                 <a href="{{ route('peserta.attendance.csv', ['month' => $month, 'year' => $year]) }}" 
                    class="btn-secondary" 

@@ -20,6 +20,9 @@
 </head>
 <body>
 
+    <!-- Sidebar Backdrop for mobile -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
@@ -155,9 +158,16 @@
     <!-- Main Content Panel -->
     <div class="main-content">
         <div class="page-header">
+            <button type="button" class="mobile-toggle-btn" id="mobile-toggle-btn" aria-label="Buka menu">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
             <h1 class="page-title">@yield('header_title')</h1>
             <div class="page-header-actions">
-                @if(auth()->user()->isPeserta())
+                @if(auth()->user()->isPeserta() || auth()->user()->isAdmin())
                     <div class="notification-dropdown-wrapper">
                         <button type="button" class="notification-bell-btn" id="notification-bell-btn" aria-label="Notifikasi">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -210,6 +220,7 @@
         };
         window.userAttendanceStatus = {
             isPeserta: @json(auth()->check() && auth()->user()->isPeserta()),
+            isAdmin: @json(auth()->check() && auth()->user()->isAdmin()),
             hasCheckedInToday: @json(auth()->check() && auth()->user()->isPeserta() && auth()->user()->attendances()->whereDate('tanggal', \Carbon\Carbon::today())->whereNotNull('jam_masuk')->exists()),
             hasCheckedOutToday: @json(auth()->check() && auth()->user()->isPeserta() && auth()->user()->attendances()->whereDate('tanggal', \Carbon\Carbon::today())->whereNotNull('jam_pulang')->exists()),
             isHolidayToday: @json(\App\Models\WorkSchedule::getScheduleForDate(\Carbon\Carbon::today())?->is_holiday ?? \Carbon\Carbon::today()->isWeekend())

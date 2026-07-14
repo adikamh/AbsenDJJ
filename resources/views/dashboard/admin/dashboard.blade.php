@@ -9,6 +9,124 @@
 
 @push('scripts')
     @vite('resources/js/admin/dashboard.js')
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Today's Attendance Chart
+            const ctxToday = document.getElementById('todayAttendanceChart').getContext('2d');
+            const totalActivity = {{ $hadirTodayCount }} + {{ $terlambatTodayCount }} + {{ $izinSakitTodayCount }} + {{ $alfaTodayCount }};
+            const hasData = totalActivity > 0;
+            
+            new Chart(ctxToday, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Tepat Waktu', 'Terlambat', 'Izin / Sakit', 'Belum Absen (Alfa)'],
+                    datasets: [{
+                        data: hasData 
+                            ? [{{ $hadirTodayCount }}, {{ $terlambatTodayCount }}, {{ $izinSakitTodayCount }}, {{ $alfaTodayCount }}]
+                            : [0, 0, 0, 1], // fallback if no data
+                        backgroundColor: hasData
+                            ? ['#10b981', '#fbbf24', '#3b82f6', '#ef4444']
+                            : ['rgba(255,255,255,0.05)'],
+                        borderWidth: 1,
+                        borderColor: 'rgba(255,255,255,0.1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#a0aec0',
+                                font: {
+                                    family: 'Outfit, sans-serif',
+                                    size: 11
+                                },
+                                padding: 15
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    if (!hasData) return ' Tidak ada aktivitas bimbingan hari ini';
+                                    const value = context.raw;
+                                    return ` ${context.label}: ${value} Orang`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+
+            // 2. Compliance Bar Chart
+            const ctxCompliance = document.getElementById('complianceChart').getContext('2d');
+            const complianceData = @json($internAttendanceData);
+            const labels = complianceData.map(item => item.name);
+            const rates = complianceData.map(item => item.rate);
+
+            new Chart(ctxCompliance, {
+                type: 'bar',
+                data: {
+                    labels: labels.length > 0 ? labels : ['Belum ada data'],
+                    datasets: [{
+                        label: 'Persentase Kehadiran (%)',
+                        data: rates.length > 0 ? rates : [0],
+                        backgroundColor: 'rgba(124, 58, 237, 0.45)',
+                        borderColor: '#7c3aed',
+                        borderWidth: 1.5,
+                        borderRadius: 6,
+                        barPercentage: 0.5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` Kepatuhan: ${context.raw}%`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 100,
+                            ticks: {
+                                color: '#a0aec0',
+                                font: {
+                                    family: 'Outfit, sans-serif'
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(255,255,255,0.05)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#a0aec0',
+                                font: {
+                                    family: 'Outfit, sans-serif',
+                                    size: 10
+                                }
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
 @endpush
 
 @section('content')
@@ -34,7 +152,7 @@
         <div class="stat-card hover-lift">
             <div class="stat-info">
                 <span class="stat-label">Intern Hadir Hari Ini</span>
-                <span class="stat-value">{{ $hadirTodayCount }} Orang</span>
+                <span class="stat-value">{{ $totalHadirToday }} Orang</span>
             </div>
             <div class="stat-icon-wrapper">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -74,6 +192,35 @@
                     <line x1="8" y1="2" x2="8" y2="6"></line>
                     <line x1="3" y1="10" x2="21" y2="10"></line>
                 </svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analysis & Insights Section -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; margin-bottom: 30px;">
+        <!-- Card 1: Today's Attendance Doughnut -->
+        <div class="content-card" style="padding: 24px; display: flex; flex-direction: column;">
+            <div style="border-bottom: 1px solid var(--glass-border); padding-bottom: 15px; margin-bottom: 20px;">
+                <h3 style="margin: 0; font-size: 1.1rem; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
+                    Analisis Kehadiran Hari Ini
+                </h3>
+            </div>
+            <div style="flex-grow: 1; display: flex; align-items: center; justify-content: center; min-height: 240px; position: relative;">
+                <canvas id="todayAttendanceChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Card 2: Attendance Rate Comparison Bar Chart -->
+        <div class="content-card" style="padding: 24px; display: flex; flex-direction: column;">
+            <div style="border-bottom: 1px solid var(--glass-border); padding-bottom: 15px; margin-bottom: 20px;">
+                <h3 style="margin: 0; font-size: 1.1rem; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                    Tingkat Kepatuhan Absensi (%)
+                </h3>
+            </div>
+            <div style="flex-grow: 1; display: flex; align-items: center; justify-content: center; min-height: 240px; position: relative;">
+                <canvas id="complianceChart"></canvas>
             </div>
         </div>
     </div>
@@ -127,7 +274,10 @@
             </div>
             @if($totalPendingLogbooksCount > 3)
                 <div class="card-footer" style="padding: 15px; text-align: center; border-top: 1px solid var(--glass-border);">
-                    <a href="{{ route('admin.logbooks', ['status_approval' => 'Pending']) }}" class="btn-secondary" style="font-size: 0.85rem; text-decoration: none; padding: 8px 16px; display: inline-block;">Lihat Semua Pending ({{ $totalPendingLogbooksCount }}) &rarr;</a>
+                    <a href="{{ route('admin.logbooks', ['status_approval' => 'Pending']) }}" class="btn-secondary" style="font-size: 0.85rem; text-decoration: none; padding: 8px 16px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                        Lihat Semua Pending ({{ $totalPendingLogbooksCount }})
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                    </a>
                 </div>
             @endif
         </div>
@@ -166,7 +316,10 @@
             </div>
             @if($totalInternsCount > 3)
                 <div class="card-footer" style="padding: 15px; text-align: center; border-top: 1px solid var(--glass-border);">
-                    <a href="{{ route('admin.interns') }}" class="btn-secondary" style="font-size: 0.85rem; text-decoration: none; padding: 8px 16px; display: inline-block;">Kelola Semua Intern ({{ $totalInternsCount }}) &rarr;</a>
+                    <a href="{{ route('admin.interns') }}" class="btn-secondary" style="font-size: 0.85rem; text-decoration: none; padding: 8px 16px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                        Kelola Semua Intern ({{ $totalInternsCount }})
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                    </a>
                 </div>
             @endif
         </div>
@@ -231,7 +384,10 @@
         </div>
         @if($totalPendingLeavesCount > 3)
             <div class="card-footer" style="padding: 15px; text-align: center; border-top: 1px solid var(--glass-border);">
-                <a href="{{ route('admin.leaves', ['status_approval' => 'Pending']) }}" class="btn-secondary" style="font-size: 0.85rem; text-decoration: none; padding: 8px 16px; display: inline-block;">Lihat Semua Pending ({{ $totalPendingLeavesCount }}) &rarr;</a>
+                <a href="{{ route('admin.leaves', ['status_approval' => 'Pending']) }}" class="btn-secondary" style="font-size: 0.85rem; text-decoration: none; padding: 8px 16px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                    Lihat Semua Pending ({{ $totalPendingLeavesCount }})
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </a>
             </div>
         @endif
     </div>

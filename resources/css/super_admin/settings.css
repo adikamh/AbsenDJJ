@@ -650,4 +650,48 @@
         padding: 8px 12px;
         font-size: 0.82rem;
     }
+
+    /* Settings page Calendar responsiveness */
+    .calendar-grid {
+        gap: 4px !important;
+    }
+
+    .calendar-day-label {
+        font-size: 0.7rem !important;
+        padding: 4px 0 !important;
+    }
+
+    .calendar-cell {
+        min-height: 55px !important;
+        padding: 4px !important;
+        border-radius: 6px !important;
+        aspect-ratio: auto !important;
+    }
+
+    .cell-number {
+        font-size: 0.75rem !important;
+    }
+
+    .cell-info {
+        font-size: 0.55rem !important;
+        padding: 1px 2px !important;
+        border-radius: 3px !important;
+        margin-top: 2px !important;
+    }
+
+    .cell-desc {
+        font-size: 0.5rem !important;
+        padding: 0 2px !important;
+        margin-top: 1px !important;
+    }
+    
+    /* GPS settings and Map */
+    #map {
+        height: 240px !important;
+    }
+    
+    .map-controls-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
 }

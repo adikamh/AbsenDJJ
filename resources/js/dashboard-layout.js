@@ -212,7 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('DOMContentLoaded', () => {
     const status = window.userAttendanceStatus || {};
     
-    if (status.isPeserta) {
+    if (status.isPeserta || status.isAdmin) {
         // --- 1. Notification Dropdown Panel ---
         const bellBtn = document.getElementById('notification-bell-btn');
         const menu = document.getElementById('notification-menu');
@@ -291,7 +291,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Fetch initially and poll every 30 seconds
         fetchNotifications();
         setInterval(fetchNotifications, 30000);
+    }
 
+    if (status.isPeserta) {
         // --- 2. Push Notifications & Reminders ---
         if ('Notification' in window) {
             // Request permission if not already granted or denied
@@ -344,5 +346,28 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
+});
+
+// Mobile menu toggle logic
+const mobileToggleBtn = document.getElementById('mobile-toggle-btn');
+const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+
+if (mobileToggleBtn) {
+    mobileToggleBtn.addEventListener('click', () => {
+        document.body.classList.add('sidebar-mobile-open');
+    });
+}
+
+if (sidebarBackdrop) {
+    sidebarBackdrop.addEventListener('click', () => {
+        document.body.classList.remove('sidebar-mobile-open');
+    });
+}
+
+// Close mobile sidebar on nav link click
+sidebar?.querySelectorAll('.nav-item a').forEach((link) => {
+    link.addEventListener('click', () => {
+        document.body.classList.remove('sidebar-mobile-open');
+    });
 });
 

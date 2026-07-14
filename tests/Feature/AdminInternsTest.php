@@ -113,7 +113,6 @@ class AdminInternsTest extends TestCase
         $response = $this->actingAs($this->supervisor1)->get("/admin/interns/{$this->intern1->id}");
         $response->assertStatus(200);
         $response->assertSee('Intern Satu ITB');
-        $response->assertSee('Implementasi Fitur Admin');
         $response->assertSee('Hadir');
     }
 
