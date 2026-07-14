@@ -188,7 +188,7 @@
                                 @endif
                             </td>
                             <td>
-                                <span class="muted-small">{{ $logbook->catatan_pembimbing ?? '-' }}</span>
+                                <span class="muted-small">{{ !empty($logbook->catatan_pembimbing) ? $logbook->catatan_pembimbing : '-' }}</span>
                             </td>
                             <td>
                                 @if(in_array($logbook->status_approval, ['Pending', 'Draft']))
@@ -364,6 +364,39 @@
                 if (e.target === modalEditLogbook) {
                     toggleEditLogbookModal(false);
                 }
+            });
+
+            // ===== Delete Confirmation (SweetAlert2) =====
+            document.querySelectorAll('.delete-logbook-form').forEach(form => {
+                form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+
+                    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+                        || document.body.classList.contains('dark-mode');
+
+                    if (window.Swal) {
+                        window.Swal.fire({
+                            title: 'Hapus Logbook?',
+                            text: 'Apakah Anda yakin ingin menghapus entri logbook ini? Tindakan ini tidak dapat dibatalkan.',
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#ef4444',
+                            cancelButtonColor: '#64748b',
+                            confirmButtonText: 'Ya, Hapus',
+                            cancelButtonText: 'Batal',
+                            background: isDark ? '#1e293b' : '#ffffff',
+                            color: isDark ? '#f8fafc' : '#0f172a'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                form.submit();
+                            }
+                        });
+                    } else {
+                        if (confirm('Apakah Anda yakin ingin menghapus entri logbook ini?')) {
+                            form.submit();
+                        }
+                    }
+                });
             });
         });
     </script>

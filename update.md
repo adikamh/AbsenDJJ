@@ -700,3 +700,23 @@
 - **Form Cetak & Rekap Logbook ([index.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/admin/logbooks/index.blade.php))**:
   - Menyediakan widget kartu baru "Cetak & Rekap Logbook Anak Didik" di bagian atas halaman Logbook Kegiatan Anak Didik.
   - Form ini dilengkapi dropdown pemilihan anak didik, bulan, dan tahun, serta menggunakan atribut HTML5 `formaction` dan `formtarget` guna mengarahkan ekspor PDF/CSV secara asinkron dan presisi.
+
+## Update 2026-07-14
+
+### Perbaikan Bug Kolom Catatan Pembimbing Tidak Muncul di Logbook Peserta
+
+- **Akar Masalah**: Saat pembimbing menyetujui atau menolak logbook tanpa mengisi catatan, nilai `catatan_pembimbing` disimpan ke database sebagai string kosong `""` (bukan `null`). Operator `??` (null coalescing) pada Blade hanya menangani nilai `null`, sehingga string kosong lolos dan ditampilkan sebagai sel tabel kosong tanpa teks apapun.
+- **Perbaikan View** ([logbook.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/peserta/logbook.blade.php)):
+  - Mengubah tampilan kolom Catatan Pembimbing dari `{{ $logbook->catatan_pembimbing ?? '-' }}` menjadi `{{ !empty($logbook->catatan_pembimbing) ? $logbook->catatan_pembimbing : '-' }}` agar menangani baik `null` maupun string kosong `""`.
+- **Perbaikan View** ([dashboard.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/peserta/dashboard.blade.php)):
+  - Menerapkan perbaikan yang sama pada tabel ringkasan logbook terbaru di dashboard utama peserta.
+- **Perbaikan Root Cause** ([DashboardController.php](file:///c:/laragon/www/AbsenDJJ/app/Http/Controllers/Admin/DashboardController.php)):
+  - Menormalisasi input `catatan_pembimbing` pada method `approveLogbook()`, `rejectLogbook()`, `approveLeave()`, dan `rejectLeave()` menggunakan `?: null` agar string kosong otomatis dikonversi menjadi `null` sebelum disimpan ke database.
+- Seluruh **55/55 pengujian** dinyatakan lulus (*passed*).
+
+### Konfirmasi Hapus Logbook dengan SweetAlert2
+
+- Menambahkan dialog konfirmasi **SweetAlert2** pada tombol **Hapus** di tabel Daftar Logbook Kegiatan peserta ([logbook.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/peserta/logbook.blade.php)).
+- Saat peserta menekan tombol Hapus, popup SweetAlert2 bertema modern muncul dengan judul *"Hapus Logbook?"*, pesan konfirmasi, serta tombol *"Ya, Hapus"* (merah) dan *"Batal"* (abu-abu).
+- Warna background dan teks popup otomatis menyesuaikan tema aktif (dark mode: latar gelap `#1e293b`, light mode: latar putih `#ffffff`).
+- Menyediakan fallback `confirm()` bawaan browser jika pustaka SweetAlert2 belum termuat.

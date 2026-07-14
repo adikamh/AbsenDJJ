@@ -285,7 +285,7 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <span class="muted-small">{{ $logbook->catatan_pembimbing ?? '-' }}</span>
+                                    <span class="muted-small">{{ !empty($logbook->catatan_pembimbing) ? $logbook->catatan_pembimbing : '-' }}</span>
                                 </td>
                             </tr>
                         @empty
