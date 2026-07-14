@@ -720,3 +720,101 @@
 - Saat peserta menekan tombol Hapus, popup SweetAlert2 bertema modern muncul dengan judul *"Hapus Logbook?"*, pesan konfirmasi, serta tombol *"Ya, Hapus"* (merah) dan *"Batal"* (abu-abu).
 - Warna background dan teks popup otomatis menyesuaikan tema aktif (dark mode: latar gelap `#1e293b`, light mode: latar putih `#ffffff`).
 - Menyediakan fallback `confirm()` bawaan browser jika pustaka SweetAlert2 belum termuat.
+
+### Redesain Halaman Login
+
+- **Struktur HTML & Blade** ([login.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/auth/login.blade.php)):
+  - Menambahkan elemen latar dekoratif SVG gelombang (`bg-header-wave`) dengan gradasi biru dongker bawaan.
+  - Membungkus logo PU ke dalam container flex `.login-logo-container` agar terpusat rapi.
+  - Menambahkan judul heading utama `Masuk` (`.login-heading`) di atas form input.
+  - Mengubah placeholder input menjadi `Email Anda` dan `Kata Sandi`.
+- **Gaya Tampilan CSS** ([auth-login.css](file:///c:/laragon/www/AbsenDJJ/resources/css/auth-login.css)):
+  - Mengubah warna latar belakang `body` menjadi putih (`#ffffff`).
+  - Menambahkan pengaturan posisi absolut SVG gelombang pada `.bg-header-wave` agar menempati 48% bagian atas layar.
+  - Mengubah warna latar `.card` menjadi putih (`#ffffff`) dengan bayangan halus melayang (`box-shadow`) dan radius sudut `24px`.
+  - Mendesain ulang gaya input `.form-control` dengan konsep garis bawah (*underline style*) dan menghilangkan box-shadow fokus.
+  - Menyesuaikan penempatan tombol toggle password `.password-toggle` di ujung kanan garis bawah input kata sandi.
+  - Mengubah tombol submit `.btn-submit` menjadi bentuk kapsul (*pill button* / `border-radius: 50px`) menggunakan gradasi warna kuning-oranye bawaan.
+  - Menyesuaikan gaya warna demo accounts dan banner error agar kontras di atas kartu putih.
+- **Verifikasi Fungsional**:
+  - Tombol toggle tampilkan/sembunyikan kata sandi berfungsi dengan baik.
+  - Seluruh **55/55 kasus pengujian** lulus dengan sukses (*passed*).
+
+### Highlight-Only Logbook Harian pada Dashboard Pembimbing
+
+- **Perubahan View** ([dashboard.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/admin/dashboard.blade.php)):
+  - Mengubah tabel pada kartu **Persetujuan Logbook Harian** agar hanya menampilkan highlight data logbook tanpa tombol aksi ("Setujui" & "Tolak").
+  - Mengubah kolom "Tindakan" menjadi kolom "Status" yang menampilkan label status `Pending` berwarna kuning.
+  - Untuk melakukan tindakan persetujuan atau penolakan, pembimbing dapat menavigasi ke halaman manajemen logbook utama melalui tautan "Lihat Semua Pending" di bagian bawah kartu.
+- **Verifikasi Fungsional**:
+  - Tombol aksi tidak lagi muncul di halaman dashboard pembimbing, sedangkan pada card permohonan izin/sakit tombol aksi tetap dipertahankan.
+  - Seluruh **55/55 kasus pengujian** lulus dengan sukses (*passed*).
+
+### Bottom Navigation Bar / Tab Bar untuk Seluler (Mobile View)
+
+- **Struktur HTML & Blade** ([layout.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/layout.blade.php)):
+  - Menambahkan kontainer `<div class="bottom-nav">` di bagian bawah halaman untuk menyajikan tab bar menu navigasi seluler.
+  - Memasukkan item tab bar yang dinamis menyesuaikan peran pengguna (Super Admin, Pembimbing/Admin, Peserta) dengan ikon SVG dan label ringkas.
+  - Menambahkan tombol log keluar khusus seluler (`mobile-logout-form` & `btn-logout-mobile`) di dalam `.page-header-actions` pada header atas.
+- **Gaya Tampilan CSS** ([dashboard-layout.css](file:///c:/laragon/www/AbsenDJJ/resources/css/dashboard-layout.css)):
+  - Menyembunyikan `.bottom-nav` secara default di layar desktop.
+  - Di layar seluler (lebar <= 768px):
+    - Menyembunyikan menu sidebar `.sidebar` dan overlay `.sidebar-backdrop` secara permanen.
+    - Menyembunyikan tombol menu hamburger `.mobile-toggle-btn`.
+    - Menampilkan `.bottom-nav` dengan posisi tetap (*fixed*) di bagian bawah layar menggunakan efek kaca (*glassmorphism/blur*) dan latar belakang terintegrasi.
+    - Menambahkan padding bawah sebesar `85px` pada `.main-content` agar konten utama tidak tertutup oleh bilah navigasi bawah.
+    - Menampilkan tombol log keluar di header atas.
+- **Verifikasi Fungsional**:
+  - Berhasil diuji menggunakan browser subagent dalam viewport seluler (390x844).
+  - Navigasi bawah aktif menunjukkan status halaman dengan warna aksen kuning (`var(--accent-primary)`).
+  - Seluruh **55/55 kasus pengujian** lulus dengan sukses (*passed*).
+
+### Perbaikan Bug Visual Kalender Kehadiran di Layar HP
+
+- **Perubahan View** ([attendance_history.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/peserta/attendance_history.blade.php) & [show.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/admin/interns/show.blade.php)):
+  - Memetakan nilai status `"Tanpa Keterangan"` (yang memiliki 16 karakter dan terlalu panjang untuk sel kalender sempit di layar HP) menjadi `"Alfa"` pada tampilan sel kalender. Ini menghemat ruang horizontal sel tanpa merusak data asli di database.
+- **Peningkatan CSS** ([dashboard.css](file:///c:/laragon/www/AbsenDJJ/resources/css/peserta/dashboard.css)):
+  - Mengubah properti CSS untuk `.day-status .badge` di dalam media query seluler (`max-width: 768px`) dengan menambahkan `max-width: 100%` dan `display: block`.
+  - Hal ini memaksa pemotongan teks secara aman menggunakan elipsis (`...`) pada inline-block badge yang terisi teks panjang, sehingga mencegah badge meluap keluar dari batas garis sel kalender.
+- **Verifikasi Fungsional**:
+  - Berhasil diuji menggunakan browser subagent pada viewport seluler (375x812), menghasilkan tampilan sel kalender yang rapi dan sejajar.
+  - Seluruh **55/55 kasus pengujian** dinyatakan lulus (*passed*).
+
+### Peningkatan Responsif Halaman Peserta Lainnya (Logbook & Izin/Sakit) di HP
+
+- **Penyelarasan Aksi Tajuk (Header Actions) HP** ([logbook.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/peserta/logbook.blade.php)):
+  - Menambahkan aturan responsif khusus pada tombol tindakan di tajuk kartu logbook: tombol cetak PDF & ekspor CSV ditata berdampingan masing-masing berukuran `50%`, sedangkan tombol utama "Tulis Logbook" diposisikan di bawahnya dengan lebar penuh (`100%`). Hal ini mencegah tombol-tombol bertumpuk tidak beraturan atau meluap secara horizontal di layar HP.
+- **Penyelarasan Kolom Saring (Filter Inputs) HP** ([logbook.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/peserta/logbook.blade.php) & [leave.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/peserta/leave.blade.php)):
+  - Menambahkan media query di bagian `<style>` untuk mengatur agar bilah saring `.filter-row` berubah orientasi menjadi kolom vertikal (`flex-direction: column`) saat dibuka di HP (lebar <= 768px).
+  - Label saring diposisikan di atas kolom masukan/pilihan dengan lebar penuh (`100%`) agar lebih mudah diakses dan dibaca di layar HP yang sempit.
+- **Verifikasi Fungsional**:
+  - Diuji secara langsung dengan browser subagent pada viewport seluler (375x812). Tombol tajuk dan kolom saring tertata sangat rapi, selaras, dan responsif.
+  - Seluruh **55/55 kasus pengujian** dinyatakan lulus (*passed*).
+
+### Publikasi Aplikasi ke Ngrok (Akses Publik)
+
+- **Konfigurasi Lingkungan** ([.env](file:///c:/laragon/www/AbsenDJJ/.env)):
+  - Mengubah nilai `APP_URL` menjadi `https://1144-103-154-222-89.ngrok-free.app` agar Laravel menghasilkan tautan aset (`asset()`), rute (`route()`), dan berkas lainnya menggunakan protokol aman HTTPS langsung ke terowongan Ngrok.
+- **Konfigurasi Terowongan Ngrok (Ngrok Tunneling)**:
+  - Menjalankan perintah tunneling Ngrok dari direktori Laragon: `ngrok http 8000` di latar belakang (background task) untuk meneruskan permintaan dari URL publik luar ke server lokal `php artisan serve` (port 8000).
+- **Verifikasi Akses**:
+  - Diuji langsung menggunakan browser subagent, berhasil mem-bypass halaman peringatan gratis Ngrok, memuat seluruh aset Vite, CSS, gambar logo PU secara aman, dan merender form login dengan sempurna.
+
+### Perbaikan Responsif Dropdown Notifikasi Mobile
+
+- **Penyelarasan CSS (dashboard-layout.css)** ([dashboard-layout.css](file:///c:/laragon/www/AbsenDJJ/resources/css/dashboard-layout.css)):
+  - Menambahkan aturan responsif khusus pada `.notification-menu` di dalam media query mobile (`max-width: 768px`).
+  - Mengubah posisinya menjadi `position: fixed` dengan penempatan `left: 16px` dan `right: 16px` serta lebar otomatis (`width: auto`). Ini memastikan dropdown notifikasi terbentang rata di tengah layar dengan margin seimbang dan tidak terpotong ke kiri luar layar HP.
+- **Verifikasi Visual**:
+  - Diuji secara langsung menggunakan browser subagent pada resolusi seluler. Dropdown notifikasi dapat dibuka dengan stabil dan terposisi tepat di bawah header tanpa ada pemotongan visual.
+  - Seluruh **55/55 kasus pengujian** lulus dengan sukses (*passed*).
+
+### Penataan Widget Jam Digital Mobile pada Card Kontrol Kehadiran
+
+- **Penyelarasan CSS (dashboard.css)** ([dashboard.css](file:///c:/laragon/www/AbsenDJJ/resources/css/peserta/dashboard.css)):
+  - Menambahkan aturan responsif khusus pada `.card-header .digital-clock-container` di dalam media query seluler (`max-width: 768px`).
+  - Mengubah posisinya agar mengambil lebar penuh `100%`, di-center (`text-align: center`), dan diberi latar belakang gelas tipis (`background: rgba(255, 255, 255, 0.02)`) lengkap dengan garis pembatas tipis dan bayangan melayang yang lembut (*soft shadow*).
+  - Mengatur ukuran font jam digital menjadi `1.6rem` dan teks tanggal menjadi `0.8rem` agar serasi dan mudah dibaca di layar HP.
+- **Verifikasi Visual**:
+  - Diuji secara langsung menggunakan browser subagent pada viewport seluler. Widget jam digital terpusat secara presisi, rapi, dan memiliki tampilan kartu widget yang sangat premium di bawah judul kartu.
+  - Seluruh **55/55 kasus pengujian** lulus dengan sukses (*passed*).

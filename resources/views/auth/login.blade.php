@@ -13,16 +13,30 @@
 </head>
 <body>
 
-    <div class="glow-sphere glow-sphere-1"></div>
-    <div class="glow-sphere glow-sphere-2"></div>
+    <div class="bg-header-wave">
+        <svg viewBox="0 0 1440 260" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+            <path d="M0,200 C360,240 720,280 1080,220 C1260,190 1380,110 1440,60 L1440,0 L0,0 Z" fill="url(#bg-gradient-def)"></path>
+            <defs>
+                <linearGradient id="bg-gradient-def" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#1b264f" />
+                    <stop offset="50%" stop-color="#2e4085" />
+                    <stop offset="100%" stop-color="#384877" />
+                </linearGradient>
+            </defs>
+        </svg>
+    </div>
 
     <div class="login-container">
         <div class="card">
             <div class="header">
-                <img src="{{ asset('images/Logo/Logo_PU.png') }}" alt="Logo PU" class="login-logo">
+                <div class="login-logo-container">
+                    <img src="{{ asset('images/Logo/Logo_PU.png') }}" alt="Logo PU" class="login-logo">
+                </div>
                 <div class="logo-title">Sistem Absen Magang</div>
                 <div class="subtitle">Direktorat Bina Teknik Jalan dan Jembatan</div>
             </div>
+
+            <h2 class="login-heading">Masuk</h2>
 
             @if ($errors->any() && !($errors->has('email') && $errors->first('email') === 'Akun Anda dinonaktifkan. Silakan hubungi administrator.'))
                 <div class="error-banner">
@@ -56,14 +70,14 @@
                 <div class="form-group">
                     <label class="form-label" for="email">Alamat Email</label>
                     <div class="input-wrapper">
-                        <input type="email" id="email" name="email" class="form-control" placeholder="nama@email.com" value="{{ old('email') }}" required autofocus>
+                        <input type="email" id="email" name="email" class="form-control" placeholder="Email Anda" value="{{ old('email') }}" required autofocus>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label" for="password">Kata Sandi</label>
                     <div class="input-wrapper">
-                        <input type="password" id="password" name="password" class="form-control" placeholder="********" required>
+                        <input type="password" id="password" name="password" class="form-control" placeholder="Kata Sandi" required>
                         <button type="button" class="password-toggle" id="password-toggle" aria-label="Tampilkan kata sandi" aria-pressed="false">
                             <span class="password-toggle-icon">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">

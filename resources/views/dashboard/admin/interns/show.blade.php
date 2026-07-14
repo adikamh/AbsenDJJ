@@ -175,7 +175,7 @@
                         <div class="day-status">
                             @if($attendance)
                                 <span class="badge {{ $attendance->status === 'Hadir' ? 'badge-success' : ($attendance->status === 'Terlambat' ? 'badge-warning' : ($attendance->status === 'Tanpa Keterangan' ? 'badge-danger' : 'badge-info')) }}">
-                                    {{ $attendance->status }}
+                                    {{ $attendance->status === 'Tanpa Keterangan' ? 'Alfa' : $attendance->status }}
                                     @if($attendance->jam_masuk)
                                         <div style="font-size: 0.65rem; font-weight: normal; margin-top: 2px;">
                                             {{ \Carbon\Carbon::parse($attendance->jam_masuk)->format('H:i') }}

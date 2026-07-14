@@ -240,7 +240,7 @@
                             <th>Intern</th>
                             <th>Tanggal</th>
                             <th>Kegiatan</th>
-                            <th>Tindakan</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -258,10 +258,7 @@
                                     <span class="muted-small">{{ Str::limit($logbook->deskripsi, 45) }}</span>
                                 </td>
                                 <td>
-                                    <div style="display: flex; gap: 6px; flex-direction: column;">
-                                        <button type="button" class="badge badge-success approve-btn" style="border: none; cursor: pointer; padding: 4px 8px; font-weight: 600; width: 100%; text-align: center;" data-type="Logbook" data-action-url="{{ route('admin.logbook.approve', $logbook->id) }}">Setujui</button>
-                                        <button type="button" class="badge badge-danger reject-btn" style="border: none; cursor: pointer; padding: 4px 8px; font-weight: 600; width: 100%; text-align: center;" data-type="Logbook" data-action-url="{{ route('admin.logbook.reject', $logbook->id) }}">Tolak</button>
-                                    </div>
+                                    <span class="badge badge-warning">Pending</span>
                                 </td>
                             </tr>
                         @empty

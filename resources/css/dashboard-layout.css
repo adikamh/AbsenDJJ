@@ -1268,39 +1268,121 @@ select option {
     pointer-events: none;
 }
 
+/* Bottom Navigation Bar */
+.bottom-nav {
+    display: none; /* Hidden on desktop */
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 65px;
+    background-color: var(--bg-sidebar);
+    border-top: 1px solid var(--glass-border);
+    justify-content: space-around;
+    align-items: center;
+    z-index: 10002;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+    padding: 0 10px;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+.bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.7rem;
+    font-weight: 600;
+    flex: 1;
+    height: 100%;
+    transition: all 0.2s ease;
+    opacity: 0.8;
+}
+
+.bottom-nav-item svg {
+    width: 20px;
+    height: 20px;
+    transition: transform 0.2s ease;
+    color: var(--text-secondary);
+}
+
+.bottom-nav-item:hover,
+.bottom-nav-item.active {
+    color: var(--accent-primary);
+    opacity: 1;
+}
+
+.bottom-nav-item.active svg {
+    color: var(--accent-primary);
+    transform: translateY(-2px);
+}
+
+.bottom-nav-label {
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 70px;
+}
+
+/* Mobile Logout Button */
+.mobile-logout-form {
+    display: none;
+}
+
+.btn-logout-mobile {
+    background: none;
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    color: #ef4444; /* red icon for logout alert */
+    cursor: pointer;
+    padding: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.btn-logout-mobile:hover {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: #ef4444;
+}
+
 @media (max-width: 768px) {
     .mobile-toggle-btn {
-        display: inline-flex;
+        display: none !important; /* Hide hamburger completely on mobile */
     }
 
     .sidebar-backdrop {
-        display: block;
+        display: none !important; /* Hide backdrop completely on mobile */
     }
 
     body.sidebar-mobile-open .sidebar-backdrop {
-        opacity: 1;
-        pointer-events: auto;
+        display: none !important;
     }
 
     .sidebar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        z-index: 10001; /* Higher than calendar controls and overlays */
-        transform: translateX(-100%);
-        width: 280px;
-        height: 100vh;
-        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 10px 0 30px rgba(0, 0, 0, 0.35);
+        display: none !important; /* Hide sidebar completely on mobile */
     }
 
     body.sidebar-mobile-open .sidebar {
-        transform: translateX(0);
+        display: none !important;
+    }
+
+    .bottom-nav {
+        display: flex !important; /* Show bottom navigation bar */
+    }
+
+    .mobile-logout-form {
+        display: inline-block !important; /* Show logout button in header actions */
     }
 
     .main-content {
-        padding: 20px 16px !important;
+        padding: 20px 16px 85px 16px !important; /* Add bottom padding so content is not cut by bottom-nav */
         width: 100%;
         overflow-x: hidden;
     }
@@ -1361,5 +1443,17 @@ select option {
     
     .table-responsive {
         -webkit-overflow-scrolling: touch;
+    }
+
+    /* Prevent notification dropdown clipping on mobile */
+    .notification-menu {
+        position: fixed !important;
+        top: 75px !important;
+        left: 16px !important;
+        right: 16px !important;
+        width: auto !important;
+        max-width: none !important;
+        z-index: 100005 !important;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
     }
 }
