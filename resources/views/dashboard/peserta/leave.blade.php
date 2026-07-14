@@ -79,6 +79,37 @@
         .document-link:hover {
             text-decoration: underline;
         }
+
+        @media (max-width: 768px) {
+            .filter-row {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                padding: 12px 16px !important;
+                gap: 10px !important;
+            }
+
+            .filter-item {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 4px !important;
+                width: 100% !important;
+                min-width: 0 !important;
+            }
+
+            .filter-item label {
+                align-self: flex-start !important;
+                font-size: 0.78rem !important;
+            }
+
+            .filter-select, .filter-search {
+                width: 100% !important;
+            }
+
+            .btn-filter-reset {
+                width: 100% !important;
+                text-align: center !important;
+            }
+        }
     </style>
 @endpush
 
