@@ -99,7 +99,7 @@ class DashboardController extends Controller
 
     public function approveLogbook(Request $request, Logbook $logbook)
     {
-        $catatan = $request->input('catatan_pembimbing');
+        $catatan = $request->input('catatan_pembimbing') ?: null;
         $logbook->update([
             'status_approval' => 'Approved',
             'catatan_pembimbing' => $catatan
@@ -117,7 +117,7 @@ class DashboardController extends Controller
 
     public function rejectLogbook(Request $request, Logbook $logbook)
     {
-        $catatan = $request->input('catatan_pembimbing');
+        $catatan = $request->input('catatan_pembimbing') ?: null;
         $logbook->update([
             'status_approval' => 'Rejected',
             'catatan_pembimbing' => $catatan
@@ -135,7 +135,7 @@ class DashboardController extends Controller
 
     public function approveLeave(Request $request, LeaveRequest $leave)
     {
-        $catatan = $request->input('catatan_pembimbing');
+        $catatan = $request->input('catatan_pembimbing') ?: null;
         $leave->update([
             'status_approval' => 'Approved',
             'catatan_pembimbing' => $catatan
@@ -153,7 +153,7 @@ class DashboardController extends Controller
 
     public function rejectLeave(Request $request, LeaveRequest $leave)
     {
-        $catatan = $request->input('catatan_pembimbing');
+        $catatan = $request->input('catatan_pembimbing') ?: null;
         $leave->update([
             'status_approval' => 'Rejected',
             'catatan_pembimbing' => $catatan
