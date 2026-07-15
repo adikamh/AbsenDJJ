@@ -1,0 +1,6 @@
+.has-selfie-photo:hover {
+    background: rgba(124, 58, 237, 0.08) !important;
+    border-color: var(--accent-primary) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.15);
+}

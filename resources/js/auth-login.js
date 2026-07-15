@@ -19,3 +19,22 @@ if (passwordInput && passwordToggle) {
     });
 }
 
+// Show SweetAlert2 error dialog if login-error-flag element exists
+const errorFlag = document.getElementById('login-error-flag');
+if (errorFlag && window.Swal) {
+    const errorText = errorFlag.getAttribute('data-error');
+    if (errorText) {
+        window.Swal.fire({
+            icon: 'error',
+            title: 'Akun Dinonaktifkan',
+            text: errorText,
+            confirmButtonText: 'Mengerti',
+            confirmButtonColor: '#2e4085',
+            background: '#1e293b',
+            color: '#f8fafc',
+            iconColor: '#ef4444'
+        });
+    }
+}
+
+

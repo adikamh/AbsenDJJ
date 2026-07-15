@@ -62,7 +62,7 @@ class LeaveRequestController extends Controller
             'tanggal_selesai' => ['required', 'date', 'after_or_equal:tanggal_mulai'],
             'jenis' => ['required', 'in:Izin,Sakit'],
             'alasan' => ['required', 'string', 'max:1000'],
-            'file_bukti' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:2048'], // max 2MB
+            'file_bukti' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:10240'], // max 10MB
         ]);
 
         $filePath = null;

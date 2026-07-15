@@ -4,113 +4,7 @@
 @section('header_title', 'Pengajuan Izin / Sakit')
 
 @push('styles')
-    @vite('resources/css/peserta/dashboard.css')
-    <style>
-        .filter-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            align-items: center;
-            padding: 15px 20px;
-            border-bottom: 1px solid var(--glass-border);
-            background: rgba(255, 255, 255, 0.01);
-        }
-
-        .filter-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex: 1;
-            min-width: 200px;
-        }
-
-        .filter-item label {
-            font-size: 0.82rem;
-            color: var(--text-secondary);
-            font-weight: 500;
-            white-space: nowrap;
-        }
-
-        .filter-select, .filter-search {
-            flex: 1;
-            padding: 8px 12px;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--glass-border);
-            color: var(--text-primary);
-            font-family: inherit;
-            font-size: 0.85rem;
-            transition: all 0.2s ease;
-        }
-
-        .filter-select:focus, .filter-search:focus {
-            border-color: var(--accent-primary);
-            background: rgba(255, 255, 255, 0.05);
-            outline: none;
-        }
-
-        .btn-filter-reset {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--glass-border);
-            color: var(--text-secondary);
-            text-decoration: none;
-            padding: 8px 14px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            transition: all 0.2s ease;
-            white-space: nowrap;
-        }
-
-        .btn-filter-reset:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: var(--text-primary);
-        }
-
-        .document-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            color: var(--accent-primary);
-            text-decoration: none;
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
-
-        .document-link:hover {
-            text-decoration: underline;
-        }
-
-        @media (max-width: 768px) {
-            .filter-row {
-                flex-direction: column !important;
-                align-items: stretch !important;
-                padding: 12px 16px !important;
-                gap: 10px !important;
-            }
-
-            .filter-item {
-                flex-direction: column !important;
-                align-items: stretch !important;
-                gap: 4px !important;
-                width: 100% !important;
-                min-width: 0 !important;
-            }
-
-            .filter-item label {
-                align-self: flex-start !important;
-                font-size: 0.78rem !important;
-            }
-
-            .filter-select, .filter-search {
-                width: 100% !important;
-            }
-
-            .btn-filter-reset {
-                width: 100% !important;
-                text-align: center !important;
-            }
-        }
-    </style>
+    @vite(['resources/css/peserta/dashboard.css', 'resources/css/leave.css'])
 @endpush
 
 @section('content')
@@ -260,7 +154,7 @@
                 <div class="form-group">
                     <label for="file_bukti">Dokumen Bukti (Surat Dokter / Lampiran)</label>
                     <input type="file" id="file_bukti" name="file_bukti" accept="image/*,application/pdf">
-                    <span class="muted-small" style="font-size: 0.72rem; color: var(--text-secondary); display: block; margin-top: 4px;">Format: JPG, JPEG, PNG, atau PDF (Maks. 2MB)</span>
+                    <span class="muted-small" style="font-size: 0.72rem; color: var(--text-secondary); display: block; margin-top: 4px;">Format: JPG, JPEG, PNG, atau PDF (Maks. 10MB)</span>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn-secondary" id="cancel-add-leave-modal">Batal</button>
@@ -272,28 +166,5 @@
 @endsection
 
 @push('scripts')
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const modalAddLeave = document.getElementById('modal-add-leave');
-            const btnOpenAddLeave = document.getElementById('open-add-leave-modal');
-            const btnCloseAddLeave = document.getElementById('close-add-leave-modal');
-            const btnCancelAddLeave = document.getElementById('cancel-add-leave-modal');
-
-            const toggleAddLeaveModal = (show) => {
-                if (modalAddLeave) {
-                    modalAddLeave.classList.toggle('is-open', show);
-                }
-            };
-
-            btnOpenAddLeave?.addEventListener('click', () => toggleAddLeaveModal(true));
-            btnCloseAddLeave?.addEventListener('click', () => toggleAddLeaveModal(false));
-            btnCancelAddLeave?.addEventListener('click', () => toggleAddLeaveModal(false));
-
-            modalAddLeave?.addEventListener('click', (e) => {
-                if (e.target === modalAddLeave) {
-                    toggleAddLeaveModal(false);
-                }
-            });
-        });
-    </script>
+    @vite('resources/js/leave.js')
 @endpush

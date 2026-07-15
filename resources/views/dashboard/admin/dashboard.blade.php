@@ -8,125 +8,8 @@
 @endpush
 
 @push('scripts')
-    @vite('resources/js/admin/dashboard.js')
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // 1. Today's Attendance Chart
-            const ctxToday = document.getElementById('todayAttendanceChart').getContext('2d');
-            const totalActivity = {{ $hadirTodayCount }} + {{ $terlambatTodayCount }} + {{ $izinSakitTodayCount }} + {{ $alfaTodayCount }};
-            const hasData = totalActivity > 0;
-            
-            new Chart(ctxToday, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Tepat Waktu', 'Terlambat', 'Izin / Sakit', 'Belum Absen (Alfa)'],
-                    datasets: [{
-                        data: hasData 
-                            ? [{{ $hadirTodayCount }}, {{ $terlambatTodayCount }}, {{ $izinSakitTodayCount }}, {{ $alfaTodayCount }}]
-                            : [0, 0, 0, 1], // fallback if no data
-                        backgroundColor: hasData
-                            ? ['#10b981', '#fbbf24', '#3b82f6', '#ef4444']
-                            : ['rgba(255,255,255,0.05)'],
-                        borderWidth: 1,
-                        borderColor: 'rgba(255,255,255,0.1)'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                color: '#a0aec0',
-                                font: {
-                                    family: 'Outfit, sans-serif',
-                                    size: 11
-                                },
-                                padding: 15
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    if (!hasData) return ' Tidak ada aktivitas bimbingan hari ini';
-                                    const value = context.raw;
-                                    return ` ${context.label}: ${value} Orang`;
-                                }
-                            }
-                        }
-                    },
-                    cutout: '65%'
-                }
-            });
-
-            // 2. Compliance Bar Chart
-            const ctxCompliance = document.getElementById('complianceChart').getContext('2d');
-            const complianceData = @json($internAttendanceData);
-            const labels = complianceData.map(item => item.name);
-            const rates = complianceData.map(item => item.rate);
-
-            new Chart(ctxCompliance, {
-                type: 'bar',
-                data: {
-                    labels: labels.length > 0 ? labels : ['Belum ada data'],
-                    datasets: [{
-                        label: 'Persentase Kehadiran (%)',
-                        data: rates.length > 0 ? rates : [0],
-                        backgroundColor: 'rgba(124, 58, 237, 0.45)',
-                        borderColor: '#7c3aed',
-                        borderWidth: 1.5,
-                        borderRadius: 6,
-                        barPercentage: 0.5
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return ` Kepatuhan: ${context.raw}%`;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            min: 0,
-                            max: 100,
-                            ticks: {
-                                color: '#a0aec0',
-                                font: {
-                                    family: 'Outfit, sans-serif'
-                                }
-                            },
-                            grid: {
-                                color: 'rgba(255,255,255,0.05)'
-                            }
-                        },
-                        x: {
-                            ticks: {
-                                color: '#a0aec0',
-                                font: {
-                                    family: 'Outfit, sans-serif',
-                                    size: 10
-                                }
-                            },
-                            grid: {
-                                display: false
-                            }
-                        }
-                    }
-                }
-            });
-        });
-    </script>
+    @vite('resources/js/admin/dashboard.js')
 @endpush
 
 @section('content')
@@ -207,7 +90,12 @@
                 </h3>
             </div>
             <div style="flex-grow: 1; display: flex; align-items: center; justify-content: center; min-height: 240px; position: relative;">
-                <canvas id="todayAttendanceChart"></canvas>
+                <canvas id="todayAttendanceChart" 
+                        data-hadir="{{ $hadirTodayCount }}" 
+                        data-terlambat="{{ $terlambatTodayCount }}" 
+                        data-izin="{{ $izinSakitTodayCount }}" 
+                        data-alfa="{{ $alfaTodayCount }}">
+                </canvas>
             </div>
         </div>
 
@@ -220,7 +108,9 @@
                 </h3>
             </div>
             <div style="flex-grow: 1; display: flex; align-items: center; justify-content: center; min-height: 240px; position: relative;">
-                <canvas id="complianceChart"></canvas>
+                <canvas id="complianceChart" 
+                        data-compliance='@json($internAttendanceData)'>
+                </canvas>
             </div>
         </div>
     </div>
