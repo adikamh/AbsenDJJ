@@ -1,8 +1,35 @@
 document.addEventListener('DOMContentLoaded', () => {
     // ===== Database Schedule Data Passed to JS =====
-    const globalDefaultSettings = window.settingsConfig.globalDefaultSettings;
-    const rawDayOverrides = window.settingsConfig.dayOverrides;
-    const rawDateOverrides = window.settingsConfig.dateOverrides;
+    const configEl = document.getElementById('settings-config');
+    let globalDefaultSettings = {};
+    let rawDayOverrides = [];
+    let rawDateOverrides = [];
+    let routes = {};
+    let csrfToken = '';
+
+    if (configEl) {
+        try {
+            globalDefaultSettings = JSON.parse(configEl.getAttribute('data-global-default-settings') || '{}');
+            rawDayOverrides = JSON.parse(configEl.getAttribute('data-day-overrides') || '[]');
+            rawDateOverrides = JSON.parse(configEl.getAttribute('data-date-overrides') || '[]');
+            routes = {
+                storeSchedule: configEl.getAttribute('data-routes-store-schedule') || '',
+                syncHolidays: configEl.getAttribute('data-routes-sync-holidays') || ''
+            };
+            csrfToken = configEl.getAttribute('data-csrf-token') || '';
+        } catch (e) {
+            console.error('Error parsing settings config:', e);
+        }
+    }
+
+    window.settingsConfig = {
+        globalDefaultSettings,
+        dayOverrides: rawDayOverrides,
+        dateOverrides: rawDateOverrides,
+        routes,
+        csrfToken
+    };
+
 
     const dayOverrides = {};
     rawDayOverrides.forEach(ovr => {

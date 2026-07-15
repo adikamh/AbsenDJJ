@@ -49,20 +49,7 @@
 
             @if ($errors->has('email') && $errors->first('email') === 'Akun Anda dinonaktifkan. Silakan hubungi administrator.')
                 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-                <script>
-                    document.addEventListener('DOMContentLoaded', function () {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Akun Dinonaktifkan',
-                            text: 'Akun Anda dinonaktifkan. Silakan hubungi administrator.',
-                            confirmButtonText: 'Mengerti',
-                            confirmButtonColor: '#2e4085',
-                            background: '#1e293b',
-                            color: '#f8fafc',
-                            iconColor: '#ef4444'
-                        });
-                    });
-                </script>
+                <div id="login-error-flag" data-error="Akun Anda dinonaktifkan. Silakan hubungi administrator."></div>
             @endif
 
             <form action="{{ route('login') }}" method="POST">

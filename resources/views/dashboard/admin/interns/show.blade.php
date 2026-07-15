@@ -4,15 +4,7 @@
 @section('header_title', 'Detail Aktivitas Intern: ' . $intern->nama_lengkap)
 
 @push('styles')
-    @vite(['resources/css/admin/interns.css', 'resources/css/peserta/dashboard.css'])
-    <style>
-        .has-selfie-photo:hover {
-            background: rgba(124, 58, 237, 0.08) !important;
-            border-color: var(--accent-primary) !important;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.15);
-        }
-    </style>
+    @vite(['resources/css/admin/interns.css', 'resources/css/peserta/dashboard.css', 'resources/css/show.css'])
 @endpush
 
 @section('content')
@@ -350,76 +342,7 @@
         </div>
     </div>
 
-    <!-- JS script for selfie preview -->
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Selfie Modal controls
-            const selfieModal = document.getElementById('selfie-modal');
-            const modalSelfieImg = document.getElementById('modal-selfie-img');
-            const modalSelfieTitle = document.getElementById('modal-selfie-title');
-            const closeSelfieModal = document.getElementById('close-selfie-modal');
-
-            window.showImageModal = function(src, title) {
-                if (!selfieModal || !modalSelfieImg || !modalSelfieTitle) return;
-                modalSelfieImg.src = src;
-                modalSelfieTitle.textContent = title;
-                selfieModal.classList.add('is-open');
-            };
-
-            closeSelfieModal?.addEventListener('click', () => {
-                selfieModal?.classList.remove('is-open');
-            });
-
-            selfieModal?.addEventListener('click', (e) => {
-                if (e.target === selfieModal) {
-                    selfieModal.classList.remove('is-open');
-                }
-            });
-
-            // Daily Photos Modal controls
-            const photosModal = document.getElementById('daily-photos-modal');
-            const imgMasuk = document.getElementById('modal-foto-masuk');
-            const imgPulang = document.getElementById('modal-foto-pulang');
-            const containerMasuk = document.getElementById('modal-masuk-container');
-            const containerPulang = document.getElementById('modal-pulang-container');
-            const modalPhotosTitle = document.getElementById('modal-photos-title');
-            const closePhotosModal = document.getElementById('close-photos-modal');
-
-            window.showSelfiePopup = function(fotoMasuk, fotoPulang, formattedDate) {
-                if (!photosModal || !modalPhotosTitle || !imgMasuk || !imgPulang) return;
-
-                modalPhotosTitle.textContent = `Foto Absensi - ${formattedDate}`;
-
-                // Set check-in photo
-                if (fotoMasuk) {
-                    imgMasuk.src = fotoMasuk;
-                    containerMasuk.style.display = 'flex';
-                } else {
-                    imgMasuk.src = '';
-                    containerMasuk.style.display = 'none';
-                }
-
-                // Set check-out photo
-                if (fotoPulang) {
-                    imgPulang.src = fotoPulang;
-                    containerPulang.style.display = 'flex';
-                } else {
-                    imgPulang.src = '';
-                    containerPulang.style.display = 'none';
-                }
-
-                photosModal.classList.add('is-open');
-            };
-
-            closePhotosModal?.addEventListener('click', () => {
-                photosModal?.classList.remove('is-open');
-            });
-
-            photosModal?.addEventListener('click', (e) => {
-                if (e.target === photosModal) {
-                    photosModal.classList.remove('is-open');
-                }
-            });
-        });
-    </script>
+    @push('scripts')
+        @vite('resources/js/show.js')
+    @endpush
 @endsection

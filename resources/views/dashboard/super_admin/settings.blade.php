@@ -524,22 +524,14 @@
 @endsection
 
 @push('scripts')
+    <div id="settings-config" style="display:none;"
+         data-global-default-settings='{"jam_masuk":"{{ substr($settings->jam_masuk, 0, 5) }}","batas_keterlambatan":"{{ substr($settings->batas_keterlambatan, 0, 5) }}","jam_pulang":"{{ substr($settings->jam_pulang, 0, 5) }}"}'
+         data-day-overrides='@json($dayOverrides->values())'
+         data-date-overrides='@json($dateOverrides)'
+         data-routes-store-schedule="{{ route('super-admin.schedules.store') }}"
+         data-routes-sync-holidays="{{ route('super-admin.schedules.sync-holidays') }}"
+         data-csrf-token="{{ csrf_token() }}">
+    </div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    <script>
-        window.settingsConfig = {
-            globalDefaultSettings: {
-                jam_masuk: "{{ substr($settings->jam_masuk, 0, 5) }}",
-                batas_keterlambatan: "{{ substr($settings->batas_keterlambatan, 0, 5) }}",
-                jam_pulang: "{{ substr($settings->jam_pulang, 0, 5) }}"
-            },
-            dayOverrides: @json($dayOverrides->values()),
-            dateOverrides: @json($dateOverrides),
-            routes: {
-                storeSchedule: "{{ route('super-admin.schedules.store') }}",
-                syncHolidays: "{{ route('super-admin.schedules.sync-holidays') }}"
-            },
-            csrfToken: "{{ csrf_token() }}"
-        };
-    </script>
     @vite('resources/js/super_admin/settings.js')
 @endpush

@@ -38,6 +38,14 @@ export default defineConfig({
                 'resources/css/peserta/dashboard.css',
                 'resources/js/peserta/dashboard.js',
                 'resources/js/peserta/logbook.js',
+
+                // Isolated separated assets
+                'resources/css/show.css',
+                'resources/js/show.js',
+                'resources/css/leave.css',
+                'resources/js/leave.js',
+                'resources/css/logbook.css',
+                'resources/js/logbook.js',
             ],
             refresh: true,
             fonts: [
