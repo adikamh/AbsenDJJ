@@ -9,7 +9,7 @@
     <!-- Premium Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="icon" type="image/x-icon" href="{{ asset('public/images/logo/favicon.ico') }}">
+    <link rel="icon" type="image/x-icon" href="{{ asset('images/logo/favicon.ico') }}">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="manifest" href="{{ asset('manifest.json') }}">
     <meta name="theme-color" content="#007bff">
