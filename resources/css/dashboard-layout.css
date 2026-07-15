@@ -1714,5 +1714,7 @@ select option {
     .content-card {
         padding: 16px !important;
         border-radius: 16px !important;
+        overflow: hidden !important;
+        min-width: 0 !important;
     }
 }

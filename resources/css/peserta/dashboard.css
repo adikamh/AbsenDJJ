@@ -387,7 +387,14 @@
     }
 
     /* Calendar Grid Adjustments */
+    .calendar-wrapper {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+    }
+
     .calendar-grid {
+        min-width: 600px !important;
         gap: 4px !important;
     }
 

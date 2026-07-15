@@ -371,3 +371,128 @@ sidebar?.querySelectorAll('.nav-item a').forEach((link) => {
     });
 });
 
+
+// ==========================================================
+// Global Loading Interceptors for Slow Connections (SweetAlert2)
+// ==========================================================
+
+// Helper to filter out downloads/exports
+function shouldIgnoreUrl(url) {
+    if (!url) return true;
+    const urlStr = url.toLowerCase();
+    const keywords = [
+        'download', 'export', 'print', 'cetak', 'pdf', 'csv', 'xlsx', 
+        'rekap', 'chart', 'graphic', 'selfie', 'foto', 'bukti', 'logout'
+    ];
+    return keywords.some(kw => urlStr.includes(kw));
+}
+
+// Global Form Submit Loader
+document.addEventListener('submit', (e) => {
+    const form = e.target;
+    if (e.defaultPrevented) return;
+    
+    // Ignore target="_blank"
+    if (form.getAttribute('target') === '_blank') return;
+    
+    // Ignore downloads/exports
+    const action = form.getAttribute('action') || '';
+    if (shouldIgnoreUrl(action)) return;
+
+    Swal.fire({
+        ...getSwalTheme(),
+        title: 'Memproses Data...',
+        text: 'Mohon tunggu sebentar.',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+});
+
+// Global Link Click Navigation Loader
+document.addEventListener('click', (e) => {
+    const link = e.target.closest('a');
+    if (!link) return;
+
+    // Ignore links that don't navigate
+    const href = link.getAttribute('href');
+    if (!href || href.startsWith('#') || href.startsWith('javascript:') || link.target === '_blank') return;
+    
+    // Ignore download, prints, or exports
+    if (link.hasAttribute('download') || shouldIgnoreUrl(link.href) || shouldIgnoreUrl(href)) return;
+
+    // Verify it is an internal link
+    const currentHost = window.location.host;
+    try {
+        const linkUrl = new URL(link.href);
+        if (linkUrl.host !== currentHost) return;
+    } catch (err) {
+        if (!href.startsWith('/') && !href.startsWith('.') && href.indexOf(':') > -1) return;
+    }
+
+    // Show loading spinner
+    Swal.fire({
+        ...getSwalTheme(),
+        title: 'Memuat Halaman...',
+        text: 'Menghubungkan ke server...',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+});
+
+// Global Fetch/AJAX Loader Interceptor
+const originalFetch = window.fetch;
+window.fetch = async function (url, options) {
+    let urlStr = '';
+    if (typeof url === 'string') {
+        urlStr = url;
+    } else if (url instanceof URL) {
+        urlStr = url.href;
+    } else if (url && url.url) {
+        urlStr = url.url;
+    }
+    
+    const method = (options && options.method || 'GET').toUpperCase();
+    const isBackground = urlStr.includes('notifications') || urlStr.includes('cookie-consent') || urlStr.includes('dev-reload-check');
+    
+    let loadingTimer = null;
+    let swalShown = false;
+
+    if (['POST', 'PUT', 'DELETE'].includes(method) && !isBackground) {
+        loadingTimer = setTimeout(() => {
+            swalShown = true;
+            Swal.fire({
+                ...getSwalTheme(),
+                title: 'Menghubungkan...',
+                text: 'Sedang memproses permintaan Anda, mohon tunggu.',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+        }, 500); // 500ms delay to avoid flashing on fast connections
+    }
+
+    try {
+        const response = await originalFetch(url, options);
+        return response;
+    } finally {
+        if (loadingTimer) {
+            clearTimeout(loadingTimer);
+        }
+        if (swalShown) {
+            Swal.close();
+        }
+    }
+};
+
+
