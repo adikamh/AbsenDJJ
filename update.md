@@ -914,6 +914,9 @@
 - **Peningkatan Batas Upload Berkas Izin Peserta (10MB Limit)**:
   - **Validasi Backend (LeaveRequestController.php)** ([LeaveRequestController.php](file:///c:/laragon/www/AbsenDJJ/app/Http/Controllers/Peserta/LeaveRequestController.php)): Mengubah batas validasi ukuran file lampiran bukti izin (`file_bukti`) dari `max:2048` (2MB) menjadi `max:10240` (10MB) agar menampung dokumen surat dokter/lampiran yang berukuran lebih besar.
   - **Pembaruan UI Label (leave.blade.php)** ([leave.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/peserta/leave.blade.php)): Memperbarui label instruksi unggahan berkas dalam modal pop-up agar secara eksplisit menampilkan keterangan "(Maks. 10MB)".
+- **Perbaikan Viewport Scrolling Seluler (Mobile Scroll Lock Fix)**:
+  - **Pemisahan Scroll Container (dashboard-layout.css)** ([dashboard-layout.css](file:///c:/laragon/www/AbsenDJJ/resources/css/dashboard-layout.css)): Pada media query seluler (`max-width: 768px`), memaksa `.main-content` menggunakan `height: auto !important` dan `overflow-y: visible !important`. Perubahan ini memindahkan scrollbar dari level kontainer dalam ke scrollbar jendela (*native browser window*) sehingga seluruh kartu informasi (Visual Kalender, Tabel Absensi, Logbook) dapat diakses dengan gestur gulir usap jari secara mulus tanpa terkunci atau terpotong pada browser seluler (Safari iPhone 12 / Chrome Mobile).
+
 
 
 
