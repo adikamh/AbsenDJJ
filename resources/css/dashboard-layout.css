@@ -1693,6 +1693,10 @@ select option {
         display: flex !important;
     }
 
+    .fab-container-peserta {
+        display: flex !important;
+    }
+
     /* Admin custom detail modals responsive positioning */
     #logbook-detail-modal,
     #leave-detail-modal,
