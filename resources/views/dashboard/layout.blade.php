@@ -291,7 +291,7 @@
     </div>
 
     {{-- Floating Action Button (FAB) for Super Admin to Add Peserta / Pembimbing (Expandable Menu) --}}
-    @if(auth()->check() && auth()->user()->isSuperAdmin() && request()->routeIs('super-admin.*'))
+    @if(auth()->check() && auth()->user()->isSuperAdmin() && (request()->routeIs('super-admin.*') || request()->routeIs('dashboard')))
         <div class="fab-container" id="global-fab-container">
             <!-- Expanded Menu -->
             <div class="fab-menu" id="global-fab-menu">

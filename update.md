@@ -885,6 +885,21 @@
   - **Struktur Baris Profil Vertikal**: Mengubah baris-baris info peserta (nama, email, alamat, dll.) yang bertipe flex row menjadi vertikal (column) pada layar HP, serta menonaktifkan lebar tetap `140px` pada label agar email atau teks panjang tidak meluap melintasi sisi kanan card.
   - **Tombol Cetak & Unduh Adaptif**: Mengatur seluruh tombol cetak laporan (PDF/CSV) di dalam card "Kontak Darurat & Unduhan" menjadi lebar penuh (`width: 100%`) dan terpusat di layar ponsel untuk kemudahan navigasi jempol.
   - **Scrollable Visual Kalender Kehadiran**: Mengaktifkan overflow horizontal pada kontainer kalender (`.calendar-wrapper`) dan menetapkan `min-width: 600px` pada grid kalender khusus di layar HP. Hal ini menjaga agar sel kalender (yang berisi tanggal, badge status, waktu masuk, dan ikon kamera) tidak terkompresi terlalu sempit (misal menjadi 50px) dan tetap terbaca sempurna melalui gulir horizontal yang mulus tanpa memotong card.
+- **Implementasi Global Loading Interceptor & Penanganan Jaringan Lambat (dashboard-layout.js)** ([dashboard-layout.js](file:///c:/laragon/www/AbsenDJJ/resources/js/dashboard-layout.js)):
+  - **Pencegah Klik Ganda & Spinner Form**: Mengaitkan listener global pada event `submit` form. Begitu formulir dikirim (kecuali ekspor PDF/CSV/Cetak), popup SweetAlert2 "Memproses Data..." dengan animasi spinner dimunculkan guna memberi isyarat visual kepada user bahwa data sedang dikirim dan mencegah penekanan tombol berkali-kali.
+  - **Indikator Navigasi Halaman**: Mengaitkan listener global pada klik tautan (`a`). Jika pengguna bernavigasi ke halaman internal baru, popup SweetAlert2 "Memuat Halaman..." akan muncul seketika, meniadakan kesan web "menggantung" apabila jaringan seluler atau server merespons lambat.
+  - **Fetch / AJAX Interceptor Pintar**: Membungkus (*monkey-patch*) fungsi global `window.fetch`. Khusus untuk metode pengiriman data (`POST`, `PUT`, `DELETE`) non-background, interceptor akan menunggu selama `500ms`. Jika respons server belum kembali dalam kurun waktu tersebut (pertanda koneksi lambat atau proses berat), popup SweetAlert2 "Menghubungkan..." otomatis dimunculkan dan akan menutup sendiri (`Swal.close()`) segera setelah respons diterima.
+- **Pelebaran Jangkauan FAB Super Admin ke Dashboard Overview (layout.blade.php)** ([layout.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/layout.blade.php)):
+  - **Aktivasi di Halaman Utama**: Mengubah kondisi render `@if` pada layout agar mendeteksi juga rute utama dashboard (`dashboard`). Hal ini membuat Floating Action Button (FAB) Super Admin untuk pintasan tambah pembimbing/peserta juga tampil dengan anggun pada halaman **Super Admin Overview** (Dashboard).
+  - **Integrasi Navigasi & Auto-Open**: Opsi pada menu FAB di halaman dashboard tetap terintegrasi penuh. Ketika salah satu ditekan, website akan secara otomatis mengalihkan pengguna ke halaman bersangkutan dengan parameter query `?add=1`, yang memicu pembukaan form modal secara instan setelah halaman baru selesai dimuat.
+- **Scrollable Kalender Riwayat Absen Peserta (dashboard.css)** ([dashboard.css](file:///c:/laragon/www/AbsenDJJ/resources/css/peserta/dashboard.css)):
+  - **Penyelarasan Kalender Seluler**: Menerapkan struktur gulir horizontal (`overflow-x: auto`) pada `.calendar-wrapper` dan menetapkan `min-width: 600px` pada `.calendar-grid` pada file CSS peserta. Ini memastikan sel-sel tanggal yang memuat jam absen dan status kehadiran tidak tertekan menjadi sangat sempit di bawah batas lebar layar HP dan tidak menyebabkan card utama pecah/terpotong.
+- **Enforcing Global Card Overflow Constraint (dashboard-layout.css)** ([dashboard-layout.css](file:///c:/laragon/www/AbsenDJJ/resources/css/dashboard-layout.css)):
+  - **Pemberantasan Layout Spillage**: Menambahkan aturan `overflow: hidden !important` dan `min-width: 0 !important` pada `.content-card` di media query seluler. Hal ini menjamin seluruh card di aplikasi bertindak sebagai wadah tertutup yang aman, mencegah elemen dalam (seperti kalender atau baris tabel) meregangkan lebar boks melebihi lebar layar HP Safari iPhone 12.
+
+
+
+
 
 
 
