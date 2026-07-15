@@ -794,9 +794,13 @@
 ### Publikasi Aplikasi ke Ngrok (Akses Publik)
 
 - **Konfigurasi Lingkungan** ([.env](file:///c:/laragon/www/AbsenDJJ/.env)):
-  - Mengubah nilai `APP_URL` menjadi `https://1144-103-154-222-89.ngrok-free.app` agar Laravel menghasilkan tautan aset (`asset()`), rute (`route()`), dan berkas lainnya menggunakan protokol aman HTTPS langsung ke terowongan Ngrok.
+  - Mengubah nilai `APP_URL` menjadi `https://0e34-103-154-222-89.ngrok-free.app` agar Laravel menghasilkan tautan aset (`asset()`), rute (`route()`), dan berkas lainnya menggunakan protokol aman HTTPS langsung ke terowongan Ngrok.
 - **Konfigurasi Terowongan Ngrok (Ngrok Tunneling)**:
   - Menjalankan perintah tunneling Ngrok dari direktori Laragon: `ngrok http 8000` di latar belakang (background task) untuk meneruskan permintaan dari URL publik luar ke server lokal `php artisan serve` (port 8000).
+- **Penyesuaian Skema HTTPS** ([AppServiceProvider.php](file:///c:/laragon/www/AbsenDJJ/app/Providers/AppServiceProvider.php)):
+  - Memaksa skema URL Laravel menggunakan `https` lewat panggilan `URL::forceScheme('https')` di dalam method `boot()` jika nilai konfigurasi `app.url` diawali dengan protokol secure HTTPS. Hal ini mencegah browser menolak muatan aset (Vite/CSS/JS) karena masalah mixed content.
+- **Konfigurasi Trusted Proxies** ([app.php](file:///c:/laragon/www/AbsenDJJ/bootstrap/app.php)):
+  - Mendaftarkan kebijakan proxy tepercaya (`$middleware->trustProxies(at: '*')`) agar Laravel mengenali header asal yang diteruskan oleh terowongan Ngrok secara aman, sehingga pendeteksian rute dan protokol HTTPS dapat berjalan semestinya di lingkungan tunnel.
 - **Verifikasi Akses**:
   - Diuji langsung menggunakan browser subagent, berhasil mem-bypass halaman peringatan gratis Ngrok, memuat seluruh aset Vite, CSS, gambar logo PU secara aman, dan merender form login dengan sempurna.
 
@@ -818,3 +822,58 @@
 - **Verifikasi Visual**:
   - Diuji secara langsung menggunakan browser subagent pada viewport seluler. Widget jam digital terpusat secara presisi, rapi, dan memiliki tampilan kartu widget yang sangat premium di bawah judul kartu.
   - Seluruh **55/55 kasus pengujian** lulus dengan sukses (*passed*).
+
+## Update 2026-07-15
+
+### Perbaikan Judul Halaman Superadmin pada Tampilan Seluler (Android/iOS)
+
+- **Penyelarasan CSS (dashboard-layout.css)** ([dashboard-layout.css](file:///c:/laragon/www/AbsenDJJ/resources/css/dashboard-layout.css)):
+  - Mengubah aturan CSS responsif untuk `.page-title` di dalam media query seluler (`max-width: 768px`).
+  - Mengganti pembatasan baris tunggal kaku (`white-space: nowrap; overflow: hidden; text-overflow: ellipsis;`) menjadi pembungkusan teks alami (`white-space: normal; overflow: visible; text-overflow: clip; word-break: break-word;`). Hal ini mencegah judul halaman yang panjang seperti "Super Admin Overview", "Kelola Pembimbing", atau "Pengaturan Parameter Global" terpotong menjadi tanda elipsis (`...`) pada layar ponsel Android atau iOS.
+
+### Perbaikan Responsif & Lapisan Tumpukan Modal Form (Z-Index) di HP
+
+- **Penyelarasan Z-Index (dashboard-layout.css & settings.css)** ([dashboard-layout.css](file:///c:/laragon/www/AbsenDJJ/resources/css/dashboard-layout.css), [settings.css](file:///c:/laragon/www/AbsenDJJ/resources/css/super_admin/settings.css)):
+  - Menurunkan nilai `z-index` bilah menu bawah seluler (`.bottom-nav`) dari semula `10002` menjadi `1002`. Ini penting agar pop-up dialog (seperti modal form dan notifikasi kustom SweetAlert2) tidak lagi tertutupi atau terhalang oleh menu bawah.
+  - Menaikkan nilai `z-index` modal latar belakang (`.form-modal-backdrop`, `.cookie-modal-backdrop`, dan `.modal-backdrop`) menjadi `2000` agar posisinya berada di lapisan teratas (di atas `.bottom-nav` dan `.top-header`).
+- **Batasan Tinggi dan Scrollable Modal HP** ([dashboard-layout.css](file:///c:/laragon/www/AbsenDJJ/resources/css/dashboard-layout.css), [settings.css](file:///c:/laragon/www/AbsenDJJ/resources/css/super_admin/settings.css)):
+  - Menambahkan aturan responsif khusus di dalam media query seluler (`max-width: 768px`) untuk kelas `.form-modal`, `.form-modal-content`, dan `.modal-container`.
+  - Membatasi tinggi maksimum modal di layar seluler menjadi `80vh` (`max-height: 80vh !important`) dan mengaktifkan scrollbar vertikal otomatis (`overflow-y: auto !important`). Hal ini menjamin agar seluruh isi formulir pop-up (seperti form tambah/edit peserta yang memiliki banyak kolom) tetap dapat digulir dan diisi secara penuh tanpa terpotong atau keluar dari batas viewport layar HP.
+
+### Optimalisasi Halaman Pengaturan Parameter Global di HP (iPhone 12 / Android)
+
+- **Penyelarasan Kalender Parameter (settings.css & settings.js)** ([settings.css](file:///c:/laragon/www/AbsenDJJ/resources/css/super_admin/settings.css), [settings.js](file:///c:/laragon/www/AbsenDJJ/resources/js/super_admin/settings.js)):
+  - Menyembunyikan elemen keterangan libur/override (`.cell-desc`) pada resolusi mobile untuk menghindari tumpukan teks yang membuat kalender tidak jelas/berantakan.
+  - Memisahkan jam masuk dan jam pulang ke dalam `span` terpisah di JavaScript (`time-start`, `time-dash`, `time-end`).
+  - Mengubah CSS responsif `.cell-info` di handphone agar menggunakan arah kolom (`flex-direction: column`) dan menyembunyikan tanda hubung (`.time-dash`). Hal ini membuat jam kerja ditumpuk secara vertikal (misal: baris atas `07:30`, baris bawah `16:00`), mencegah jam kerja terpotong menjadi titik-titik (`...`) dan menjaganya agar tetap terbaca jelas di layar HP yang sempit.
+  - Meningkatkan tinggi minimal sel kalender dari `55px` menjadi `65px` serta mengubah tata letaknya menjadi flex-column terdistribusi seimbang agar nomor tanggal dan status jam kerja tidak bertabrakan.
+- **Penyelarasan Pencarian Lokasi & Geofencing (settings.css)** ([settings.css](file:///c:/laragon/www/AbsenDJJ/resources/css/super_admin/settings.css)):
+  - Menambahkan aturan responsif untuk `.map-search-bar` agar elemen input pencarian peta dan tombol pendukung (`Cari` & `GPS`) tidak menumpuk horizontal atau meluber keluar dari kartu utama.
+  - Pada layar HP, input pencarian otomatis mengambil lebar penuh (`100%`) di baris pertama, sedangkan tombol pencarian (`Cari`) dan tombol `GPS` ditata sejajar berdampingan mengisi baris kedua secara proporsional.
+- **Penyelarasan Menu Tanggal Khusus / Libur (settings.css)** ([settings.css](file:///c:/laragon/www/AbsenDJJ/resources/css/super_admin/settings.css)):
+  - Menata kontainer header row di atas tabel Tanggal Khusus (`#tab-date > div:first-child`) agar berubah menjadi kolom vertikal (`flex-direction: column; align-items: flex-start; gap: 10px`) pada mobile.
+  - Tombol utama **`Tambah Tanggal`** otomatis diatur agar mengambil lebar penuh (`width: 100%`) di bawah teks deskripsi, mencegah tombol keluar dari batas boks kartu utama.
+  - Menambahkan aturan responsif untuk kontainer pagination tabel Tanggal Khusus (`#table-date-pagination`). Di layar HP, kontainer pagination ditata menjadi kolom vertikal (`flex-direction: column; gap: 12px; align-items: center;`), dengan teks informasi berada di tengah atas, dan tombol navigasi **`Sebelumnya`** serta **`Berikutnya`** berposisi berdampingan secara proporsional (`flex: 1`) memenuhi ruang baris bawah secara seimbang sehingga tidak meluap keluar dari batas kartu.
+- **Pemulihan Koneksi Server Macet / Deadlock (System Recovery)**:
+  - Mengidentifikasi kegantungan (*deadlock/freeze*) pada proses server PHP lokal (`php artisan serve`) di mana request terhenti/hang tanpa respons, memicu galat Safari seluler *"network connection was lost"*.
+  - Melakukan penghentian paksa (*force kill*) terhadap seluruh proses PHP yang menggantung pada Windows dan meluncurkan ulang `php artisan serve` sebagai background task baru yang bersih.
+  - Memvalidasi stabilitas routing melalui HTTPS Ngrok secara instan (respons 0 detik), memastikan formulir **Simpan Geofencing** dapat diproses dan dialihkan (*redirect*) kembali tanpa kendala jaringan.
+- **Penerapan Auto-Reload Halaman (Live Reload)** ([routes/web.php](file:///c:/laragon/www/AbsenDJJ/routes/web.php), [layout.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/layout.blade.php)):
+  - Menambahkan endpoint pendeteksi modifikasi berkas `/dev-reload-check` di `routes/web.php` yang memindai seluruh folder `resources/` dan `public/build/` guna mengambil penanda waktu modifikasi berkas terakhir (`mtime`). Endpoint ini hanya aktif pada lingkungan lokal (`local`).
+  - Menambahkan skrip JavaScript ringan di `layout.blade.php` (hanya aktif ketika `config('app.env') === 'local'`) yang melakukan polling berkala setiap 1.5 detik ke `/dev-reload-check`.
+  - Jika terdeteksi adanya perubahan berkas baru (misalnya saat file Blade, CSS, atau JS diedit atau dibangun kembali lewat `npm run build`), browser di handphone maupun PC secara otomatis menyegarkan halaman (`window.location.reload()`), meniadakan keharusan menekan tombol refresh secara manual selama proses pengembangan.
+- **Penerapan Floating Action Button / FAB Seluler (layout.blade.php & dashboard-layout.css)** ([layout.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/layout.blade.php), [dashboard-layout.css](file:///c:/laragon/www/AbsenDJJ/resources/css/dashboard-layout.css)):
+  - Menambahkan Floating Action Button (`#fab-main-trigger`) di pojok **kanan** bawah layar seluler (`bottom: 80px; right: 20px;`) yang berdiri estetis di atas bilah menu bawah `.bottom-nav`.
+  - FAB hanya tampil jika pengguna terotentikasi sebagai **Super Admin** dan sedang membuka halaman dalam cakupan Super Admin (`super-admin.*`).
+  - Menambahkan menu melayang (*expandable FAB menu*) yang memicu kemunculan dua opsi: **Tambah Pembimbing** dan **Tambah Peserta**.
+  - Aksi menu bersifat dinamis & cerdas: Jika pengguna berada pada halaman yang sesuai (misal: di halaman kelola peserta), mengklik opsi akan membuka modal langsung. Jika berada di halaman lain (misal: dashboard atau settings), mengklik opsi akan mengalihkan pengguna ke halaman bersangkutan dengan parameter query `?add=1`, yang secara otomatis akan langsung memicu pembukaan modal tambah data setelah halaman baru selesai dimuat.
+  - Menerapkan transisi mikro-interaksi premium: tombol utama berubah warna merah saat aktif, ikon `+` berputar 135 derajat menjadi tombol tutup (`x`), dan opsi menu slide-up memudar masuk secara anggun.
+
+
+
+
+
+
+
+
+

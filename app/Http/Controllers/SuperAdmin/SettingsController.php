@@ -84,6 +84,7 @@ class SettingsController extends Controller
      */
     public function updateSettings(Request $request)
     {
+        \Illuminate\Support\Facades\Log::info('updateSettings called', $request->all());
         $validated = $request->validate([
             'jam_masuk' => ['required', 'string', 'regex:/^[0-9]{2}:[0-9]{2}(:[0-9]{2})?$/'],
             'jam_pulang' => ['required', 'string', 'regex:/^[0-9]{2}:[0-9]{2}(:[0-9]{2})?$/'],

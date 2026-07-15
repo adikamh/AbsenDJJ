@@ -320,7 +320,7 @@ body.sidebar-collapsed .user-panel {
     align-items: center;
     justify-content: center;
     padding: 20px;
-    z-index: 1000;
+    z-index: 2000;
 }
 
 .cookie-modal {
@@ -488,7 +488,7 @@ body.sidebar-collapsed .user-panel {
 .form-modal-backdrop {
     position: fixed;
     inset: 0;
-    z-index: 900;
+    z-index: 2000;
     display: none;
     align-items: center;
     justify-content: center;
@@ -1280,7 +1280,7 @@ select option {
     border-top: 1px solid var(--glass-border);
     justify-content: space-around;
     align-items: center;
-    z-index: 10002;
+    z-index: 1002;
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
     padding: 0 10px;
     backdrop-filter: blur(16px);
@@ -1352,6 +1352,112 @@ select option {
     border-color: #ef4444;
 }
 
+/* Floating Action Button (FAB) Container */
+.fab-container {
+    display: none;
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    z-index: 1003;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+/* Main FAB Button */
+.fab-main-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-primary) 0%, #3b82f6 100%);
+    color: #ffffff;
+    border: none;
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fab-main-btn .fab-icon {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* FAB Menu */
+.fab-menu {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+    margin-bottom: 16px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Menu Item */
+.fab-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+.fab-menu-label {
+    background: rgba(15, 23, 42, 0.85);
+    color: #ffffff;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    white-space: nowrap;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(8px);
+}
+
+.fab-menu-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #1e293b;
+    color: #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.2s ease;
+}
+
+.fab-menu-item:active .fab-menu-icon,
+.fab-menu-item:hover .fab-menu-icon {
+    background: var(--accent-primary);
+    color: #ffffff;
+    transform: scale(1.05);
+}
+
+/* Active / Opened State */
+.fab-container.active .fab-main-btn {
+    background: #ef4444;
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+}
+
+.fab-container.active .fab-icon {
+    transform: rotate(135deg);
+}
+
+.fab-container.active .fab-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+
 @media (max-width: 768px) {
     .mobile-toggle-btn {
         display: none !important; /* Hide hamburger completely on mobile */
@@ -1402,11 +1508,12 @@ select option {
     }
 
     .page-title {
-        font-size: 1.4rem !important;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        font-size: 1.3rem !important;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
         flex-grow: 1;
+        word-break: break-word;
     }
 
     .page-header-actions {
@@ -1414,11 +1521,19 @@ select option {
     }
 
     /* Modal Form / Overlay Adjustments */
+    .form-modal,
     .form-modal-content {
         width: 95% !important;
+        max-width: 540px !important;
         padding: 20px !important;
-        max-height: 90vh;
-        overflow-y: auto;
+        max-height: 80vh !important;
+        overflow-y: auto !important;
+        border-radius: 12px !important;
+    }
+    
+    .form-modal-backdrop {
+        padding: 16px !important;
+        z-index: 2000 !important;
     }
 
     .form-grid {
@@ -1455,5 +1570,9 @@ select option {
         max-width: none !important;
         z-index: 100005 !important;
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
+    }
+
+    .fab-container {
+        display: flex !important;
     }
 }
