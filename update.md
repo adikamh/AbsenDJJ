@@ -868,6 +868,28 @@
   - Menambahkan menu melayang (*expandable FAB menu*) yang memicu kemunculan dua opsi: **Tambah Pembimbing** dan **Tambah Peserta**.
   - Aksi menu bersifat dinamis & cerdas: Jika pengguna berada pada halaman yang sesuai (misal: di halaman kelola peserta), mengklik opsi akan membuka modal langsung. Jika berada di halaman lain (misal: dashboard atau settings), mengklik opsi akan mengalihkan pengguna ke halaman bersangkutan dengan parameter query `?add=1`, yang secara otomatis akan langsung memicu pembukaan modal tambah data setelah halaman baru selesai dimuat.
   - Menerapkan transisi mikro-interaksi premium: tombol utama berubah warna merah saat aktif, ikon `+` berputar 135 derajat menjadi tombol tutup (`x`), dan opsi menu slide-up memudar masuk secara anggun.
+- **Penyelarasan Modal & FAB Admin Pembimbing (layout.blade.php & dashboard-layout.css)** ([layout.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/layout.blade.php), [dashboard-layout.css](file:///c:/laragon/www/AbsenDJJ/resources/css/dashboard-layout.css)):
+  - **Penyelarasan Modal (Z-Index)**: Menimpa (*override*) properti z-index inline bawaan modal detail logbook (`#logbook-detail-modal`), detail izin (`#leave-detail-modal`), dan modal konfirmasi tindakan (`#action-confirm-modal`) pada tampilan seluler menjadi `2000` !important agar tidak lagi terhalang atau tertutup oleh bilah navigasi bawah seluler (`.bottom-nav`).
+  - **Scrollable Modal & Batasan Tinggi**: Mengatur tinggi maksimum modal-modal tersebut menjadi `80vh` dan menambahkan margin bawah `80px` pada layar HP agar tombol-tombol aksi krusial (seperti "Setujui" / "Tolak") tetap terlihat jelas, dapat digulir, dan tidak terpotong oleh overlay navigasi.
+  - **FAB Admin Pembimbing (Pojok Kanan)**: Menambahkan Floating Action Button baru (`#admin-fab-trigger`) di pojok **kanan** bawah layar seluler (`bottom: 80px; right: 20px;`) dengan warna hijau khas persetujuan (`#10b981`).
+  - FAB hanya tampil jika pengguna terotentikasi sebagai **Admin** (Pembimbing).
+  - Ketika diklik, FAB akan memunculkan menu vertikal berisi 2 opsi pintasan cepat: **Approve Logbook** (mengarahkan langsung ke `/admin/logbooks`) dan **Approve Izin/Sakit** (mengarahkan langsung ke `/admin/leaves`).
+- **Optimasi Card & Tabel Dashboard Admin (dashboard.css & dashboard-layout.css)** ([dashboard.css](file:///c:/laragon/www/AbsenDJJ/resources/css/admin/dashboard.css), [dashboard-layout.css](file:///c:/laragon/www/AbsenDJJ/resources/css/dashboard-layout.css)):
+  - **Pencegahan Card Terpotong**: Menambahkan aturan `min-width: 0` dan `overflow: hidden` pada `.content-card` di dalam baris grid `.admin-dashboard-row`. Hal ini menghentikan perilaku default CSS Grid yang merentangkan lebar boks pembungkus secara berlebih di luar batas layar HP saat memuat data tabel yang lebar.
+  - **Scrollable Tabel Mandiri**: Dengan pembatasan lebar di atas, tabel di dalam card "Persetujuan Logbook Harian" dan "Daftar Intern Anda" kini akan digulirkan secara horizontal secara mandiri di dalam boks card masing-masing tanpa merusak tata letak halaman utama.
+  - **Padding Card Responsif**: Menambahkan penyesuaian padding khusus seluler pada `.content-card` secara global (`padding: 16px !important; border-radius: 16px !important;` pada layar `<= 768px`) untuk memaksimalkan area tampilan tabel dan data di layar HP sempit.
+- **Penyelesaian Bug Clicks Blocked oleh Overlay FAB (dashboard-layout.css)** ([dashboard-layout.css](file:///c:/laragon/www/AbsenDJJ/resources/css/dashboard-layout.css)):
+  - **Pointer Events Pass-Through**: Menggunakan properti `pointer-events: none` pada kontainer FAB (`.fab-container` & `.fab-container-left`). Ini memungkinkan klik pengguna di area tak terlihat sekitar tombol (yang sebelumnya terhalang oleh boks flex kontainer FAB) diteruskan langsung ke elemen di belakangnya (seperti tombol **Lihat Detail** pada baris tabel terbawah).
+  - **Aktivasi Pointer Events Anak**: Menetapkan `pointer-events: auto` khusus pada tombol utama (`.fab-main-btn`/`.fab-main-btn-left`) dan opsi menu agar tetap interaktif dan dapat diklik secara normal.
+- **Penyelarasan Detail Aktivitas Intern Seluler (interns.css)** ([interns.css](file:///c:/laragon/www/AbsenDJJ/resources/css/admin/interns.css)):
+  - **Struktur Baris Profil Vertikal**: Mengubah baris-baris info peserta (nama, email, alamat, dll.) yang bertipe flex row menjadi vertikal (column) pada layar HP, serta menonaktifkan lebar tetap `140px` pada label agar email atau teks panjang tidak meluap melintasi sisi kanan card.
+  - **Tombol Cetak & Unduh Adaptif**: Mengatur seluruh tombol cetak laporan (PDF/CSV) di dalam card "Kontak Darurat & Unduhan" menjadi lebar penuh (`width: 100%`) dan terpusat di layar ponsel untuk kemudahan navigasi jempol.
+  - **Scrollable Visual Kalender Kehadiran**: Mengaktifkan overflow horizontal pada kontainer kalender (`.calendar-wrapper`) dan menetapkan `min-width: 600px` pada grid kalender khusus di layar HP. Hal ini menjaga agar sel kalender (yang berisi tanggal, badge status, waktu masuk, dan ikon kamera) tidak terkompresi terlalu sempit (misal menjadi 50px) dan tetap terbaca sempurna melalui gulir horizontal yang mulus tanpa memotong card.
+
+
+
+
+
 
 
 

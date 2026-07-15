@@ -33,41 +33,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ===== Calendar Rendering Logic =====
     let currentCalDate = new Date();
-    
+
     function renderCalendar() {
         const year = currentCalDate.getFullYear();
         const month = currentCalDate.getMonth();
-        
+
         const monthNames = [
             "Januari", "Februari", "Maret", "April", "Mei", "Juni",
             "Juli", "Agustus", "September", "Oktober", "November", "Desember"
         ];
         document.getElementById('calendar-month-year-label').textContent = `${monthNames[month]} ${year}`;
-        
+
         const container = document.getElementById('calendar-days-container');
         if (!container) return;
         container.innerHTML = '';
-        
+
         const firstDayIndex = new Date(year, month, 1).getDay();
         const totalDays = new Date(year, month + 1, 0).getDate();
-        
+
         for (let i = 0; i < firstDayIndex; i++) {
             const emptyCell = document.createElement('div');
             emptyCell.className = 'calendar-cell cell-empty';
             container.appendChild(emptyCell);
         }
-        
+
         for (let day = 1; day <= totalDays; day++) {
             const dateObj = new Date(year, month, day);
             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             const dayOfWeek = dateObj.getDay();
-            
+
             const cell = document.createElement('div');
             cell.className = 'calendar-cell';
             if (dayOfWeek === 0) {
                 cell.classList.add('cell-sunday');
             }
-            
+
             let statusClass = 'cell-status-default';
             let infoText = `${globalDefaultSettings.jam_masuk} - ${globalDefaultSettings.jam_pulang}`;
             let isHoliday = false;
@@ -76,13 +76,13 @@ document.addEventListener('DOMContentLoaded', () => {
             let batas = globalDefaultSettings.batas_keterlambatan;
             let jamPulang = globalDefaultSettings.jam_pulang;
             let keterangan = '';
-            
+
             if (dateOverrides[dateStr]) {
                 const ovr = dateOverrides[dateStr];
                 overrideId = ovr.id;
                 isHoliday = ovr.is_holiday;
                 keterangan = ovr.keterangan || '';
-                
+
                 if (isHoliday) {
                     statusClass = 'cell-status-holiday';
                     infoText = 'Libur';
@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 overrideId = ovr.id;
                 isHoliday = ovr.is_holiday;
                 keterangan = ovr.keterangan || '';
-                
+
                 if (isHoliday) {
                     statusClass = 'cell-status-holiday';
                     infoText = 'Libur';
@@ -117,9 +117,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 keterangan = 'Minggu Libur';
                 isHoliday = true;
             }
-            
+
             cell.classList.add(statusClass);
-            
+
             let infoHTML = '';
             if (isHoliday) {
                 infoHTML = `<div class="cell-info" title="Libur">Libur</div>`;
@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 `;
             }
-            
+
             cell.innerHTML = `
                 <span class="cell-number">${day}</span>
                 <div style="display: flex; flex-direction: column; width: 100%; align-items: center; justify-content: flex-end; flex-grow: 1; min-height: 42px;">
@@ -140,26 +140,26 @@ document.addEventListener('DOMContentLoaded', () => {
                     ${keterangan ? `<div class="cell-desc" title="${keterangan}">${keterangan}</div>` : ''}
                 </div>
             `;
-            
+
             cell.addEventListener('click', () => {
                 const modal = document.getElementById('date-override-modal');
                 const form = document.getElementById('date-override-form');
                 if (!modal || !form) return;
-                
+
                 document.getElementById('date-modal-title').textContent = isHoliday && dateOverrides[dateStr] ? 'Edit Tanggal Khusus' : 'Atur Tanggal Khusus / Libur';
-                
+
                 document.getElementById('date-form-date').value = dateStr;
                 document.getElementById('date-form-date').readOnly = true;
                 document.getElementById('date-form-date-group').style.display = 'block';
-                
+
                 document.getElementById('date-form-masuk').value = isHoliday ? globalDefaultSettings.jam_masuk : jamMasuk;
                 document.getElementById('date-form-batas').value = isHoliday ? globalDefaultSettings.batas_keterlambatan : batas;
                 document.getElementById('date-form-pulang').value = isHoliday ? globalDefaultSettings.jam_pulang : jamPulang;
-                
+
                 document.getElementById('date-form-holiday').checked = isHoliday;
                 document.getElementById('date-form-keterangan').value = keterangan;
                 toggleDateTimeInputs();
-                
+
                 if (dateOverrides[dateStr]) {
                     form.action = `/super-admin/schedules/${overrideId}`;
                     document.getElementById('date-form-method').value = 'PUT';
@@ -167,21 +167,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     form.action = window.settingsConfig.routes.storeSchedule;
                     document.getElementById('date-form-method').value = 'POST';
                 }
-                
+
                 modal.style.display = 'flex';
             });
-            
+
             container.appendChild(cell);
         }
     }
-    
+
     renderCalendar();
-    
+
     document.getElementById('calendar-prev-month')?.addEventListener('click', () => {
         currentCalDate.setMonth(currentCalDate.getMonth() - 1);
         renderCalendar();
     });
-    
+
     document.getElementById('calendar-next-month')?.addEventListener('click', () => {
         currentCalDate.setMonth(currentCalDate.getMonth() + 1);
         renderCalendar();
@@ -283,7 +283,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const getSwalColors = () => {
         const isLight = document.documentElement.getAttribute('data-theme') === 'light' ||
-                        !document.body.classList.contains('dark-theme');
+            !document.body.classList.contains('dark-theme');
         return {
             background: isLight ? '#ffffff' : '#1e293b',
             color: isLight ? '#0f172a' : '#f8fafc',
@@ -362,24 +362,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===== Pagination for Specific Dates Table =====
     const tableBody = document.getElementById('table-date-body');
     const paginationContainer = document.getElementById('table-date-pagination');
-    
+
     if (tableBody && paginationContainer) {
         const rows = Array.from(tableBody.querySelectorAll('tr'));
         const itemsPerPage = 5;
         const totalItems = rows.length;
         const totalPages = Math.ceil(totalItems / itemsPerPage);
         let currentTablePage = 1;
-        
+
         if (totalItems <= itemsPerPage) {
             paginationContainer.style.display = 'none';
         } else {
             const prevBtn = document.getElementById('btn-date-prev');
             const nextBtn = document.getElementById('btn-date-next');
             const infoLabel = document.getElementById('date-pagination-info');
-            
+
             function showTablePage(page) {
                 currentTablePage = page;
-                
+
                 rows.forEach((row, idx) => {
                     const startIdx = (page - 1) * itemsPerPage;
                     const endIdx = page * itemsPerPage;
@@ -389,50 +389,50 @@ document.addEventListener('DOMContentLoaded', () => {
                         row.style.display = 'none';
                     }
                 });
-                
+
                 const startNum = (page - 1) * itemsPerPage + 1;
                 const endNum = Math.min(page * itemsPerPage, totalItems);
                 infoLabel.textContent = `Menampilkan ${startNum} - ${endNum} dari ${totalItems} data`;
-                
+
                 prevBtn.disabled = (page === 1);
                 nextBtn.disabled = (page === totalPages);
-                
+
                 prevBtn.style.opacity = (page === 1) ? '0.5' : '1';
                 prevBtn.style.cursor = (page === 1) ? 'not-allowed' : 'pointer';
                 nextBtn.style.opacity = (page === totalPages) ? '0.5' : '1';
                 nextBtn.style.cursor = (page === totalPages) ? 'not-allowed' : 'pointer';
             }
-            
+
             prevBtn.addEventListener('click', () => {
                 if (currentTablePage > 1) {
                     showTablePage(currentTablePage - 1);
                 }
             });
-            
+
             nextBtn.addEventListener('click', () => {
                 if (currentTablePage < totalPages) {
                     showTablePage(currentTablePage + 1);
                 }
             });
-            
+
             showTablePage(1);
         }
     }
 });
 
 // ===== Toggle helpers =====
-window.toggleDayTimeInputs = function() {
+window.toggleDayTimeInputs = function () {
     const isHoliday = document.getElementById('day-form-holiday').checked;
     document.getElementById('day-time-inputs').style.display = isHoliday ? 'none' : 'block';
 }
 
-window.toggleDateTimeInputs = function() {
+window.toggleDateTimeInputs = function () {
     const isHoliday = document.getElementById('date-form-holiday').checked;
     document.getElementById('date-time-inputs').style.display = isHoliday ? 'none' : 'block';
 }
 
 // ===== Delete confirmation with SweetAlert2 =====
-window.handleDayDelete = async function(event) {
+window.handleDayDelete = async function (event) {
     event.preventDefault();
     if (window.confirmDangerAction) {
         const confirmed = await window.confirmDangerAction({
@@ -447,7 +447,7 @@ window.handleDayDelete = async function(event) {
     return false;
 }
 
-window.handleDateDelete = async function(event) {
+window.handleDateDelete = async function (event) {
     event.preventDefault();
     if (window.confirmDangerAction) {
         const confirmed = await window.confirmDangerAction({
