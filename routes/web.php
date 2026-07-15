@@ -93,3 +93,34 @@ Route::middleware(['auth', 'role:peserta'])->prefix('peserta')->group(function (
     Route::get('/leave-request', [\App\Http\Controllers\Peserta\LeaveRequestController::class, 'index'])->name('peserta.leave');
     Route::post('/leave-request', [\App\Http\Controllers\Peserta\LeaveRequestController::class, 'store'])->name('peserta.leave.store');
 });
+
+if (app()->environment('local')) {
+    Route::get('/dev-reload-check', function () {
+        $latestTime = 0;
+        
+        $paths = [
+            resource_path(),
+            public_path('build'),
+        ];
+        
+        foreach ($paths as $path) {
+            if (!is_dir($path)) continue;
+            
+            $iterator = new RecursiveIteratorIterator(
+                new RecursiveDirectoryIterator($path, RecursiveDirectoryIterator::SKIP_DOTS),
+                RecursiveIteratorIterator::SELF_FIRST
+            );
+            
+            foreach ($iterator as $file) {
+                if ($file->isFile()) {
+                    $latestTime = max($latestTime, $file->getMTime());
+                }
+            }
+        }
+        
+        return response()->json([
+            'latest_mtime' => $latestTime
+        ]);
+    })->name('dev-reload-check');
+}
+

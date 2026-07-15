@@ -290,6 +290,97 @@
         @endif
     </div>
 
+    {{-- Floating Action Button (FAB) for Super Admin to Add Peserta / Pembimbing (Expandable Menu) --}}
+    @if(auth()->check() && auth()->user()->isSuperAdmin() && request()->routeIs('super-admin.*'))
+        <div class="fab-container" id="global-fab-container">
+            <!-- Expanded Menu -->
+            <div class="fab-menu" id="global-fab-menu">
+                <button type="button" class="fab-menu-item" id="fab-action-pembimbing" aria-label="Tambah Pembimbing">
+                    <span class="fab-menu-label">Tambah Pembimbing</span>
+                    <span class="fab-menu-icon">
+                        <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+                        </svg>
+                    </span>
+                </button>
+                <button type="button" class="fab-menu-item" id="fab-action-peserta" aria-label="Tambah Peserta">
+                    <span class="fab-menu-label">Tambah Peserta</span>
+                    <span class="fab-menu-icon">
+                        <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/>
+                        </svg>
+                    </span>
+                </button>
+            </div>
+            <!-- Main Trigger Button -->
+            <button type="button" class="fab-main-btn" id="fab-main-trigger" aria-label="Menu Tambah">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="fab-icon">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+            </button>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const container = document.getElementById('global-fab-container');
+                const trigger = document.getElementById('fab-main-trigger');
+                const actionPembimbing = document.getElementById('fab-action-pembimbing');
+                const actionPeserta = document.getElementById('fab-action-peserta');
+
+                if (!container || !trigger) return;
+
+                // Toggle menu
+                trigger.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    container.classList.toggle('active');
+                });
+
+                // Close on click outside
+                document.addEventListener('click', () => {
+                    container.classList.remove('active');
+                });
+
+                // Trigger or redirect for Pembimbing
+                actionPembimbing.addEventListener('click', () => {
+                    const targetBtn = document.getElementById('open-add-pembimbing-modal');
+                    if (targetBtn) {
+                        targetBtn.click();
+                    } else {
+                        window.location.href = "{{ route('super-admin.pembimbing') }}?add=1";
+                    }
+                });
+
+                // Trigger or redirect for Peserta
+                actionPeserta.addEventListener('click', () => {
+                    const targetBtn = document.getElementById('open-add-peserta-modal');
+                    if (targetBtn) {
+                        targetBtn.click();
+                    } else {
+                        window.location.href = "{{ route('super-admin.peserta') }}?add=1";
+                    }
+                });
+
+                // Check URL query parameters to auto-open modal if redirected
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('add') === '1') {
+                    setTimeout(() => {
+                        const addPembimbingBtn = document.getElementById('open-add-pembimbing-modal');
+                        const addPesertaBtn = document.getElementById('open-add-peserta-modal');
+                        if (addPembimbingBtn) {
+                            addPembimbingBtn.click();
+                        } else if (addPesertaBtn) {
+                            addPesertaBtn.click();
+                        }
+                        // Clean up URL parameters without refreshing the page
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    }, 400);
+                }
+            });
+        </script>
+    @endif
+
+
     @if(!request()->hasCookie('cookie_consent') && !session('cookie_consent'))
         <div class="cookie-modal-backdrop" id="cookie-modal-backdrop">
             <div class="cookie-modal" role="dialog" aria-modal="true" aria-labelledby="cookie-title">
@@ -328,6 +419,33 @@
                 .catch(err => console.log('SW Registration Failed:', err));
         });
     }
-</script>
+    </script>
+
+    @if(config('app.env') === 'local')
+        <script>
+            (function() {
+                let lastMtime = null;
+                const checkInterval = 1500; // Poll every 1.5 seconds
+
+                function checkReload() {
+                    fetch('{{ route('dev-reload-check') }}')
+                        .then(response => response.json())
+                        .then(data => {
+                            if (lastMtime === null) {
+                                lastMtime = data.latest_mtime;
+                            } else if (data.latest_mtime > lastMtime) {
+                                console.log('File change detected! Reloading page...');
+                                window.location.reload();
+                            }
+                        })
+                        .catch(err => {
+                            // Suppress errors
+                        });
+                }
+
+                setInterval(checkReload, checkInterval);
+            })();
+        </script>
+    @endif
 </body>
 </html>

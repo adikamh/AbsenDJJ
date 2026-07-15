@@ -120,10 +120,23 @@ document.addEventListener('DOMContentLoaded', () => {
             
             cell.classList.add(statusClass);
             
+            let infoHTML = '';
+            if (isHoliday) {
+                infoHTML = `<div class="cell-info" title="Libur">Libur</div>`;
+            } else {
+                infoHTML = `
+                    <div class="cell-info" title="${infoText}">
+                        <span class="time-start">${jamMasuk.substring(0, 5)}</span>
+                        <span class="time-dash">-</span>
+                        <span class="time-end">${jamPulang.substring(0, 5)}</span>
+                    </div>
+                `;
+            }
+            
             cell.innerHTML = `
                 <span class="cell-number">${day}</span>
                 <div style="display: flex; flex-direction: column; width: 100%; align-items: center; justify-content: flex-end; flex-grow: 1; min-height: 42px;">
-                    <div class="cell-info" title="${infoText}">${infoText}</div>
+                    ${infoHTML}
                     ${keterangan ? `<div class="cell-desc" title="${keterangan}">${keterangan}</div>` : ''}
                 </div>
             `;
