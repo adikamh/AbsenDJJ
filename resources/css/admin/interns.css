@@ -88,3 +88,46 @@
     transform: translateY(-1px);
     border-color: var(--text-primary);
 }
+
+/* Responsive adjustments for Admin Interns Show details page */
+@media (max-width: 768px) {
+    /* 1. Stack Profile & Emergency Contact card items vertically */
+    .profile-layout {
+        grid-template-columns: 1fr !important;
+        gap: 20px !important;
+    }
+    
+    .profile-layout .content-card div[style*="display: flex"] {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 6px !important;
+    }
+    
+    .profile-layout .content-card div[style*="display: flex"] span[style*="width: 140px"] {
+        width: auto !important;
+        font-size: 0.8rem;
+        margin-bottom: 2px;
+    }
+    
+    /* Full-width action/export buttons */
+    .profile-layout .btn-primary,
+    .profile-layout .btn-secondary {
+        width: 100% !important;
+        text-align: center;
+        justify-content: center;
+        display: flex !important;
+        box-sizing: border-box;
+    }
+
+    /* 2. Responsive Calendar Grid Scrollable Wrapper */
+    .calendar-wrapper {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+    }
+    
+    .calendar-grid {
+        min-width: 600px !important;
+    }
+}
+

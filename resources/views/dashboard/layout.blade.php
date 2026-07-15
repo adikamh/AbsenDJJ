@@ -381,6 +381,65 @@
     @endif
 
 
+    {{-- Floating Action Button (FAB) for Admin (Pembimbing) to Approve Logbook / Izin (Right Position) --}}
+    @if(auth()->check() && auth()->user()->isAdmin())
+        <div class="fab-container-left" id="admin-fab-container">
+            <!-- Expanded Menu -->
+            <div class="fab-menu-left" id="admin-fab-menu">
+                <a href="{{ route('admin.logbooks') }}" class="fab-menu-item-left" aria-label="Approve Logbook">
+                    <span class="fab-menu-label-left">Approve Logbook</span>
+                    <span class="fab-menu-icon-left">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                        </svg>
+                    </span>
+                </a>
+                <a href="{{ route('admin.leaves') }}" class="fab-menu-item-left" aria-label="Approve Izin/Sakit">
+                    <span class="fab-menu-label-left">Approve Izin/Sakit</span>
+                    <span class="fab-menu-icon-left">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                    </span>
+                </a>
+            </div>
+            <!-- Main Trigger Button -->
+            <button type="button" class="fab-main-btn-left" id="admin-fab-trigger" aria-label="Menu Admin">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="fab-icon-left">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+            </button>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const container = document.getElementById('admin-fab-container');
+                const trigger = document.getElementById('admin-fab-trigger');
+
+                if (!container || !trigger) return;
+
+                // Toggle menu
+                trigger.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    container.classList.toggle('active');
+                });
+
+                // Close on click outside
+                document.addEventListener('click', () => {
+                    container.classList.remove('active');
+                });
+            });
+        </script>
+    @endif
+
+
     @if(!request()->hasCookie('cookie_consent') && !session('cookie_consent'))
         <div class="cookie-modal-backdrop" id="cookie-modal-backdrop">
             <div class="cookie-modal" role="dialog" aria-modal="true" aria-labelledby="cookie-title">

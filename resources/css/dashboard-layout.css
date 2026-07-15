@@ -1361,6 +1361,7 @@ select option {
     z-index: 1003;
     flex-direction: column;
     align-items: flex-end;
+    pointer-events: none;
 }
 
 /* Main FAB Button */
@@ -1377,6 +1378,7 @@ select option {
     align-items: center;
     justify-content: center;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: auto;
 }
 
 .fab-main-btn .fab-icon {
@@ -1405,6 +1407,7 @@ select option {
     border: none;
     cursor: pointer;
     padding: 0;
+    pointer-events: auto;
 }
 
 .fab-menu-label {
@@ -1457,6 +1460,114 @@ select option {
     transform: translateY(0);
 }
 
+/* Floating Action Button (FAB) Left Container */
+.fab-container-left {
+    display: none;
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    z-index: 1003;
+    flex-direction: column;
+    align-items: flex-end;
+    pointer-events: none;
+}
+
+/* Main FAB Button Left */
+.fab-main-btn-left {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #ffffff;
+    border: none;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: auto;
+}
+
+.fab-main-btn-left .fab-icon-left {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* FAB Menu Left */
+.fab-menu-left {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+    margin-bottom: 16px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Menu Item Left */
+.fab-menu-item-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: none;
+    pointer-events: auto;
+}
+
+.fab-menu-label-left {
+    background: rgba(15, 23, 42, 0.85);
+    color: #ffffff;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    white-space: nowrap;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(8px);
+}
+
+.fab-menu-icon-left {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #1e293b;
+    color: #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.2s ease;
+}
+
+.fab-menu-item-left:active .fab-menu-icon-left,
+.fab-menu-item-left:hover .fab-menu-icon-left {
+    background: #10b981;
+    color: #ffffff;
+    transform: scale(1.05);
+}
+
+/* Active / Opened State Left */
+.fab-container-left.active .fab-main-btn-left {
+    background: #ef4444;
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+}
+
+.fab-container-left.active .fab-icon-left {
+    transform: rotate(90deg);
+}
+
+.fab-container-left.active .fab-menu-left {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
 
 @media (max-width: 768px) {
     .mobile-toggle-btn {
@@ -1574,5 +1685,34 @@ select option {
 
     .fab-container {
         display: flex !important;
+    }
+
+    .fab-container-left {
+        display: flex !important;
+    }
+
+    /* Admin custom detail modals responsive positioning */
+    #logbook-detail-modal,
+    #leave-detail-modal,
+    #action-confirm-modal {
+        z-index: 2000 !important;
+        padding: 10px !important;
+        align-items: flex-start !important;
+        overflow-y: auto !important;
+    }
+    
+    #logbook-detail-modal > div,
+    #leave-detail-modal > div,
+    #action-confirm-modal > div {
+        max-height: 80vh !important;
+        margin-top: 20px !important;
+        margin-bottom: 80px !important;
+        padding: 20px !important;
+    }
+
+    /* Compact content cards on mobile to prevent clipping and maximize content area */
+    .content-card {
+        padding: 16px !important;
+        border-radius: 16px !important;
     }
 }

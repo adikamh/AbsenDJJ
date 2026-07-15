@@ -8,9 +8,16 @@
     margin-bottom: 30px;
 }
 
+.admin-dashboard-row .content-card {
+    min-width: 0;
+    width: 100%;
+    overflow: hidden;
+}
+
 @media (max-width: 1100px) {
     .admin-dashboard-row {
         grid-template-columns: 1fr;
+        gap: 20px;
     }
 }
 
