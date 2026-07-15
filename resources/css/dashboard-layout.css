@@ -1602,6 +1602,8 @@ select option {
         padding: 20px 16px 85px 16px !important; /* Add bottom padding so content is not cut by bottom-nav */
         width: 100%;
         overflow-x: hidden;
+        height: auto !important;
+        overflow-y: visible !important;
     }
 
     .sidebar-toggle {
@@ -1688,6 +1690,10 @@ select option {
     }
 
     .fab-container-left {
+        display: flex !important;
+    }
+
+    .fab-container-peserta {
         display: flex !important;
     }
 

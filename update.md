@@ -914,9 +914,29 @@
 - **Peningkatan Batas Upload Berkas Izin Peserta (10MB Limit)**:
   - **Validasi Backend (LeaveRequestController.php)** ([LeaveRequestController.php](file:///c:/laragon/www/AbsenDJJ/app/Http/Controllers/Peserta/LeaveRequestController.php)): Mengubah batas validasi ukuran file lampiran bukti izin (`file_bukti`) dari `max:2048` (2MB) menjadi `max:10240` (10MB) agar menampung dokumen surat dokter/lampiran yang berukuran lebih besar.
   - **Pembaruan UI Label (leave.blade.php)** ([leave.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/peserta/leave.blade.php)): Memperbarui label instruksi unggahan berkas dalam modal pop-up agar secara eksplisit menampilkan keterangan "(Maks. 10MB)".
-
-
-
+- **Perbaikan Viewport Scrolling Seluler (Mobile Scroll Lock Fix)**:
+  - **Pemisahan Scroll Container (dashboard-layout.css)** ([dashboard-layout.css](file:///c:/laragon/www/AbsenDJJ/resources/css/dashboard-layout.css)): Pada media query seluler (`max-width: 768px`), memaksa `.main-content` menggunakan `height: auto !important` dan `overflow-y: visible !important`. Perubahan ini memindahkan scrollbar dari level kontainer dalam ke scrollbar jendela (*native browser window*) sehingga seluruh kartu informasi (Visual Kalender, Tabel Absensi, Logbook) dapat diakses dengan gestur gulir usap jari secara mulus tanpa terkunci atau terpotong pada browser seluler (Safari iPhone 12 / Chrome Mobile).
+- **Binding APP_URL Dinamis untuk Terowongan Ngrok**:
+  - **Penyelarasan Host Aset (AppServiceProvider.php)** ([AppServiceProvider.php](file:///c:/laragon/www/AbsenDJJ/app/Providers/AppServiceProvider.php)): Secara dinamis menimpa konfigurasi `app.url` dengan alamat host dari request aktif (`request()->getSchemeAndHttpHost()`) pada setiap web request. Ini menyelesaikan isu kegagalan muat file CSS (tampilan polos/hancur) di perangkat seluler yang disebabkan oleh perubahan subdomain ngrok pasca-restart yang tidak sinkron dengan nilai hardcode `APP_URL` di dalam file `.env`.
+- **Pembaruan Besar README.md (Dokumentasi Proyek)**:
+  - **Perombakan Total Konten (README.md)** ([README.md](file:///c:/laragon/www/AbsenDJJ/README.md)): Menulis ulang secara menyeluruh dokumentasi utama proyek dari versi ringkas minimalis menjadi dokumentasi lengkap dan profesional.
+  - **Penambahan Bagian Fitur Utama Per Role**: Menambahkan deskripsi fitur terperinci untuk masing-masing panel pengguna — Super Admin (geofencing, kalender jadwal, master data), Admin/Pembimbing (persetujuan logbook/izin, profil aktivitas, FAB), dan Peserta (absensi selfie, logbook harian, pengajuan izin 10MB, kalender riwayat visual).
+  - **Penambahan Bagian Optimalisasi Mobile & Jaringan**: Mendokumentasikan fitur interceptor jaringan lambat (`window.fetch` wrapper), pencegahan layout terpotong di Safari iPhone 12 (`overflow: hidden`, `min-width: 0`, `calendar-wrapper` scrollable), penyesuaian `pointer-events` FAB, dan fitur live refresh state check.
+  - **Penambahan Bagian Struktur Aset Modular**: Mendokumentasikan pohon direktori (`resources/css/` dan `resources/js/`) lengkap dengan keterangan setiap berkas aset baru hasil pemisahan dari Blade (termasuk `show.css`, `leave.css`, `logbook.css`, `show.js`, `leave.js`, `logbook.js`, dan `settings.js`).
+  - **Penambahan Bagian Arsitektur Controller Terpisah**: Mendokumentasikan pembagian tanggung jawab controller Admin — `DashboardController` (statistik), `InternController` (profil peserta), `LogbookController` [NEW] (persetujuan logbook), dan `LeaveController` [NEW] (persetujuan izin).
+  - **Pembaruan Spesifikasi Teknologi**: Memperbarui bagian teknologi dari daftar singkat menjadi deskripsi terstruktur yang mencakup Backend Framework, Frontend Bundler (Vite 8.x), Database Driver, dan daftar aset eksternal CDN.
+  - **Pembaruan Instruksi Instalasi**: Menyesuaikan urutan langkah instalasi — menambahkan langkah `npm run build` untuk kompilasi aset produksi, memisahkan instruksi server Laravel dan bundler Vite, serta memperbarui perintah tes otomatis.
+- **Kompilasi Ulang Aset Produksi (Vite Build)**:
+  - **Regenerasi Bundle Produksi (public/build/)**: Menjalankan `npm run build` untuk mengkompilasi ulang seluruh berkas CSS dan JavaScript baru hasil pemisahan modular (auth-login.js, admin/dashboard.js, show.js, leave.js, logbook.js, show.css, leave.css, logbook.css, dll.) ke dalam folder `public/build/assets/` dengan hash-nama berkas unik. Hal ini memastikan seluruh aset yang dipisahkan dari Blade terdaftar di dalam `public/build/manifest.json` dan dapat dimuat secara benar oleh directive `@vite()` pada lingkungan produksi maupun saat diakses melalui terowongan ngrok.
+- **Penerapan Floating Action Button (FAB) Peserta (layout.blade.php & dashboard-layout.css)** ([layout.blade.php](file:///c:/laragon/www/AbsenDJJ/resources/views/dashboard/layout.blade.php), [dashboard-layout.css](file:///c:/laragon/www/AbsenDJJ/resources/css/dashboard-layout.css)):
+  - Menambahkan Floating Action Button (`#peserta-fab-trigger`) di pojok **kanan** bawah layar seluler (`bottom: 80px; right: 20px;`) khusus untuk pengguna yang terotentikasi sebagai **Peserta**.
+  - FAB menggunakan gradien warna **oranye/amber** (`#f59e0b → #d97706`) agar secara visual berbeda dari FAB Super Admin (biru) dan FAB Admin (hijau).
+  - Menambahkan menu melayang (*expandable FAB menu*) dengan 2 opsi pintasan cepat:
+    - **Tulis Logbook**: Membuka form modal logbook baru jika pengguna sedang di halaman Logbook Kegiatan, atau mengalihkan ke `/peserta/logbook?add=1` jika berada di halaman lain.
+    - **Ajukan Izin / Sakit**: Membuka form modal pengajuan izin jika pengguna sedang di halaman Izin/Sakit, atau mengalihkan ke `/peserta/leave?add=1` jika berada di halaman lain.
+  - Parameter query `?add=1` ditangani oleh script FAB untuk secara otomatis memicu pembukaan modal terkait setelah halaman baru selesai dimuat, kemudian membersihkan URL query tanpa merefresh.
+  - Menerapkan transisi mikro-interaksi premium yang sama: tombol utama berubah merah saat aktif, ikon `+` berputar 135 derajat menjadi tombol tutup (`×`), dan opsi menu slide-up memudar masuk secara anggun.
+  - Menggunakan `pointer-events: none` pada kontainer FAB dan `pointer-events: auto` pada tombol-tombol anak agar elemen di belakang FAB tetap dapat diklik secara normal.
 
 
 
