@@ -61,8 +61,21 @@ class LeaveRequestController extends Controller
             'tanggal_mulai' => ['required', 'date'],
             'tanggal_selesai' => ['required', 'date', 'after_or_equal:tanggal_mulai'],
             'jenis' => ['required', 'in:Izin,Sakit'],
-            'alasan' => ['required', 'string', 'max:1000'],
-            'file_bukti' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:10240'], // max 10MB
+            'alasan' => [
+                $request->input('jenis') === 'Izin' ? 'required' : 'nullable',
+                'string',
+                'max:1000',
+                'regex:/^[^<>]*$/'
+            ],
+            'file_bukti' => [
+                $request->input('jenis') === 'Sakit' ? 'required' : 'nullable',
+                'file',
+                'mimes:jpg,jpeg,png,pdf',
+                'max:10240'
+            ],
+        ], [
+            'alasan.regex' => 'Alasan pengajuan tidak diperbolehkan mengandung karakter < atau >.',
+            'file_bukti.mimes' => 'Dokumen bukti hanya boleh berupa gambar (JPG, JPEG, PNG) atau PDF.',
         ]);
 
         $filePath = null;

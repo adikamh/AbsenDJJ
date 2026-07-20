@@ -65,29 +65,32 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ===== Delete Confirmation =====
-    document.querySelectorAll('.delete-logbook-form').forEach(form => {
-        form.addEventListener('submit', (e) => {
+    document.querySelectorAll('.delete-logbook-form .btn-delete-logbook').forEach(button => {
+        button.addEventListener('click', (e) => {
             e.preventDefault();
-            if (window.Swal) {
-                window.Swal.fire({
-                    title: 'Hapus Logbook',
-                    text: 'Apakah Anda yakin ingin menghapus entri logbook ini?',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#ef4444',
-                    cancelButtonColor: '#64748b',
-                    confirmButtonText: 'Ya, Hapus',
-                    cancelButtonText: 'Batal',
-                    background: '#1e293b',
-                    color: '#f8fafc'
-                }).then((result) => {
-                    if (result.isConfirmed) {
+            const form = button.closest('form');
+            if (form) {
+                if (window.Swal) {
+                    window.Swal.fire({
+                        title: 'Hapus Logbook',
+                        text: 'Apakah Anda yakin ingin menghapus entri logbook ini?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#ef4444',
+                        cancelButtonColor: '#64748b',
+                        confirmButtonText: 'Ya, Hapus',
+                        cancelButtonText: 'Batal',
+                        background: '#1e293b',
+                        color: '#f8fafc'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.submit();
+                        }
+                    });
+                } else {
+                    if (confirm('Apakah Anda yakin ingin menghapus entri logbook ini?')) {
                         form.submit();
                     }
-                });
-            } else {
-                if (confirm('Apakah Anda yakin ingin menghapus entri logbook ini?')) {
-                    form.submit();
                 }
             }
         });

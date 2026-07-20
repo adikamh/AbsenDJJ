@@ -29,13 +29,36 @@ class LogbookController extends Controller
             $query->where('status_approval', $request->input('status_approval'));
         }
 
+        if ($request->filled('tanggal')) {
+            $query->whereDate('tanggal', $request->input('tanggal'));
+        }
+
+        if ($request->filled('bulan')) {
+            $query->whereMonth('tanggal', $request->input('bulan'));
+        }
+
+        if ($request->filled('tahun')) {
+            $query->whereYear('tanggal', $request->input('tahun'));
+        }
+
         $logbooks = $query->paginate(5)->withQueryString();
 
         $approvedLogbooksCount = Logbook::where('user_id', $user->id)
             ->where('status_approval', 'Approved')
             ->count();
 
-        return view('dashboard.peserta.logbook', compact('logbooks', 'approvedLogbooksCount'));
+        $existingDates = Logbook::where('user_id', $user->id)
+            ->pluck('tanggal')
+            ->map(function($date) {
+                return \Carbon\Carbon::parse($date)->toDateString();
+            })
+            ->toArray();
+
+        $todayLogbook = Logbook::where('user_id', $user->id)
+            ->whereDate('tanggal', \Carbon\Carbon::today())
+            ->first();
+
+        return view('dashboard.peserta.logbook', compact('logbooks', 'approvedLogbooksCount', 'existingDates', 'todayLogbook'));
     }
 
     /**
@@ -50,7 +73,27 @@ class LogbookController extends Controller
             'deskripsi' => ['required', 'string', 'max:2000'],
         ]);
 
+        // Check if logbook already exists for that user and that date
+        $exists = Logbook::where('user_id', Auth::id())
+            ->whereDate('tanggal', $validated['tanggal'])
+            ->exists();
+
+        if ($exists) {
+            return redirect()
+                ->route('peserta.logbook')
+                ->with('error', 'Anda hanya diperbolehkan menulis satu logbook per hari.');
+        }
+
         $status = $request->input('action') === 'draft' ? 'Draft' : 'Pending';
+
+        if ($status === 'Pending') {
+            $pembimbing = Auth::user()->pembimbing;
+            if ($pembimbing) {
+                if ($pembimbing->auto_approve_logbook_global || Auth::user()->auto_approve_logbook) {
+                    $status = 'Approved';
+                }
+            }
+        }
 
         $logbook = Logbook::create([
             'user_id' => Auth::id(),
@@ -72,10 +115,12 @@ class LogbookController extends Controller
             }
         }
 
-        $msg = $status === 'Draft' ? 'Logbook berhasil disimpan sebagai draft sementara.' : 'Logbook baru berhasil ditambahkan.';
+        $msg = $status === 'Draft' ? 'Logbook berhasil disimpan sebagai draft sementara.' : ($status === 'Approved' ? 'Logbook baru berhasil ditambahkan dan disetujui otomatis.' : 'Logbook baru berhasil ditambahkan.');
+
+        $redirectTo = $request->input('redirect_to') === 'dashboard' ? 'dashboard' : 'peserta.logbook';
 
         return redirect()
-            ->route('peserta.logbook')
+            ->route($redirectTo)
             ->with('success', $msg);
     }
 
@@ -84,12 +129,14 @@ class LogbookController extends Controller
      */
     public function update(Request $request, Logbook $logbook)
     {
-        abort_unless($logbook->user_id === Auth::id(), 403);
+        abort_unless((int) $logbook->user_id === (int) Auth::id(), 403);
         
-        if (!in_array($logbook->status_approval, ['Pending', 'Draft'])) {
+        $previousStatus = $logbook->status_approval;
+
+        if ($logbook->status_approval !== 'Draft' && $logbook->status_approval !== 'Revisi') {
             return redirect()
                 ->route('peserta.logbook')
-                ->with('error', 'Logbook yang sudah disetujui atau ditolak tidak dapat diubah.');
+                ->with('error', 'Hanya logbook berstatus Draft atau Revisi yang dapat diubah.');
         }
 
         $validated = $request->validate([
@@ -100,11 +147,24 @@ class LogbookController extends Controller
 
         $status = $request->input('action') === 'draft' ? 'Draft' : 'Pending';
 
+        if ($status === 'Pending') {
+            // Revisions must go to Pending for manual review, even if auto-approve is active
+            if ($previousStatus !== 'Revisi') {
+                $pembimbing = Auth::user()->pembimbing;
+                if ($pembimbing) {
+                    if ($pembimbing->auto_approve_logbook_global || Auth::user()->auto_approve_logbook) {
+                        $status = 'Approved';
+                    }
+                }
+            }
+        }
+
         $logbook->update([
             'kegiatan' => $validated['kegiatan'],
             'tags' => $validated['tags'] ?? null,
             'deskripsi' => $validated['deskripsi'],
             'status_approval' => $status,
+            'catatan_pembimbing' => ($status === 'Pending' || $status === 'Approved') ? null : $logbook->catatan_pembimbing,
         ]);
 
         if ($status === 'Pending') {
@@ -118,7 +178,7 @@ class LogbookController extends Controller
             }
         }
 
-        $msg = $status === 'Draft' ? 'Logbook berhasil disimpan sebagai draft sementara.' : 'Logbook berhasil diperbarui.';
+        $msg = $status === 'Draft' ? 'Logbook berhasil disimpan sebagai draft sementara.' : ($status === 'Approved' ? 'Logbook berhasil diperbarui dan disetujui otomatis.' : ($previousStatus === 'Revisi' ? 'Logbook revisi berhasil dikirim untuk ditinjau.' : 'Logbook berhasil diperbarui.'));
 
         return redirect()
             ->route('peserta.logbook')
@@ -130,12 +190,12 @@ class LogbookController extends Controller
      */
     public function destroy(Logbook $logbook)
     {
-        abort_unless($logbook->user_id === Auth::id(), 403);
+        abort_unless((int) $logbook->user_id === (int) Auth::id(), 403);
 
-        if (!in_array($logbook->status_approval, ['Pending', 'Draft'])) {
+        if ($logbook->status_approval !== 'Draft') {
             return redirect()
                 ->route('peserta.logbook')
-                ->with('error', 'Logbook yang sudah disetujui atau ditolak tidak dapat dihapus.');
+                ->with('error', 'Hanya logbook berstatus Draft yang dapat dihapus.');
         }
 
         $logbook->delete();
@@ -151,9 +211,11 @@ class LogbookController extends Controller
     public function exportPdf(Request $request)
     {
         $user = Auth::user();
-        if ($user->isAdmin() && $request->has('user_id')) {
-            $targetUser = \App\Models\User::findOrFail($request->input('user_id'));
-            if ($targetUser->pembimbing_id !== $user->id) {
+        if (($user->isAdmin() || $user->isSuperAdmin()) && $request->has('user_id')) {
+            $targetUser = \App\Models\User::where('user_code', $request->input('user_id'))
+                ->orWhere('id', $request->input('user_id'))
+                ->firstOrFail();
+            if ($user->isAdmin() && (int) $targetUser->pembimbing_id !== (int) $user->id) {
                 abort(403, 'Anda tidak memiliki akses ke data logbook peserta magang ini.');
             }
             $user = $targetUser;
@@ -179,9 +241,11 @@ class LogbookController extends Controller
     public function exportCsv(Request $request)
     {
         $user = Auth::user();
-        if ($user->isAdmin() && $request->has('user_id')) {
-            $targetUser = \App\Models\User::findOrFail($request->input('user_id'));
-            if ($targetUser->pembimbing_id !== $user->id) {
+        if (($user->isAdmin() || $user->isSuperAdmin()) && $request->has('user_id')) {
+            $targetUser = \App\Models\User::where('user_code', $request->input('user_id'))
+                ->orWhere('id', $request->input('user_id'))
+                ->firstOrFail();
+            if ($user->isAdmin() && (int) $targetUser->pembimbing_id !== (int) $user->id) {
                 abort(403, 'Anda tidak memiliki akses ke data logbook peserta magang ini.');
             }
             $user = $targetUser;

@@ -127,7 +127,7 @@
                 <div class="form-grid">
                     <div class="form-group" style="grid-column: span 2;">
                         <label for="nama_instansi">Nama Instansi</label>
-                        <input type="text" id="nama_instansi" name="nama_instansi" value="{{ old('nama_instansi') }}" required>
+                        <input type="text" id="nama_instansi" name="nama_instansi" value="{{ old('nama_instansi') }}" required maxlength="170" autocomplete="off" placeholder="Contoh: SMK Negeri 1 Bandung, Universitas Indonesia">
                         @error('nama_instansi', 'storeInstansi')
                             <span class="form-error">{{ $message }}</span>
                         @enderror
@@ -135,12 +135,18 @@
 
                     <div class="form-group" style="grid-column: span 2;">
                         <label for="jenis">Jenis Instansi</label>
-                        <select id="jenis" name="jenis" required>
-                            <option value="">Pilih Jenis</option>
-                            <option value="Universitas" @selected(old('jenis') === 'Universitas')>Universitas</option>
-                            <option value="SMK" @selected(old('jenis') === 'SMK')>SMK</option>
-                            <option value="Lainnya" @selected(old('jenis') === 'Lainnya')>Lainnya</option>
-                        </select>
+                        <div class="custom-select-wrapper" id="add-jenis-wrapper">
+                            <button type="button" class="custom-select-trigger" id="add-jenis-trigger" aria-haspopup="listbox" aria-expanded="false">
+                                <span class="custom-select-value">{{ old('jenis') ?: 'Pilih Jenis' }}</span>
+                                <svg class="custom-select-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                            </button>
+                            <input type="hidden" id="jenis" name="jenis" value="{{ old('jenis') }}" required>
+                            <ul class="custom-select-options" role="listbox" aria-label="Jenis Instansi">
+                                <li class="custom-select-option {{ old('jenis') === 'Universitas' ? 'is-selected' : '' }}" role="option" data-value="Universitas">🎓 Universitas</li>
+                                <li class="custom-select-option {{ old('jenis') === 'SMK' ? 'is-selected' : '' }}" role="option" data-value="SMK">🏫 SMK</li>
+                                <li class="custom-select-option {{ old('jenis') === 'Lainnya' ? 'is-selected' : '' }}" role="option" data-value="Lainnya">🏢 Lainnya</li>
+                            </ul>
+                        </div>
                         @error('jenis', 'storeInstansi')
                             <span class="form-error">{{ $message }}</span>
                         @enderror
@@ -177,7 +183,7 @@
                 <div class="form-grid">
                     <div class="form-group" style="grid-column: span 2;">
                         <label for="edit_nama_instansi">Nama Instansi</label>
-                        <input type="text" id="edit_nama_instansi" name="nama_instansi" value="{{ old('nama_instansi') }}" required>
+                        <input type="text" id="edit_nama_instansi" name="nama_instansi" value="{{ old('nama_instansi') }}" required maxlength="170" autocomplete="off" placeholder="Contoh: SMK Negeri 1 Bandung, Universitas Indonesia">
                         @error('nama_instansi', 'updateInstansi')
                             <span class="form-error">{{ $message }}</span>
                         @enderror
@@ -185,12 +191,18 @@
 
                     <div class="form-group" style="grid-column: span 2;">
                         <label for="edit_jenis">Jenis Instansi</label>
-                        <select id="edit_jenis" name="jenis" required>
-                            <option value="">Pilih Jenis</option>
-                            <option value="Universitas" @selected(old('jenis') === 'Universitas')>Universitas</option>
-                            <option value="SMK" @selected(old('jenis') === 'SMK')>SMK</option>
-                            <option value="Lainnya" @selected(old('jenis') === 'Lainnya')>Lainnya</option>
-                        </select>
+                        <div class="custom-select-wrapper" id="edit-jenis-wrapper">
+                            <button type="button" class="custom-select-trigger" id="edit-jenis-trigger" aria-haspopup="listbox" aria-expanded="false">
+                                <span class="custom-select-value">{{ old('jenis') ?: 'Pilih Jenis' }}</span>
+                                <svg class="custom-select-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                            </button>
+                            <input type="hidden" id="edit_jenis" name="jenis" value="{{ old('jenis') }}" required>
+                            <ul class="custom-select-options" role="listbox" aria-label="Jenis Instansi">
+                                <li class="custom-select-option {{ old('jenis') === 'Universitas' ? 'is-selected' : '' }}" role="option" data-value="Universitas">🎓 Universitas</li>
+                                <li class="custom-select-option {{ old('jenis') === 'SMK' ? 'is-selected' : '' }}" role="option" data-value="SMK">🏫 SMK</li>
+                                <li class="custom-select-option {{ old('jenis') === 'Lainnya' ? 'is-selected' : '' }}" role="option" data-value="Lainnya">🏢 Lainnya</li>
+                            </ul>
+                        </div>
                         @error('jenis', 'updateInstansi')
                             <span class="form-error">{{ $message }}</span>
                         @enderror

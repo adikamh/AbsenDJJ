@@ -8,7 +8,7 @@
 @endpush
 
 @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" integrity="sha384-vsrfeLOOY6KuIYKDlmVH5UiBmgIdB1oEf7p01YgWHuqmOHfZr374+odEv96n9tNC" crossorigin="anonymous"></script>
     @vite('resources/js/admin/dashboard.js')
 @endpush
 
@@ -80,7 +80,7 @@
     </div>
 
     <!-- Analysis & Insights Section -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; margin-bottom: 30px;">
+    <div class="admin-chart-grid">
         <!-- Card 1: Today's Attendance Doughnut -->
         <div class="content-card" style="padding: 24px; display: flex; flex-direction: column;">
             <div style="border-bottom: 1px solid var(--glass-border); padding-bottom: 15px; margin-bottom: 20px;">
@@ -190,7 +190,7 @@
                                 <td><strong>{{ $intern->nama_lengkap }}</strong></td>
                                 <td><span class="muted-small">{{ $intern->instansi?->nama_instansi ?? '-' }}</span></td>
                                 <td>
-                                    <a href="{{ route('admin.interns.show', $intern->id) }}" class="badge badge-info" style="text-decoration: none; display: inline-block;">Lihat Profil</a>
+                                    <a href="{{ route('admin.interns.show', $intern->user_code) }}" class="badge badge-info" style="text-decoration: none; display: inline-block;">Lihat Profil</a>
                                 </td>
                             </tr>
                         @empty

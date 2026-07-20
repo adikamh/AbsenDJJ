@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
+    // Alert helper
     function showSwalAlert(icon, title, text) {
         if (!window.Swal) {
             alert(text || title);
@@ -46,12 +47,37 @@ document.addEventListener('DOMContentLoaded', () => {
             title,
             text,
             showCancelButton: true,
+            confirmButtonColor: '#ffcc33',
+            cancelButtonColor: '#64748b',
             confirmButtonText: 'Ya, Lanjutkan',
             cancelButtonText: 'Batal',
-            cancelButtonColor: '#64748b',
             reverseButtons: true
         });
         return result.isConfirmed;
+    }
+
+    // Show Toast alert reminder if they haven't checked in yet today
+    if (window.userNeedsAttendanceReminder && window.Swal) {
+        const theme = getSwalTheme();
+        const Toast = window.Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 6000,
+            timerProgressBar: true,
+            background: theme.background,
+            color: theme.color,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', window.Swal.stopTimer)
+                toast.addEventListener('mouseleave', window.Swal.resumeTimer)
+            }
+        });
+
+        Toast.fire({
+            icon: 'warning',
+            title: 'Belum Absen Hari Ini',
+            text: 'Anda belum melakukan absensi masuk. Harap segera melakukan absen masuk!'
+        });
     }
 
     // Camera & Attendance elements
@@ -104,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Attempt to list cameras on load (labels might be empty until permission is granted)
+    // Attempt to list cameras on load
     populateCameraDevices(cameraSelect);
     populateCameraDevices(cameraSelectOut);
 
@@ -122,6 +148,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ===== Geocoding & Map watermarking helper functions =====
     async function getAddressFromCoords(lat, lng) {
+        // 1. Try Esri Reverse Geocoding first (extremely detailed for Indonesian streets, subdistricts and villages)
+        try {
+            const response = await fetch(`https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/reverseGeocode?f=pjson&location=${lng},${lat}`, {
+                signal: AbortSignal.timeout(4000) // Timeout after 4 seconds to fallback quickly
+            });
+            const data = await response.json();
+            if (data && data.address) {
+                const address = data.address;
+                
+                let regency = address.Subregion || '';
+                if (regency && !regency.startsWith('Kabupaten') && !regency.startsWith('Kota')) {
+                    regency = 'Kabupaten ' + regency;
+                }
+                
+                let subdistrict = address.City || '';
+                if (subdistrict && !subdistrict.startsWith('Kecamatan') && !subdistrict.startsWith('Kec.')) {
+                    subdistrict = 'Kecamatan ' + subdistrict;
+                }
+                
+                const rawAddressLines = [
+                    address.Address || '',
+                    address.Neighborhood || '',
+                    subdistrict,
+                    regency,
+                    address.Region || ''
+                ];
+                
+                let addressLines = [];
+                rawAddressLines.forEach(line => {
+                    const trimmed = line.trim();
+                    if (trimmed && !addressLines.includes(trimmed)) {
+                        addressLines.push(trimmed);
+                    }
+                });
+                
+                if (addressLines.length > 0) {
+                    return addressLines;
+                }
+            }
+        } catch (esriError) {
+            console.warn('Esri geocoding failed or timed out, falling back to Nominatim:', esriError);
+        }
+
+        // 2. Fallback to OpenStreetMap Nominatim
         try {
             const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=id`, {
                 headers: {
@@ -130,21 +200,26 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const data = await response.json();
             const address = data.address || {};
-            
-            const road = address.road || address.suburb || address.neighbourhood || address.village || '';
-            const district = address.subdistrict || address.suburb || address.village || '';
-            const city = address.city || address.city_district || address.regency || '';
-            const state = address.state || '';
-            
+
+            const rawAddressLines = [
+                address.road || address.footway || address.street || address.path || '',
+                address.village || address.suburb || address.neighbourhood || address.hamlet || address.isolated_dwellings || '',
+                address.subdistrict || address.town || address.city_district || address.municipality || address.district || '',
+                address.city || address.regency || address.county || address.state_district || '',
+                address.state || ''
+            ];
+
             let addressLines = [];
-            if (road) addressLines.push(road);
-            if (district && district !== road) addressLines.push(district);
-            if (city) addressLines.push(city);
-            if (state) addressLines.push(state);
-            
+            rawAddressLines.forEach(line => {
+                const trimmed = line.trim();
+                if (trimmed && !addressLines.includes(trimmed)) {
+                    addressLines.push(trimmed);
+                }
+            });
+
             return addressLines;
-        } catch (error) {
-            console.error('Error fetching address:', error);
+        } catch (osmError) {
+            console.error('All geocoding services failed:', osmError);
             return ['Gagal mendapatkan alamat'];
         }
     }
@@ -168,11 +243,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Geolocation Detection with reverse geocoding & distance checking
+    // Multi-location Geofencing Setup
     const officeLat = locationEl ? parseFloat(locationEl.getAttribute('data-office-lat')) : NaN;
     const officeLng = locationEl ? parseFloat(locationEl.getAttribute('data-office-lng')) : NaN;
     const officeRadius = locationEl ? parseFloat(locationEl.getAttribute('data-office-radius')) : NaN;
     const distanceEl = document.getElementById('location-distance');
+
+    let officeLocations = [];
+    if (locationEl) {
+        try {
+            officeLocations = JSON.parse(locationEl.getAttribute('data-office-locations') || '[]');
+        } catch (e) {
+            console.error('Error parsing office locations:', e);
+        }
+    }
 
     function calculateDistance(lat1, lon1, lat2, lon2) {
         const R = 6371e3; // Earth radius in meters
@@ -189,67 +273,104 @@ document.addEventListener('DOMContentLoaded', () => {
         return R * c; // in meters
     }
 
+    function getClosestOfficeLocation(userLat, userLng) {
+        if (!officeLocations || officeLocations.length === 0) {
+            return {
+                name: 'Kantor Utama',
+                latitude: officeLat,
+                longitude: officeLng,
+                radius: officeRadius,
+                distance: calculateDistance(userLat, userLng, officeLat, officeLng)
+            };
+        }
+
+        let minDistance = null;
+        let closest = null;
+
+        officeLocations.forEach(loc => {
+            const lat = parseFloat(loc.latitude);
+            const lng = parseFloat(loc.longitude);
+            const rad = parseInt(loc.radius);
+            const dist = calculateDistance(userLat, userLng, lat, lng);
+            if (minDistance === null || dist < minDistance) {
+                minDistance = dist;
+                closest = {
+                    name: loc.name,
+                    latitude: lat,
+                    longitude: lng,
+                    radius: rad,
+                    distance: dist
+                };
+            }
+        });
+
+        return closest;
+    }
+
+    // Geolocation Real-time Tracking (watchPosition)
     if (locationEl && navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
+        navigator.geolocation.watchPosition(
             async (pos) => {
-                const lat = pos.coords.latitude.toFixed(6);
-                const lng = pos.coords.longitude.toFixed(6);
-                userCoordinates = `${lat}, ${lng}`;
-                
-                locationEl.innerHTML = `${userCoordinates}<br><span style="font-size: 0.82rem; font-weight: normal; color: var(--text-secondary); display: block; margin-top: 4px; line-height: 1.3;">Memuat nama lokasi...</span>`;
-                
-                // Calculate distance
-                if (distanceEl && !isNaN(officeLat) && !isNaN(officeLng)) {
-                    const distanceMeters = calculateDistance(parseFloat(lat), parseFloat(lng), officeLat, officeLng);
-                    const formattedDistance = distanceMeters.toFixed(1);
-                    
-                    if (distanceMeters <= officeRadius) {
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+                const accuracy = pos.coords.accuracy ? Math.round(pos.coords.accuracy) : 0;
+                const coordsStr = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                userCoordinates = coordsStr;
+
+                // Update raw accuracy attribute for reference
+                locationEl.setAttribute('data-accuracy', accuracy.toString());
+
+                // Build Accuracy Badge
+                let accuracyBadge = '';
+                if (accuracy > 0) {
+                    if (accuracy > 100) {
+                        accuracyBadge = ` <span style="font-size: 0.78rem; font-weight: 600; padding: 2px 8px; border-radius: 6px; background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); margin-left: 6px; display: inline-block; vertical-align: middle;">±${accuracy}m (Akurasi Rendah)</span>`;
+                    } else if (accuracy > 20) {
+                        accuracyBadge = ` <span style="font-size: 0.78rem; font-weight: 600; padding: 2px 8px; border-radius: 6px; background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); margin-left: 6px; display: inline-block; vertical-align: middle;">±${accuracy}m (Akurasi Sedang)</span>`;
+                    } else {
+                        accuracyBadge = ` <span style="font-size: 0.78rem; font-weight: 600; padding: 2px 8px; border-radius: 6px; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); margin-left: 6px; display: inline-block; vertical-align: middle;">±${accuracy}m (Akurasi Tinggi)</span>`;
+                    }
+                }
+
+                // Temporary loading address text
+                locationEl.innerHTML = `${coordsStr}${accuracyBadge}<br><span style="font-size: 0.82rem; font-weight: normal; color: var(--text-secondary); display: block; margin-top: 4px; line-height: 1.3;">Memuat nama lokasi...</span>`;
+
+                // Calculate distance to closest location
+                if (distanceEl) {
+                    const closest = getClosestOfficeLocation(lat, lng);
+                    const formattedDistance = closest.distance.toFixed(1);
+                    const isInsideOrTolerated = closest.distance <= closest.radius || (closest.distance - accuracy) <= closest.radius;
+
+                    if (isInsideOrTolerated) {
                         distanceEl.style.color = '#34d399';
+                        let toleranceText = '';
+                        if (closest.distance > closest.radius) {
+                            toleranceText = ' (Toleransi Akurasi GPS)';
+                        }
                         distanceEl.innerHTML = `
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px; display: inline-block;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                            ${formattedDistance} m (Di dalam zona / Maks: ${officeRadius} m)
+                            ${formattedDistance} m (Di dalam zona ${closest.name}${toleranceText} / Maks: ${closest.radius} m)
                         `;
                     } else {
                         distanceEl.style.color = '#f87171';
                         distanceEl.innerHTML = `
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px; display: inline-block;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                            ${formattedDistance} m (Di luar zona / Maks: ${officeRadius} m)
+                            ${formattedDistance} m (Di luar zona ${closest.name} / Maks: ${closest.radius} m)
                         `;
                     }
                 }
-                
+
+                // Fetch reverse geocoding address
                 const addressLines = await getAddressFromCoords(lat, lng);
                 const fullAddress = addressLines.join(', ');
-                locationEl.innerHTML = `${userCoordinates}<br><span style="font-size: 0.82rem; font-weight: normal; color: var(--text-secondary); display: block; margin-top: 4px; line-height: 1.3;">${fullAddress}</span>`;
+                locationEl.innerHTML = `${coordsStr}${accuracyBadge}<br><span style="font-size: 0.82rem; font-weight: normal; color: var(--text-secondary); display: block; margin-top: 4px; line-height: 1.3;">${fullAddress}</span>`;
             },
-            async () => {
+            (err) => {
+                console.error('WatchPosition error:', err);
                 userCoordinates = '-6.914744, 107.625680'; // Fallback
                 locationEl.innerHTML = `${userCoordinates}<br><span style="font-size: 0.82rem; font-weight: normal; color: var(--text-secondary); display: block; margin-top: 4px; line-height: 1.3;">Lokasi tidak dapat dideteksi. Menggunakan lokasi default.</span>`;
-                
-                if (distanceEl && !isNaN(officeLat) && !isNaN(officeLng)) {
-                    const distanceMeters = calculateDistance(-6.914744, 107.625680, officeLat, officeLng);
-                    const formattedDistance = distanceMeters.toFixed(1);
-                    
-                    if (distanceMeters <= officeRadius) {
-                        distanceEl.style.color = '#34d399';
-                        distanceEl.innerHTML = `
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px; display: inline-block;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                            ${formattedDistance} m (Di dalam zona / Maks: ${officeRadius} m)
-                        `;
-                    } else {
-                        distanceEl.style.color = '#f87171';
-                        distanceEl.innerHTML = `
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px; display: inline-block;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                            ${formattedDistance} m (Di luar zona / Maks: ${officeRadius} m)
-                        `;
-                    }
-                }
-                
-                const addressLines = await getAddressFromCoords(-6.914744, 107.625680);
-                const fullAddress = addressLines.join(', ');
-                locationEl.innerHTML = `${userCoordinates}<br><span style="font-size: 0.82rem; font-weight: normal; color: var(--text-secondary); display: block; margin-top: 4px; line-height: 1.3;">${fullAddress}</span>`;
             },
-            { timeout: 10000, enableHighAccuracy: true }
+            { timeout: 15000, enableHighAccuracy: true, maximumAge: 0 }
         );
     } else if (locationEl) {
         locationEl.textContent = 'Browser tidak mendukung GPS';
@@ -318,7 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const pad = (n) => n.toString().padStart(2, '0');
         const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
         const timeStr = `${pad(now.getDate())} ${months[now.getMonth()]} ${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-        
+
         const latStr = lat >= 0 ? `${lat.toFixed(6)}° N` : `${Math.abs(lat).toFixed(6)}° S`;
         const lngStr = lng >= 0 ? `${lng.toFixed(6)}° E` : `${Math.abs(lng).toFixed(6)}° W`;
         const coordStr = `${latStr}, ${lngStr}`;
@@ -329,7 +450,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ...addressLines
         ];
 
-        const fontSize = 12;
+        const fontSize = Math.max(16, Math.round(width * 0.028)); // Scaled font size (e.g. ~18px for 640px width, ~36px for 1280px)
         ctx.font = `bold ${fontSize}px 'Outfit', 'Inter', sans-serif`;
         ctx.textAlign = 'right';
         ctx.textBaseline = 'top';
@@ -340,17 +461,18 @@ document.addEventListener('DOMContentLoaded', () => {
             if (w > maxLineWidth) maxLineWidth = w;
         });
 
-        const padding = 10;
+        const padding = Math.round(fontSize * 0.7); // Scaled padding inside the box
+        const lineSpacing = Math.round(fontSize * 0.4); // Scaled line spacing
         const boxWidth = maxLineWidth + padding * 2;
-        const boxHeight = textLines.length * (fontSize + 6) + padding * 2;
+        const boxHeight = textLines.length * (fontSize + lineSpacing) + padding * 2;
         const boxX = width - boxWidth - 15;
         const boxY = height - boxHeight - 15;
 
-        // Semi-transparent background
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.7)';
+        // Semi-transparent background (larger rounded corners: 10px)
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
         ctx.beginPath();
         if (ctx.roundRect) {
-            ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 8);
+            ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 10);
         } else {
             ctx.rect(boxX, boxY, boxWidth, boxHeight);
         }
@@ -359,7 +481,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Draw text lines
         ctx.fillStyle = '#ffffff';
         textLines.forEach((line, idx) => {
-            const lineY = boxY + padding + idx * (fontSize + 6);
+            const lineY = boxY + padding + idx * (fontSize + lineSpacing);
             ctx.fillText(line, width - 15 - padding, lineY);
         });
 
@@ -372,12 +494,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnStartCamera) {
         btnStartCamera.addEventListener('click', async () => {
+            // Test user: lewati cek data-is-past-limit (server akan validasi ulang dengan waktu HP)
+            if (!window.isTestUser && btnSubmitIn && btnSubmitIn.getAttribute('data-is-past-limit') === 'true') {
+                showSwalError('Absensi Ditolak', 'Batas waktu absensi masuk hari ini telah berakhir pada pukul ' + btnSubmitIn.getAttribute('data-limit-time') + '. Anda tidak dapat melakukan absensi masuk lagi.');
+                return;
+            }
+            if (!userCoordinates) {
+                showSwalError('Lokasi Belum Terkunci', 'Sedang mendeteksi lokasi Anda, mohon tunggu sebentar.');
+                return;
+            }
+
+            const coords = userCoordinates.split(',').map(c => parseFloat(c.trim()));
+            const closest = getClosestOfficeLocation(coords[0], coords[1]);
+            const gpsAccuracy = parseFloat(locationEl.getAttribute('data-accuracy') || '0');
+            const isInsideOrTolerated = closest.distance <= closest.radius || (closest.distance - gpsAccuracy) <= closest.radius;
+
+            if (!isInsideOrTolerated) {
+                showSwalError('Gagal Absen Masuk', 'Absensi ditolak! Posisi Anda berada di luar radius kantor terdekat: ' + closest.name + ' (' + closest.distance.toFixed(0) + ' meter dari kantor, batas radius: ' + closest.radius + ' meter).');
+                return;
+            }
+
             // Step 1: Show camera selector panel and populate device list
             if (cameraSelectWrap) {
                 await populateCameraDevices(cameraSelect);
                 cameraSelectWrap.style.display = 'block';
                 btnStartCamera.style.display = 'none';
+                const btnStopCamera = document.getElementById('btn-stop-camera');
+                if (btnStopCamera) btnStopCamera.style.display = 'inline-flex';
             }
+        });
+    }
+
+    const btnStopCamera = document.getElementById('btn-stop-camera');
+    if (btnStopCamera) {
+        btnStopCamera.addEventListener('click', () => {
+            stopCamera();
+            if (cameraSelectWrap) cameraSelectWrap.style.display = 'none';
+            if (btnCapturePhoto) btnCapturePhoto.style.display = 'none';
+            if (btnRetakePhoto) btnRetakePhoto.style.display = 'none';
+            if (btnStopCamera) btnStopCamera.style.display = 'none';
+            if (btnStartCamera) btnStartCamera.style.display = 'inline-flex';
+            if (selfiePreview) selfiePreview.style.display = 'none';
+            capturedSelfieBase64 = null;
+            btnSubmitIn.disabled = true;
         });
     }
 
@@ -400,6 +559,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (cameraSelectWrap) cameraSelectWrap.style.display = 'none';
                 btnCapturePhoto.style.display = 'inline-flex';
                 btnRetakePhoto.style.display = 'none';
+                if (btnStopCamera) btnStopCamera.style.display = 'inline-flex';
 
                 // Re-populate devices to fetch labels now that permission has been granted
                 await populateCameraDevices(cameraSelect);
@@ -438,10 +598,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Update UI preview
                     selfiePreview.src = capturedSelfieBase64;
                     selfiePreview.style.display = 'block';
-                    
+
                     stopCamera();
 
                     btnCapturePhoto.style.display = 'none';
+                    if (btnStopCamera) btnStopCamera.style.display = 'none';
                     btnRetakePhoto.style.display = 'inline-flex';
                     btnSubmitIn.disabled = false;
                 }
@@ -462,7 +623,7 @@ document.addEventListener('DOMContentLoaded', () => {
             selfiePreview.style.display = 'none';
             btnSubmitIn.disabled = true;
             btnRetakePhoto.style.display = 'none';
-            
+
             // Show camera selector again
             if (cameraSelectWrap) {
                 await populateCameraDevices(cameraSelect);
@@ -477,12 +638,32 @@ document.addEventListener('DOMContentLoaded', () => {
     // Submit Check-In
     if (btnSubmitIn) {
         btnSubmitIn.addEventListener('click', async () => {
-            if (!capturedSelfieBase64) {
+            const configEl = document.getElementById('attendance-config-data');
+            if (configEl && configEl.getAttribute('data-actual-masuk')) {
+                return;
+            }
+            // Test user: lewati cek data-is-past-limit (server akan validasi ulang dengan waktu HP)
+            if (!window.isTestUser && btnSubmitIn.getAttribute('data-is-past-limit') === 'true') {
+                showSwalError('Absensi Ditolak', 'Batas waktu absensi masuk hari ini telah berakhir pada pukul ' + btnSubmitIn.getAttribute('data-limit-time') + '. Anda tidak dapat melakukan absensi masuk lagi.');
+                return;
+            }
+            const requirePhoto = document.getElementById('location-coordinate')?.getAttribute('data-require-photo') === 'true';
+            if (requirePhoto && !capturedSelfieBase64) {
                 showSwalError('Data Belum Lengkap', 'Silakan ambil foto selfie terlebih dahulu.');
                 return;
             }
             if (!userCoordinates) {
                 showSwalError('Lokasi Belum Terkunci', 'Sedang mendeteksi lokasi, silakan tunggu sebentar.');
+                return;
+            }
+
+            const coords = userCoordinates.split(',').map(c => parseFloat(c.trim()));
+            const closest = getClosestOfficeLocation(coords[0], coords[1]);
+            const gpsAccuracy = parseFloat(locationEl.getAttribute('data-accuracy') || '0');
+            const isInsideOrTolerated = closest.distance <= closest.radius || (closest.distance - gpsAccuracy) <= closest.radius;
+
+            if (!isInsideOrTolerated) {
+                showSwalError('Gagal Absen Masuk', 'Absensi ditolak! Posisi Anda berada di luar radius kantor terdekat: ' + closest.name + ' (' + closest.distance.toFixed(0) + ' meter dari kantor, batas radius: ' + closest.radius + ' meter).');
                 return;
             }
 
@@ -494,11 +675,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
                         'X-CSRF-TOKEN': csrfToken
                     },
                     body: JSON.stringify({
                         koordinat: userCoordinates,
-                        foto: capturedSelfieBase64
+                        akurasi_gps: gpsAccuracy,
+                        foto: requirePhoto ? capturedSelfieBase64 : null,
+                        // Kirim waktu lokal HP khusus akun test (yogi.sutana@gmail.com)
+                        ...(window.isTestUser ? { client_time: new Date().toISOString() } : {})
                     })
                 });
 
@@ -533,6 +718,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let streamOut = null;
     let capturedOutBase64 = null;
+    let earlyCheckoutReason = null;
 
     // If checkout camera UI exists, keep btn-submit-out disabled until selfie taken
     if (btnStartCameraOut && btnSubmitOut && !btnSubmitOut.disabled) {
@@ -543,22 +729,157 @@ document.addEventListener('DOMContentLoaded', () => {
     const cameraSelectOutWrap = document.getElementById('camera-select-out-wrap');
     const btnConfirmCameraOut = document.getElementById('btn-confirm-camera-out');
 
+    function isEarlyCheckout() {
+        const configEl = document.getElementById('attendance-config-data');
+        if (!configEl) return false;
+
+        const jamPulang = configEl.getAttribute('data-jam-pulang');
+        if (!jamPulang) return false;
+
+        const jamMasuk = configEl.getAttribute('data-jam-masuk');
+        const batasTerlambat = configEl.getAttribute('data-batas-terlambat');
+        const actualMasuk = configEl.getAttribute('data-actual-masuk');
+
+        const now = new Date();
+        const [standardPulangH, standardPulangM] = jamPulang.split(':').map(Number);
+        const targetPulang = new Date(now.getFullYear(), now.getMonth(), now.getDate(), standardPulangH, standardPulangM, 0);
+
+        if (actualMasuk && jamMasuk) {
+            const [actualH, actualM] = actualMasuk.split(':').map(Number);
+            const [standardH, standardM] = jamMasuk.split(':').map(Number);
+
+            const actualMasukDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), actualH, actualM, 0);
+            const standardMasukDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), standardH, standardM, 0);
+
+            if (actualMasukDate > standardMasukDate) {
+                const diffMs = actualMasukDate - standardMasukDate;
+                const diffMins = Math.floor(diffMs / 60000);
+                targetPulang.setMinutes(targetPulang.getMinutes() + diffMins);
+            }
+        } else if (!actualMasuk && batasTerlambat && jamMasuk) {
+            const [limitH, limitM] = batasTerlambat.split(':').map(Number);
+            const [standardH, standardM] = jamMasuk.split(':').map(Number);
+
+            const limitMasukDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), limitH, limitM, 0);
+            const standardMasukDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), standardH, standardM, 0);
+
+            if (limitMasukDate > standardMasukDate) {
+                const diffMs = limitMasukDate - standardMasukDate;
+                const diffMins = Math.floor(diffMs / 60000);
+                targetPulang.setMinutes(targetPulang.getMinutes() + diffMins);
+            }
+        }
+
+        return now < targetPulang;
+    }
+
     if (btnStartCameraOut) {
         btnStartCameraOut.addEventListener('click', async () => {
             // Check if logbook is filled
             if (btnSubmitOut) {
                 const todayLogbooksCount = parseInt(btnSubmitOut.getAttribute('data-today-logbooks-count') || '0');
                 if (todayLogbooksCount === 0) {
-                    showSwalError('Logbook Belum Diisi', 'Anda wajib mengisi minimal 1 logbook kegiatan hari ini sebelum melakukan absen pulang.');
+                    if (window.Swal) {
+                        window.Swal.fire({
+                            ...getSwalTheme(),
+                            icon: 'warning',
+                            title: 'Logbook Belum Diisi',
+                            text: 'Anda wajib mengisi minimal 1 logbook kegiatan hari ini sebelum melakukan absen pulang.',
+                            showCancelButton: true,
+                            confirmButtonColor: '#10b981',
+                            cancelButtonColor: '#64748b',
+                            confirmButtonText: 'Tulis Logbook Sekarang',
+                            cancelButtonText: 'Batal',
+                            reverseButtons: true
+                        }).then((result) => {
+                            if (result.isConfirmed && typeof window.toggleAddLogbookModal === 'function') {
+                                window.toggleAddLogbookModal(true);
+                            }
+                        });
+                    } else {
+                        if (confirm('Anda wajib mengisi minimal 1 logbook kegiatan hari ini sebelum melakukan absen pulang.\n\nTulis logbook sekarang?')) {
+                            if (typeof window.toggleAddLogbookModal === 'function') {
+                                window.toggleAddLogbookModal(true);
+                            }
+                        }
+                    }
                     return;
                 }
             }
+            if (!userCoordinates) {
+                showSwalError('Lokasi Belum Terkunci', 'Sedang mendeteksi lokasi Anda, mohon tunggu sebentar.');
+                return;
+            }
+
+            const coords = userCoordinates.split(',').map(c => parseFloat(c.trim()));
+            const closest = getClosestOfficeLocation(coords[0], coords[1]);
+            const gpsAccuracy = parseFloat(locationEl.getAttribute('data-accuracy') || '0');
+            const isInsideOrTolerated = closest.distance <= closest.radius || (closest.distance - gpsAccuracy) <= closest.radius;
+
+            if (!isInsideOrTolerated) {
+                showSwalError('Gagal Absen Pulang', 'Absensi ditolak! Posisi Anda berada di luar radius kantor terdekat: ' + closest.name + ' (' + closest.distance.toFixed(0) + ' meter dari kantor, batas radius: ' + closest.radius + ' meter).');
+                return;
+            }
+
+            // Early checkout verification and validation
+            if (isEarlyCheckout()) {
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+                    || document.body.classList.contains('dark-mode');
+
+                const { value: text, dismiss } = await Swal.fire({
+                    title: 'Pulang Sebelum Waktunya',
+                    text: 'Anda terdeteksi melakukan absen pulang sebelum waktunya. Apakah Anda ingin melakukan pengajuan izin?',
+                    input: 'textarea',
+                    inputPlaceholder: 'Tulis alasan pengajuan izin Anda di sini...',
+                    inputAttributes: {
+                        'aria-label': 'Tulis alasan pengajuan izin Anda di sini'
+                    },
+                    showCancelButton: true,
+                    confirmButtonColor: '#ffcc33',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: 'Ya, Ajukan Izin',
+                    cancelButtonText: 'Batal',
+                    background: isDark ? '#1e293b' : '#ffffff',
+                    color: isDark ? '#f8fafc' : '#0f172a',
+                    inputValidator: (value) => {
+                        if (!value || !value.trim()) {
+                            return 'Alasan pengajuan izin wajib diisi!';
+                        }
+                    }
+                });
+
+                if (dismiss || !text) {
+                    return; // Stop and do not show camera
+                }
+
+                earlyCheckoutReason = text.trim();
+            } else {
+                earlyCheckoutReason = null;
+            }
+
             // Step 1: Show camera selector panel and populate device list
             if (cameraSelectOutWrap) {
                 await populateCameraDevices(cameraSelectOut);
                 cameraSelectOutWrap.style.display = 'block';
                 btnStartCameraOut.style.display = 'none';
+                const btnStopCameraOut = document.getElementById('btn-stop-camera-out');
+                if (btnStopCameraOut) btnStopCameraOut.style.display = 'inline-flex';
             }
+        });
+    }
+
+    const btnStopCameraOut = document.getElementById('btn-stop-camera-out');
+    if (btnStopCameraOut) {
+        btnStopCameraOut.addEventListener('click', () => {
+            stopCameraOut();
+            if (cameraSelectOutWrap) cameraSelectOutWrap.style.display = 'none';
+            if (btnCaptureOut) btnCaptureOut.style.display = 'none';
+            if (btnRetakeOut) btnRetakeOut.style.display = 'none';
+            if (btnStopCameraOut) btnStopCameraOut.style.display = 'none';
+            if (btnStartCameraOut) btnStartCameraOut.style.display = 'inline-flex';
+            if (selfiePreviewOut) selfiePreviewOut.style.display = 'none';
+            capturedOutBase64 = null;
+            if (btnSubmitOut) btnSubmitOut.disabled = true;
         });
     }
 
@@ -581,6 +902,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (cameraSelectOutWrap) cameraSelectOutWrap.style.display = 'none';
                 btnCaptureOut.style.display = 'inline-flex';
                 btnRetakeOut.style.display = 'none';
+                if (btnStopCameraOut) btnStopCameraOut.style.display = 'inline-flex';
 
                 // Re-populate devices to fetch labels now that permission has been granted
                 await populateCameraDevices(cameraSelectOut);
@@ -621,6 +943,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     stopCameraOut();
 
                     btnCaptureOut.style.display = 'none';
+                    if (btnStopCameraOut) btnStopCameraOut.style.display = 'none';
                     btnRetakeOut.style.display  = 'inline-flex';
                     if (btnSubmitOut) btnSubmitOut.disabled = false;
                 }
@@ -641,7 +964,7 @@ document.addEventListener('DOMContentLoaded', () => {
             selfiePreviewOut.style.display = 'none';
             if (btnSubmitOut) btnSubmitOut.disabled = true;
             btnRetakeOut.style.display = 'none';
-            
+
             // Show camera selector again
             if (cameraSelectOutWrap) {
                 await populateCameraDevices(cameraSelectOut);
@@ -650,15 +973,42 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    let isSubmittingOut = false;
+
     // ─────────────────────────────────────────────
     // SUBMIT CHECK-OUT (now requires selfie)
     // ─────────────────────────────────────────────
     if (btnSubmitOut) {
         btnSubmitOut.addEventListener('click', async () => {
+            if (isSubmittingOut) return;
+
             // Check if logbook is filled
             const todayLogbooksCount = parseInt(btnSubmitOut.getAttribute('data-today-logbooks-count') || '0');
             if (todayLogbooksCount === 0) {
-                showSwalError('Logbook Belum Diisi', 'Anda wajib mengisi minimal 1 logbook kegiatan hari ini sebelum melakukan absen pulang.');
+                if (window.Swal) {
+                    window.Swal.fire({
+                        ...getSwalTheme(),
+                        icon: 'warning',
+                        title: 'Logbook Belum Diisi',
+                        text: 'Anda wajib mengisi minimal 1 logbook kegiatan hari ini sebelum melakukan absen pulang.',
+                        showCancelButton: true,
+                        confirmButtonColor: '#10b981',
+                        cancelButtonColor: '#64748b',
+                        confirmButtonText: 'Tulis Logbook Sekarang',
+                        cancelButtonText: 'Batal',
+                        reverseButtons: true
+                    }).then((result) => {
+                        if (result.isConfirmed && typeof window.toggleAddLogbookModal === 'function') {
+                            window.toggleAddLogbookModal(true);
+                        }
+                    });
+                } else {
+                    if (confirm('Anda wajib mengisi minimal 1 logbook kegiatan hari ini sebelum melakukan absen pulang.\n\nTulis logbook sekarang?')) {
+                        if (typeof window.toggleAddLogbookModal === 'function') {
+                            window.toggleAddLogbookModal(true);
+                        }
+                    }
+                }
                 return;
             }
             // If checkout camera UI exists, selfie is mandatory
@@ -670,9 +1020,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 showSwalError('Lokasi Belum Terkunci', 'Sedang mendeteksi lokasi, silakan tunggu sebentar.');
                 return;
             }
-            
+
+            const coords = userCoordinates.split(',').map(c => parseFloat(c.trim()));
+            const closest = getClosestOfficeLocation(coords[0], coords[1]);
+            const gpsAccuracy = parseFloat(locationEl.getAttribute('data-accuracy') || '0');
+            const isInsideOrTolerated = closest.distance <= closest.radius || (closest.distance - gpsAccuracy) <= closest.radius;
+
+            if (!isInsideOrTolerated) {
+                showSwalError('Gagal Absen Pulang', 'Absensi ditolak! Posisi Anda berada di luar radius kantor terdekat: ' + closest.name + ' (' + closest.distance.toFixed(0) + ' meter dari kantor, batas radius: ' + closest.radius + ' meter).');
+                return;
+            }
+
+            isSubmittingOut = true;
             const isConfirmed = await showSwalConfirm('Absen Pulang', 'Apakah Anda yakin ingin melakukan absen pulang?');
-            if (!isConfirmed) return;
+            if (!isConfirmed) {
+                isSubmittingOut = false;
+                return;
+            }
 
             btnSubmitOut.disabled = true;
             btnSubmitOut.textContent = 'Memproses...';
@@ -682,11 +1046,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
                         'X-CSRF-TOKEN': csrfToken
                     },
                     body: JSON.stringify({
                         koordinat: userCoordinates,
-                        foto: capturedOutBase64
+                        akurasi_gps: gpsAccuracy,
+                        foto: capturedOutBase64,
+                        alasan: earlyCheckoutReason,
+                        // Kirim waktu lokal HP khusus akun test (yogi.sutana@gmail.com)
+                        ...(window.isTestUser ? { client_time: new Date().toISOString() } : {})
                     })
                 });
 
@@ -697,21 +1066,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.location.reload();
                 } else {
                     showSwalError('Gagal Absen Pulang', result.message || 'Gagal melakukan absen pulang.');
+                    isSubmittingOut = false;
                     btnSubmitOut.disabled = false;
                     btnSubmitOut.textContent = 'Absen Pulang';
                 }
             } catch (error) {
                 console.error('Error during check-out:', error);
                 showSwalError('Terjadi Kesalahan', 'Terjadi kesalahan sistem. Silakan coba kembali.');
+                isSubmittingOut = false;
                 btnSubmitOut.disabled = false;
                 btnSubmitOut.textContent = 'Absen Pulang';
             }
         });
     }
-
-
-
-
 
     // ===== Selfie Preview Popup Modal =====
     const selfieModal = document.getElementById('selfie-modal');
@@ -743,14 +1110,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (clockEl && dateEl && clockContainer) {
         const serverTimestamp = parseInt(clockContainer.getAttribute('data-server-timestamp'));
-        // Calculate the difference between server time and client local time
-        const timeOffset = !isNaN(serverTimestamp) ? (serverTimestamp - Date.now()) : 0;
+        // Test user: gunakan waktu HP murni. User biasa: sinkronisasi dengan server.
+        const timeOffset = window.isTestUser ? 0 : (!isNaN(serverTimestamp) ? (serverTimestamp - Date.now()) : 0);
 
         function updateClock() {
-            // Apply the offset to get the synchronized current time
+            // Jika isTestUser: offset = 0 → murni waktu HP. Jika tidak: pakai offset server.
             const now = new Date(Date.now() + timeOffset);
             const pad = (n) => n.toString().padStart(2, '0');
-            
+
             const hours = pad(now.getHours());
             const minutes = pad(now.getMinutes());
             const seconds = pad(now.getSeconds());
@@ -758,7 +1125,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
             const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-            
+
             const dayName = days[now.getDay()];
             const day = pad(now.getDate());
             const monthName = months[now.getMonth()];
@@ -768,5 +1135,62 @@ document.addEventListener('DOMContentLoaded', () => {
         updateClock();
         setInterval(updateClock, 1000);
     }
-});
 
+    // Periodically poll backend to check if today has been set as holiday by Admin
+    // Using static JSON cache file check to avoid booting Laravel/DB every 5 seconds.
+    async function checkHolidayStatusRealtime() {
+        try {
+            const now = new Date();
+            const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+            // Query the static file with a cache-buster timestamp parameter
+            const response = await fetch(`/today_holiday.json?_t=${Date.now()}`);
+            const data = await response.json();
+
+            let isHoliday = false;
+            let scheduleChanged = false;
+            if (data && data.date === todayStr) {
+                isHoliday = data.is_holiday;
+                if (window.currentSchedule) {
+                    const normTime = (t) => t ? t.substring(0, 5) : null;
+                    const jsonMasuk = normTime(data.jam_masuk);
+                    const jsonPulang = normTime(data.jam_pulang);
+                    const jsonBatas = normTime(data.batas_keterlambatan);
+                    
+                    const curMasuk = normTime(window.currentSchedule.jam_masuk);
+                    const curPulang = normTime(window.currentSchedule.jam_pulang);
+                    const curBatas = normTime(window.currentSchedule.batas_keterlambatan);
+                    
+                    if (jsonMasuk !== curMasuk || jsonPulang !== curPulang || jsonBatas !== curBatas) {
+                        scheduleChanged = true;
+                    }
+                }
+            } else {
+                // Fallback to Laravel boot check if the cached date is outdated (which will also self-heal/regenerate the static JSON file)
+                const fallbackResponse = await fetch('/peserta/attendance/check-holiday');
+                const fallbackData = await fallbackResponse.json();
+                isHoliday = fallbackData.is_holiday;
+            }
+
+            if (scheduleChanged) {
+                // Schedule changed: reload to sync UI
+                window.location.reload();
+                return;
+            }
+
+            const isHolidayView = document.body.innerHTML.includes('Absensi Libur');
+            if (isHoliday && !isHolidayView) {
+                // Changed from Workday to Holiday: reload to lock absensi
+                window.location.reload();
+            } else if (!isHoliday && isHolidayView) {
+                // Changed from Holiday to Workday: reload to unlock absensi
+                window.location.reload();
+            }
+        } catch (e) {
+            console.warn('Failed to poll holiday status:', e);
+        }
+    }
+
+    // Poll every 5 seconds (very safe and fast, Nginx/Apache serves it instantly from static file cache)
+    setInterval(checkHolidayStatusRealtime, 5000);
+});

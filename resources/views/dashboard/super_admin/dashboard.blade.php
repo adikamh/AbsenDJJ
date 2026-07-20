@@ -8,7 +8,7 @@
 @endpush
 
 @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.54.1/dist/apexcharts.min.js" integrity="sha384-KNaFJ+EK516RuHsoycvreec5pD7BkTKJEkjMrVSQWu9KGTl7En4dhIDv7t1DFJ+g" crossorigin="anonymous"></script>
     @vite('resources/js/super_admin/dashboard.js')
 @endpush
 
@@ -61,7 +61,15 @@
                             <td>{{ $user->email }}</td>
                             <td>
                                 <span class="badge {{ $user->isSuperAdmin() ? 'badge-danger' : ($user->isAdmin() ? 'badge-info' : 'badge-success') }}">
-                                    {{ $user->role->nama_role }}
+                                    @if($user->isSuperAdmin())
+                                        Super Admin
+                                    @elseif($user->isAdmin())
+                                        Pembimbing
+                                    @elseif($user->isPeserta())
+                                        Anak Bimbingan
+                                    @else
+                                        {{ $user->role->nama_role }}
+                                    @endif
                                 </span>
                             </td>
                             <td>{{ $user->instansi?->nama_instansi ?? '-' }}</td>

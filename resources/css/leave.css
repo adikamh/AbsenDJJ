@@ -72,7 +72,7 @@
     text-decoration: underline;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     .filter-row {
         flex-direction: column !important;
         align-items: stretch !important;

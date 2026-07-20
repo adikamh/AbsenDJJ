@@ -30,6 +30,140 @@ document.addEventListener('DOMContentLoaded', () => {
     const resetPembimbingPasswordConfirmation = document.getElementById('reset_password_confirmation');
     const toggleResetPembimbingPassword = document.getElementById('toggle-reset-pembimbing-password');
 
+    const DIGITS_ONLY_PATTERN = /[^0-9]/g;
+    const CHARS_PATTERN = /[^a-zA-Z0-9\s\-\/\(\)\.,\'\"\\&]/g;
+    const EMAIL_ALLOWED_PATTERN = /[^a-zA-Z0-9\s\-\/\(\)\.,\'\"\\&@_\+]/g;
+    const ADDRESS_ALLOWED_PATTERN = /[^a-zA-Z0-9\s\-\/\(\)\.,\'\"\\&#@:\n\r]/g;
+
+    function applySanitizer(id, pattern, maxLength) {
+        const input = document.getElementById(id);
+        if (!input) return;
+
+        const container = input.closest('.form-group');
+        let counterEl = null;
+
+        if (maxLength) {
+            counterEl = document.createElement('span');
+            counterEl.style.fontSize = '0.75rem';
+            counterEl.style.color = 'var(--text-secondary)';
+            counterEl.style.marginTop = '4px';
+            counterEl.style.display = 'block';
+            counterEl.style.textAlign = 'right';
+            container?.appendChild(counterEl);
+        }
+
+        function updateCounter() {
+            if (counterEl && maxLength) {
+                const currentLength = input.value.length;
+                counterEl.textContent = `${currentLength} / ${maxLength} karakter`;
+                if (currentLength >= maxLength) {
+                    counterEl.style.color = '#ef4444';
+                } else {
+                    counterEl.style.color = 'var(--text-secondary)';
+                }
+            }
+        }
+
+        input.addEventListener('input', () => {
+            let cleaned = input.value.replace(pattern, '');
+            if (maxLength && cleaned.length > maxLength) {
+                cleaned = cleaned.substring(0, maxLength);
+            }
+            input.value = cleaned;
+            updateCounter();
+        });
+
+        input.addEventListener('paste', () => {
+            setTimeout(() => {
+                let cleaned = input.value.replace(pattern, '');
+                if (maxLength && cleaned.length > maxLength) {
+                    cleaned = cleaned.substring(0, maxLength);
+                }
+                input.value = cleaned;
+                updateCounter();
+            }, 0);
+        });
+
+        if (maxLength) {
+            updateCounter();
+        }
+    }
+
+    // Apply to Add Modal
+    applySanitizer('nip', DIGITS_ONLY_PATTERN, 24);
+    applySanitizer('nama_lengkap', CHARS_PATTERN, 170);
+    applySanitizer('email', EMAIL_ALLOWED_PATTERN, 254);
+    applySanitizer('no_telepon', DIGITS_ONLY_PATTERN, 15);
+    applySanitizer('alamat', ADDRESS_ALLOWED_PATTERN, 224);
+    applySanitizer('instansi', CHARS_PATTERN, 170);
+    applySanitizer('jabatan', CHARS_PATTERN, 170);
+
+    // Apply to Edit Modal
+    applySanitizer('edit_nip', DIGITS_ONLY_PATTERN, 24);
+    applySanitizer('edit_nama_lengkap', CHARS_PATTERN, 170);
+    applySanitizer('edit_email', EMAIL_ALLOWED_PATTERN, 254);
+    applySanitizer('edit_no_telepon', DIGITS_ONLY_PATTERN, 15);
+    applySanitizer('edit_alamat', ADDRESS_ALLOWED_PATTERN, 224);
+    applySanitizer('edit_instansi', CHARS_PATTERN, 170);
+    applySanitizer('edit_jabatan', CHARS_PATTERN, 170);
+
+    function showErrorAlert(title, message) {
+        if (window.Swal) {
+            window.Swal.fire({
+                background: document.documentElement.getAttribute('data-theme') === 'light' ? '#ffffff' : '#1e293b',
+                color: document.documentElement.getAttribute('data-theme') === 'light' ? '#0f172a' : '#f8fafc',
+                confirmButtonColor: '#2e4085',
+                icon: 'warning',
+                title: title,
+                text: message,
+                confirmButtonText: 'Mengerti'
+            });
+        } else {
+            alert(title + ': ' + message);
+        }
+    }
+
+    function validatePembimbingForm(form, isEdit) {
+        const prefix = isEdit ? 'edit_' : '';
+        const nip = document.getElementById(prefix + 'nip')?.value || '';
+        const email = document.getElementById(prefix + 'email')?.value || '';
+        const noTelepon = document.getElementById(prefix + 'no_telepon')?.value || '';
+
+        // NIP digits validation
+        if (!/^[0-9]+$/.test(nip)) {
+            showErrorAlert('NIP Tidak Valid', 'NIP hanya boleh diisi angka tanpa spasi.');
+            return false;
+        }
+
+        // Email validation (must contain @ and .)
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            showErrorAlert('Format Email Tidak Valid', 'Format email tidak valid (harus mengandung @ dan domain yang memiliki titik).');
+            return false;
+        }
+
+        // No telepon validation
+        if (!/^[0-9]+$/.test(noTelepon)) {
+            showErrorAlert('No Telepon Tidak Valid', 'No telepon hanya boleh diisi angka.');
+            return false;
+        }
+
+        return true;
+    }
+
+    const addForm = addPembimbingModal?.querySelector('form');
+    addForm?.addEventListener('submit', (event) => {
+        if (!validatePembimbingForm(addForm, false)) {
+            event.preventDefault();
+        }
+    });
+
+    editPembimbingForm?.addEventListener('submit', (event) => {
+        if (!validatePembimbingForm(editPembimbingForm, true)) {
+            event.preventDefault();
+        }
+    });
+
     function toggleModal(modal, isOpen) {
         modal?.classList.toggle('is-open', isOpen);
         modal?.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
@@ -90,6 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
             setText('detail-email', button.dataset.email);
             setText('detail-telepon', button.dataset.telepon);
             setText('detail-alamat', button.dataset.alamat);
+            setText('detail-jabatan', button.dataset.jabatan);
             setText('detail-instansi', button.dataset.instansi);
             setText('detail-status', button.dataset.status);
             toggleModal(detailPembimbingModal, true);
@@ -110,7 +245,18 @@ document.addEventListener('DOMContentLoaded', () => {
             setValue('edit_no_telepon', button.dataset.telepon);
             setValue('edit_alamat', button.dataset.alamat);
             setValue('edit_instansi', button.dataset.instansi);
+            setValue('edit_jabatan', button.dataset.jabatan);
             setValue('edit_status_aktif', button.dataset.status);
+
+            // Update char counters
+            document.getElementById('edit_nip')?.dispatchEvent(new Event('input'));
+            document.getElementById('edit_nama_lengkap')?.dispatchEvent(new Event('input'));
+            document.getElementById('edit_email')?.dispatchEvent(new Event('input'));
+            document.getElementById('edit_no_telepon')?.dispatchEvent(new Event('input'));
+            document.getElementById('edit_alamat')?.dispatchEvent(new Event('input'));
+            document.getElementById('edit_instansi')?.dispatchEvent(new Event('input'));
+            document.getElementById('edit_jabatan')?.dispatchEvent(new Event('input'));
+
             toggleModal(editPembimbingModal, true);
         });
     });

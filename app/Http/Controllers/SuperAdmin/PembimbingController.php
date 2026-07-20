@@ -34,14 +34,67 @@ class PembimbingController extends Controller
     public function storePembimbing(Request $request)
     {
         $validated = $request->validateWithBag('storePembimbing', [
-            'nip' => ['required', 'string', 'max:50', 'unique:users,nip'],
-            'nama_lengkap' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'no_telepon' => ['required', 'string', 'max:30', 'regex:/^[0-9]+$/'],
-            'alamat' => ['required', 'string', 'max:1000'],
-            'instansi' => ['required', 'string', 'max:255'],
+            'nip' => [
+                'required',
+                'string',
+                'max:24',
+                'unique:users,nip',
+                'regex:/^[0-9]+$/'
+            ],
+            'nama_lengkap' => [
+                'required',
+                'string',
+                'max:170',
+                'regex:/^[a-zA-Z0-9\s\-\/\(\)\.,\'\"\\\\&]*$/'
+            ],
+            'jabatan' => [
+                'nullable',
+                'string',
+                'max:170',
+                'regex:/^[a-zA-Z0-9\s\-\/\(\)\.,\'\"\\\\&]*$/'
+            ],
+            'email' => [
+                'required',
+                'string',
+                'email:rfc',
+                'max:254',
+                'unique:users,email'
+            ],
+            'no_telepon' => [
+                'required',
+                'string',
+                'max:15',
+                'regex:/^[0-9]+$/'
+            ],
+            'alamat' => [
+                'required',
+                'string',
+                'max:224',
+                'regex:/^[a-zA-Z0-9\s\-\/\(\)\.,\'\"\\\\&#@:\n\r]*$/'
+            ],
+            'instansi' => [
+                'required',
+                'string',
+                'max:170',
+                'regex:/^[a-zA-Z0-9\s\-\/\(\)\.,\'\"\\\\&]*$/'
+            ],
             'password' => ['required', 'string', 'min:8'],
             'status_aktif' => ['required', 'boolean'],
+        ], [
+            'nip.regex' => 'NIP hanya boleh berisi angka.',
+            'nip.max' => 'NIP maksimal 24 karakter.',
+            'nama_lengkap.regex' => 'Nama lengkap mengandung karakter yang tidak diperbolehkan.',
+            'nama_lengkap.max' => 'Nama lengkap maksimal 170 karakter.',
+            'email.email' => 'Format email tidak valid (harus mengandung @ dan domain yang memiliki titik).',
+            'email.max' => 'Email maksimal 254 karakter.',
+            'no_telepon.regex' => 'No telepon hanya boleh berisi angka.',
+            'no_telepon.max' => 'No telepon maksimal 15 karakter.',
+            'alamat.max' => 'Alamat maksimal 224 karakter.',
+            'alamat.regex' => 'Alamat mengandung karakter yang tidak diperbolehkan.',
+            'instansi.regex' => 'Nama instansi mengandung karakter yang tidak diperbolehkan.',
+            'instansi.max' => 'Nama instansi maksimal 170 karakter.',
+            'jabatan.max' => 'Jabatan maksimal 170 karakter.',
+            'jabatan.regex' => 'Jabatan mengandung karakter yang tidak diperbolehkan.',
         ]);
 
         $roleAdmin = Role::where('nama_role', 'admin')->firstOrFail();
@@ -55,6 +108,7 @@ class PembimbingController extends Controller
             'instansi_id' => $instansi->id,
             'nip' => $validated['nip'],
             'nama_lengkap' => $validated['nama_lengkap'],
+            'jabatan' => $validated['jabatan'] ?? null,
             'email' => $validated['email'],
             'no_telepon' => $validated['no_telepon'],
             'alamat' => $validated['alamat'],
@@ -76,13 +130,66 @@ class PembimbingController extends Controller
 
         $validated = $request->validateWithBag('updatePembimbing', [
             'edit_id' => ['required', 'integer'],
-            'nip' => ['required', 'string', 'max:50', 'unique:users,nip,' . $pembimbing->id],
-            'nama_lengkap' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $pembimbing->id],
-            'no_telepon' => ['required', 'string', 'max:30', 'regex:/^[0-9]+$/'],
-            'alamat' => ['required', 'string', 'max:1000'],
-            'instansi' => ['required', 'string', 'max:255'],
+            'nip' => [
+                'required',
+                'string',
+                'max:24',
+                'unique:users,nip,' . $pembimbing->id,
+                'regex:/^[0-9]+$/'
+            ],
+            'nama_lengkap' => [
+                'required',
+                'string',
+                'max:170',
+                'regex:/^[a-zA-Z0-9\s\-\/\(\)\.,\'\"\\\\&]*$/'
+            ],
+            'jabatan' => [
+                'nullable',
+                'string',
+                'max:170',
+                'regex:/^[a-zA-Z0-9\s\-\/\(\)\.,\'\"\\\\&]*$/'
+            ],
+            'email' => [
+                'required',
+                'string',
+                'email:rfc',
+                'max:254',
+                'unique:users,email,' . $pembimbing->id
+            ],
+            'no_telepon' => [
+                'required',
+                'string',
+                'max:15',
+                'regex:/^[0-9]+$/'
+            ],
+            'alamat' => [
+                'required',
+                'string',
+                'max:224',
+                'regex:/^[a-zA-Z0-9\s\-\/\(\)\.,\'\"\\\\&#@:\n\r]*$/'
+            ],
+            'instansi' => [
+                'required',
+                'string',
+                'max:170',
+                'regex:/^[a-zA-Z0-9\s\-\/\(\)\.,\'\"\\\\&]*$/'
+            ],
             'status_aktif' => ['required', 'boolean'],
+        ], [
+            'nip.regex' => 'NIP hanya boleh berisi angka.',
+            'nip.max' => 'NIP maksimal 24 karakter.',
+            'nama_lengkap.regex' => 'Nama lengkap mengandung karakter yang tidak diperbolehkan.',
+            'nama_lengkap.max' => 'Nama lengkap maksimal 170 karakter.',
+            'email.email' => 'Format email tidak valid (harus mengandung @ dan domain yang memiliki titik).',
+            'email.max' => 'Email maksimal 254 karakter.',
+            'no_telepon.regex' => 'No telepon hanya boleh berisi angka.',
+            'no_telepon.max' => 'No telepon maksimal 15 karakter.',
+            'alamat.max' => 'Alamat maksimal 224 karakter.',
+            'alamat.regex' => 'Alamat mengandung karakter yang tidak diperbolehkan.',
+            'instansi.regex' => 'Nama instansi mengandung karakter yang tidak diperbolehkan.',
+            'instansi.max' => 'Nama instansi maksimal 170 karakter.',
+            'jabatan.max' => 'Jabatan maksimal 170 karakter.',
+            'jabatan.regex' => 'Jabatan mengandung karakter yang tidak diperbolehkan.',
         ]);
 
         $instansi = Instansi::firstOrCreate(
@@ -94,6 +201,7 @@ class PembimbingController extends Controller
             'instansi_id' => $instansi->id,
             'nip' => $validated['nip'],
             'nama_lengkap' => $validated['nama_lengkap'],
+            'jabatan' => $validated['jabatan'] ?? null,
             'email' => $validated['email'],
             'no_telepon' => $validated['no_telepon'],
             'alamat' => $validated['alamat'],

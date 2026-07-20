@@ -7,6 +7,79 @@
     }
 }
 
+/* On tablet, 2 equal columns */
+@media (max-width: 1024px) and (min-width: 641px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 16px !important;
+    }
+
+    .stat-card {
+        padding: 18px !important;
+    }
+
+    /* Chart container height reduced on tablet */
+    .chart-container[style*="height: 350px"] {
+        height: 260px !important;
+    }
+
+    /* Table horizontal scroll on tablet */
+    .table-responsive {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Card header align properly on tablet */
+    .card-header {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+}
+
+/* Mobile - single column */
+@media (max-width: 640px) {
+    .stats-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+
+    .stat-card {
+        padding: 16px !important;
+        border-radius: 14px !important;
+    }
+
+    .stat-label {
+        font-size: 0.8rem !important;
+    }
+
+    .stat-value {
+        font-size: 1.6rem !important;
+    }
+
+    /* Chart container height reduced on mobile */
+    .chart-container {
+        height: 220px !important;
+    }
+
+    /* Ensure content-card doesn't overflow */
+    .content-card {
+        overflow: hidden !important;
+    }
+
+    /* Table horizontal scroll on mobile */
+    .table-responsive {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Card header stacks on mobile */
+    .card-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 8px !important;
+    }
+}
+
 /* Style the role name text inside the role badge to look better */
 .custom-table .badge {
     min-width: 90px;
@@ -25,6 +98,7 @@
     border-radius: 8px;
     padding: 16px;
     border: 1px solid var(--glass-border);
+    overflow: hidden; /* Prevent chart overflow */
 }
 
 [data-theme="light"] .chart-container {

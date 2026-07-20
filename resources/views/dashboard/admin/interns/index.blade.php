@@ -55,7 +55,7 @@
                     @forelse($interns as $intern)
                         <tr>
                             <td>
-                                <a href="{{ route('admin.interns.show', $intern->id) }}" style="color: var(--text-primary); text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 8px;">
+                                <a href="{{ route('admin.interns.show', $intern->user_code) }}" style="color: var(--text-primary); text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 8px;">
                                     {{ $intern->nama_lengkap }}
                                 </a>
                                 <br>
@@ -82,7 +82,7 @@
                             </td>
                             <td><strong style="color: var(--accent-primary);">{{ $intern->total_logbook }} Hari</strong></td>
                             <td>
-                                <a href="{{ route('admin.interns.show', $intern->id) }}" class="btn-primary" style="padding: 6px 12px; font-size: 0.8rem; text-decoration: none; border-radius: 6px; font-weight: 600; display: inline-block;">Lihat Detail</a>
+                                <a href="{{ route('admin.interns.show', $intern->user_code) }}" class="btn-primary" style="padding: 6px 12px; font-size: 0.8rem; text-decoration: none; border-radius: 6px; font-weight: 600; display: inline-block;">Lihat Detail</a>
                             </td>
                         </tr>
                     @empty

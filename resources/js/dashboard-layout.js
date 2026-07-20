@@ -145,25 +145,53 @@ document.querySelectorAll('.modal-form').forEach((form) => {
 
     form.addEventListener('submit', (event) => {
         const requiredFields = [...form.querySelectorAll('[required]')];
-        const hasEmptyField = requiredFields.some((field) => !String(field.value || '').trim());
+        const emptyFields = requiredFields.filter((field) => !String(field.value || '').trim());
 
-        if (hasEmptyField) {
+        if (emptyFields.length > 0) {
             event.preventDefault();
-            showValidationAlert('Semua field wajib diisi.');
+            emptyFields.forEach(el => {
+                el.style.borderColor = '#f87171';
+                el.style.boxShadow = '0 0 0 3px rgba(248, 113, 113, 0.2)';
+                el.addEventListener('input', function clearError() {
+                    el.style.borderColor = '';
+                    el.style.boxShadow = '';
+                    el.removeEventListener('input', clearError);
+                });
+            });
+            emptyFields[0].focus();
+            showValidationAlert('Semua field wajib diisi. Kolom yang kosong telah ditandai dengan warna merah.');
             return;
         }
 
         const phoneInput = form.querySelector('input[name="no_telepon"]');
         if (phoneInput && !/^[0-9]+$/.test(phoneInput.value)) {
             event.preventDefault();
+            phoneInput.style.borderColor = '#f87171';
+            phoneInput.style.boxShadow = '0 0 0 3px rgba(248, 113, 113, 0.2)';
+            phoneInput.addEventListener('input', function clearError() {
+                phoneInput.style.borderColor = '';
+                phoneInput.style.boxShadow = '';
+                phoneInput.removeEventListener('input', clearError);
+            });
+            phoneInput.focus();
             showValidationAlert('No telepon hanya boleh berisi angka.');
             return;
         }
 
         const emergencyPhoneInputs = [...form.querySelectorAll('input[name^="no_darurat_"]')];
-        const hasInvalidEmergencyPhone = emergencyPhoneInputs.some((input) => !/^[0-9]+$/.test(input.value));
-        if (hasInvalidEmergencyPhone) {
+        const invalidEmergencyPhone = emergencyPhoneInputs.filter((input) => input.value.trim() !== '' && !/^[0-9]+$/.test(input.value));
+        if (invalidEmergencyPhone.length > 0) {
             event.preventDefault();
+            invalidEmergencyPhone.forEach(el => {
+                el.style.borderColor = '#f87171';
+                el.style.boxShadow = '0 0 0 3px rgba(248, 113, 113, 0.2)';
+                el.addEventListener('input', function clearError() {
+                    el.style.borderColor = '';
+                    el.style.boxShadow = '';
+                    el.removeEventListener('input', clearError);
+                });
+            });
+            invalidEmergencyPhone[0].focus();
             showValidationAlert('No darurat hanya boleh berisi angka.');
             return;
         }
@@ -171,6 +199,14 @@ document.querySelectorAll('.modal-form').forEach((form) => {
         const emailInput = form.querySelector('input[type="email"]');
         if (emailInput && !emailInput.validity.valid) {
             event.preventDefault();
+            emailInput.style.borderColor = '#f87171';
+            emailInput.style.boxShadow = '0 0 0 3px rgba(248, 113, 113, 0.2)';
+            emailInput.addEventListener('input', function clearError() {
+                emailInput.style.borderColor = '';
+                emailInput.style.boxShadow = '';
+                emailInput.removeEventListener('input', clearError);
+            });
+            emailInput.focus();
             showValidationAlert('Format email tidak valid.');
             return;
         }
@@ -178,6 +214,14 @@ document.querySelectorAll('.modal-form').forEach((form) => {
         const passwordInput = form.querySelector('input[name="password"][minlength]');
         if (passwordInput && passwordInput.value.length < Number(passwordInput.minLength)) {
             event.preventDefault();
+            passwordInput.style.borderColor = '#f87171';
+            passwordInput.style.boxShadow = '0 0 0 3px rgba(248, 113, 113, 0.2)';
+            passwordInput.addEventListener('input', function clearError() {
+                passwordInput.style.borderColor = '';
+                passwordInput.style.boxShadow = '';
+                passwordInput.removeEventListener('input', clearError);
+            });
+            passwordInput.focus();
             showValidationAlert(`Password minimal ${passwordInput.minLength} karakter.`);
             return;
         }
@@ -185,6 +229,14 @@ document.querySelectorAll('.modal-form').forEach((form) => {
         const passwordConfirmationInput = form.querySelector('input[name="password_confirmation"]');
         if (passwordInput && passwordConfirmationInput && passwordInput.value !== passwordConfirmationInput.value) {
             event.preventDefault();
+            passwordConfirmationInput.style.borderColor = '#f87171';
+            passwordConfirmationInput.style.boxShadow = '0 0 0 3px rgba(248, 113, 113, 0.2)';
+            passwordConfirmationInput.addEventListener('input', function clearError() {
+                passwordConfirmationInput.style.borderColor = '';
+                passwordConfirmationInput.style.boxShadow = '';
+                passwordConfirmationInput.removeEventListener('input', clearError);
+            });
+            passwordConfirmationInput.focus();
             showValidationAlert('Konfirmasi password harus sama dengan password baru.');
         }
     });
@@ -245,6 +297,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     badge.style.display = 'block';
 
                     list.innerHTML = '';
+                    
+                    let newNotificationsDetected = false;
+                    const notifiedIds = JSON.parse(localStorage.getItem('notified_ids') || '[]');
+                    const newNotifiedIds = [...notifiedIds];
+                    
                     data.forEach(item => {
                         const div = document.createElement('div');
                         div.className = 'notification-item notification-item-unread';
@@ -254,7 +311,35 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="notification-item-time">${item.created_at}</div>
                         `;
                         list.appendChild(div);
+                        
+                        // Send native browser notification if it hasn't been shown yet
+                        if (!notifiedIds.includes(item.id)) {
+                            newNotificationsDetected = true;
+                            newNotifiedIds.push(item.id);
+                            
+                            if ('Notification' in window && Notification.permission === 'granted') {
+                                if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+                                    navigator.serviceWorker.ready.then(reg => {
+                                        reg.showNotification(item.title, {
+                                            body: item.message,
+                                            icon: '/images/Logo/Logo_PU.png',
+                                            badge: '/images/Logo/favicon.ico',
+                                            vibrate: [200, 100, 200]
+                                        });
+                                    });
+                                } else {
+                                    new Notification(item.title, {
+                                        body: item.message,
+                                        icon: '/images/Logo/Logo_PU.png'
+                                    });
+                                }
+                            }
+                        }
                     });
+                    
+                    if (newNotificationsDetected) {
+                        localStorage.setItem('notified_ids', JSON.stringify(newNotifiedIds));
+                    }
                 } else {
                     badge.style.display = 'none';
                     list.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 20px 0; font-size: 0.85rem;">Tidak ada notifikasi baru</div>';
@@ -417,6 +502,10 @@ document.addEventListener('click', (e) => {
     const link = e.target.closest('a');
     if (!link) return;
 
+    // Ignore Ctrl+Click, Cmd+Click (Mac), or middle-click — these open in a new tab
+    // without navigating the current page, so no loading overlay needed
+    if (e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1) return;
+
     // Ignore links that don't navigate
     const href = link.getAttribute('href');
     if (!href || href.startsWith('#') || href.startsWith('javascript:') || link.target === '_blank') return;
@@ -494,5 +583,115 @@ window.fetch = async function (url, options) {
         }
     }
 };
+
+// Profile Dropdown Toggle
+document.addEventListener('DOMContentLoaded', () => {
+    const profileBtn = document.getElementById('profile-dropdown-btn');
+    const profileMenu = document.getElementById('profile-dropdown-menu');
+    const profileWrapper = document.querySelector('.profile-dropdown-wrapper');
+
+    if (profileBtn && profileMenu) {
+        profileBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            profileMenu.classList.toggle('open');
+            profileWrapper.classList.toggle('open');
+        });
+
+        document.addEventListener('click', (event) => {
+            if (profileWrapper && !profileWrapper.contains(event.target)) {
+                profileMenu.classList.remove('open');
+                profileWrapper.classList.remove('open');
+            }
+        });
+    }
+
+    // Polling and HTML over-the-wire for logbook table & calendar container (checksum optimized)
+    const tableContainer = document.getElementById('logbook-table-container');
+    const calendarContainer = document.getElementById('attendance-calendar-container');
+
+    if (tableContainer || calendarContainer) {
+        let currentHash = null;
+        const userCodeEl = document.getElementById('poll-user-code');
+        const pollUrl = userCodeEl ? `/logbooks/poll-check?user_code=${userCodeEl.value}` : '/logbooks/poll-check';
+
+        // Fetch initial hash
+        async function fetchInitialHash() {
+            try {
+                const res = await fetch(pollUrl);
+                if (res.ok) {
+                    const data = await res.json();
+                    currentHash = data.hash;
+                }
+            } catch (err) {
+                console.error('Error fetching initial hash:', err);
+            }
+        }
+        fetchInitialHash();
+
+        async function checkLogbookUpdates() {
+            // Only poll if tab is active/visible
+            if (document.visibilityState !== 'visible') return;
+
+            // Do not update if any modal is currently open to prevent disrupting the user
+            const isDetailModalOpen = document.getElementById('logbook-detail-modal')?.style.display === 'flex';
+            const isConfirmModalOpen = document.getElementById('action-confirm-modal')?.style.display === 'flex';
+            const isEditModalOpen = document.getElementById('modal-edit-logbook')?.classList.contains('is-open');
+            const isAddModalOpen = document.getElementById('modal-add-logbook')?.classList.contains('is-open');
+            const isActivityModalOpen = document.getElementById('activity-detail-modal')?.classList.contains('is-open');
+
+            if (isDetailModalOpen || isConfirmModalOpen || isEditModalOpen || isAddModalOpen || isActivityModalOpen) {
+                return;
+            }
+
+            try {
+                // 1. Fetch lightweight hash first (extremely light query, doesn't render HTML)
+                const res = await fetch(pollUrl);
+                if (!res.ok) return;
+                const data = await res.json();
+                
+                if (currentHash === null) {
+                    currentHash = data.hash;
+                    return;
+                }
+
+                // 2. Only if hash has changed, fetch the actual full page HTML to swap
+                if (data.hash !== currentHash) {
+                    const response = await fetch(window.location.href);
+                    if (!response.ok) return;
+                    const htmlText = await response.text();
+                    
+                    const parser = new DOMParser();
+                    const newDoc = parser.parseFromString(htmlText, 'text/html');
+                    
+                    // Update logbook table if it exists
+                    const newTableContainer = newDoc.getElementById('logbook-table-container');
+                    if (newTableContainer && tableContainer) {
+                        tableContainer.innerHTML = newTableContainer.innerHTML;
+                    }
+                    
+                    // Update calendar container if it exists
+                    const newCalendarContainer = newDoc.getElementById('attendance-calendar-container');
+                    if (newCalendarContainer && calendarContainer) {
+                        calendarContainer.innerHTML = newCalendarContainer.innerHTML;
+                    }
+                    
+                    currentHash = data.hash;
+                }
+            } catch (err) {
+                console.error('Error polling logbook table:', err);
+            }
+        }
+
+        // Poll every 5 seconds for a truly instantaneous experience
+        setInterval(checkLogbookUpdates, 5000);
+
+        // Instant update when user switches back to this tab
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                checkLogbookUpdates();
+            }
+        });
+    }
+});
 
 

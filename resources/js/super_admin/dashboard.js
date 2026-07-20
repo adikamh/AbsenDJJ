@@ -127,7 +127,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     return val + " orang";
                 }
             }
-        }
+        },
+        responsive: [
+            {
+                breakpoint: 1025,
+                options: {
+                    legend: {
+                        position: 'bottom',
+                        horizontalAlign: 'center',
+                        offsetY: 0
+                    }
+                }
+            }
+        ]
     };
 
     const chart = new ApexCharts(chartEl, options);

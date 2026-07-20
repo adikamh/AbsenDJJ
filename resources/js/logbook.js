@@ -36,8 +36,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    document.querySelectorAll('.open-edit-logbook-modal').forEach(button => {
-        button.addEventListener('click', () => {
+    // Event delegation for opening Edit Logbook Modal
+    document.addEventListener('click', (e) => {
+        const button = e.target.closest('.open-edit-logbook-modal');
+        if (button) {
             const id = button.getAttribute('data-id');
             const kegiatan = button.getAttribute('data-kegiatan');
             const tags = button.getAttribute('data-tags') || '';
@@ -57,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             toggleEditLogbookModal(true);
-        });
+        }
     });
 
     btnCloseEditLogbook?.addEventListener('click', () => toggleEditLogbookModal(false));
@@ -69,36 +71,39 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // ===== Delete Confirmation (SweetAlert2) =====
-    document.querySelectorAll('.delete-logbook-form').forEach(form => {
-        form.addEventListener('submit', (e) => {
+    // ===== Delete Confirmation (SweetAlert2) using Event Delegation =====
+    document.addEventListener('click', (e) => {
+        const deleteBtn = e.target.closest('.btn-delete-logbook');
+        if (deleteBtn) {
             e.preventDefault();
+            const form = deleteBtn.closest('form');
+            if (form) {
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+                    || document.body.classList.contains('dark-mode');
 
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
-                || document.body.classList.contains('dark-mode');
-
-            if (window.Swal) {
-                window.Swal.fire({
-                    title: 'Hapus Logbook?',
-                    text: 'Apakah Anda yakin ingin menghapus entri logbook ini? Tindakan ini tidak dapat dibatalkan.',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#ef4444',
-                    cancelButtonColor: '#64748b',
-                    confirmButtonText: 'Ya, Hapus',
-                    cancelButtonText: 'Batal',
-                    background: isDark ? '#1e293b' : '#ffffff',
-                    color: isDark ? '#f8fafc' : '#0f172a'
-                }).then((result) => {
-                    if (result.isConfirmed) {
+                if (window.Swal) {
+                    window.Swal.fire({
+                        title: 'Hapus Logbook?',
+                        text: 'Apakah Anda yakin ingin menghapus entri logbook ini? Tindakan ini tidak dapat dibatalkan.',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#ef4444',
+                        cancelButtonColor: '#64748b',
+                        confirmButtonText: 'Ya, Hapus',
+                        cancelButtonText: 'Batal',
+                        background: isDark ? '#1e293b' : '#ffffff',
+                        color: isDark ? '#f8fafc' : '#0f172a'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.submit();
+                        }
+                    });
+                } else {
+                    if (confirm('Apakah Anda yakin ingin menghapus entri logbook ini?')) {
                         form.submit();
                     }
-                });
-            } else {
-                if (confirm('Apakah Anda yakin ingin menghapus entri logbook ini?')) {
-                    form.submit();
                 }
             }
-        });
+        }
     });
 });

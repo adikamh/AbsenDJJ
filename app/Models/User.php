@@ -4,20 +4,68 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Services\UniqueCodeGenerator;
 
-#[Fillable(['role_id', 'instansi_id', 'pembimbing_id', 'nip', 'nama_lengkap', 'email', 'no_telepon', 'alamat', 'no_darurat_1', 'hubungan_darurat_1', 'no_darurat_2', 'hubungan_darurat_2', 'password', 'status_aktif'])]
-#[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
+
+    protected $fillable = [
+        'user_code',
+        'role_id',
+        'instansi_id',
+        'pembimbing_id',
+        'nip',
+        'nama_lengkap',
+        'jabatan',
+        'email',
+        'no_telepon',
+        'alamat',
+        'nama_darurat_1',
+        'no_darurat_1',
+        'hubungan_darurat_1',
+        'nama_darurat_2',
+        'no_darurat_2',
+        'hubungan_darurat_2',
+        'password',
+        'signature_path',
+        'status_aktif',
+        'auto_approve_logbook_global',
+        'auto_approve_logbook',
+        'require_photo_attendance_global',
+        'require_photo_attendance',
+    ];
+
+    /**
+     * Auto-generate user_code when creating a new user.
+     */
+    protected static function boot(): void
+    {
+        parent::boot();
+
+        static::created(function (self $user) {
+            // Generated after create so we have the real auto-increment `id`
+            if (empty($user->user_code)) {
+                try {
+                    $generator = app(UniqueCodeGenerator::class);
+                    $user->updateQuietly(['user_code' => $generator->generateUserCode($user->id)]);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error('Failed to generate user_code for user #' . $user->id . ': ' . $e->getMessage());
+                }
+            }
+        });
+    }
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
 
     /**
      * Get the attributes that should be cast.
@@ -87,6 +135,33 @@ class User extends Authenticatable
     public function leaveRequests(): HasMany
     {
         return $this->hasMany(LeaveRequest::class);
+    }
+
+    /**
+     * Use user_code as the route model binding key.
+     * This hides the internal auto-increment `id` from URLs.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'user_code';
+    }
+
+    /**
+     * Get the value of the model's route key with fallback to `id`.
+     */
+    public function getRouteKey(): mixed
+    {
+        return $this->user_code ?: $this->id;
+    }
+
+    /**
+     * Retrieve the model for a bound value (supports both user_code and id).
+     */
+    public function resolveRouteBinding($value, $field = null)
+    {
+        return $this->where('user_code', $value)
+            ->orWhere('id', $value)
+            ->first();
     }
 
     /**

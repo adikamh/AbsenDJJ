@@ -5,11 +5,103 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Absen Magang</title>
     
+    <!-- PWA Settings -->
+    <meta name="theme-color" content="#2e4085">
+    <link rel="manifest" href="{{ asset('manifest.json') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/Logo/Logo_Aplikasi.png') }}">
+
     <!-- Premium Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     @vite('resources/css/auth-login.css')
+
+    <style>
+        /* PWA Promotion Banner Styles */
+        .pwa-banner {
+            background: #1e293b;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 16px;
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            color: #f8fafc;
+            animation: pwaSlideUp 0.4s ease-out;
+        }
+
+        .pwa-banner-content {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .pwa-icon {
+            background: rgba(255, 204, 51, 0.15);
+            color: #ffcc33;
+            border-radius: 12px;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .pwa-text-group {
+            flex: 1;
+        }
+
+        .pwa-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 2px;
+        }
+
+        .pwa-desc {
+            font-size: 0.78rem;
+            color: #94a3b8;
+            line-height: 1.4;
+        }
+
+        .btn-pwa-action {
+            background: #ffcc33;
+            color: #0f172a;
+            border: none;
+            border-radius: 10px;
+            padding: 10px;
+            font-weight: 600;
+            font-size: 0.88rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-align: center;
+        }
+
+        .btn-pwa-action:hover {
+            background: #ffe082;
+        }
+
+        @keyframes pwaSlideUp {
+            0% { opacity: 0; transform: translateY(15px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Desktop Floating Layout (sebelah kanan layar melayang) */
+        @media (min-width: 769px) {
+            .pwa-banner {
+                position: fixed;
+                right: 30px;
+                bottom: 30px;
+                width: 340px;
+                margin-top: 0;
+                z-index: 9999;
+                border: 1px solid rgba(255, 255, 255, 0.12);
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -48,7 +140,7 @@
             @endif
 
             @if ($errors->has('email') && $errors->first('email') === 'Akun Anda dinonaktifkan. Silakan hubungi administrator.')
-                <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+                <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.17.2/dist/sweetalert2.all.min.js" integrity="sha384-Y1zzU5I7+ujiuXE1zuR3FJEPzfjZulUbsE9v7KDX7ztQ+fpy+aCix9RgfskCL2Oz" crossorigin="anonymous"></script>
                 <div id="login-error-flag" data-error="Akun Anda dinonaktifkan. Silakan hubungi administrator."></div>
             @endif
 
@@ -104,9 +196,77 @@
                 </ul>
             </div> --}}
         </div>
+
+        <!-- PWA Install Recommendation Banner -->
+        <div id="pwa-install-banner" class="pwa-banner" style="display: none;">
+            <div class="pwa-banner-content">
+                <div class="pwa-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                        <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                    </svg>
+                </div>
+                <div class="pwa-text-group">
+                    <div class="pwa-title">Instal Aplikasi Absen</div>
+                    <div class="pwa-desc">Akses absen magang lebih cepat & stabil langsung dari layar utama HP Anda.</div>
+                </div>
+            </div>
+            <button type="button" id="btn-pwa-install" class="btn-pwa-action">Instal Sekarang</button>
+        </div>
     </div>
 
     @vite('resources/js/auth-login.js')
+
+    <script>
+        // Register Service Worker on Login Page to satisfy PWA criteria
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('Login SW Registered!'))
+                    .catch(err => console.log('Login SW Registration failed:', err));
+            });
+        }
+
+        // PWA Installation prompt handler
+        let deferredPrompt;
+        const pwaBanner = document.getElementById('pwa-install-banner');
+        const installBtn = document.getElementById('btn-pwa-install');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent the mini-infobar from appearing on mobile
+            e.preventDefault();
+            // Stash the event so it can be triggered later.
+            deferredPrompt = e;
+            // Update UI to show the install promotion banner
+            if (pwaBanner) {
+                pwaBanner.style.display = 'flex';
+            }
+        });
+
+        if (installBtn) {
+            installBtn.addEventListener('click', async () => {
+                if (!deferredPrompt) return;
+                // Show the install prompt
+                deferredPrompt.prompt();
+                // Wait for the user to respond to the prompt
+                const { outcome } = await deferredPrompt.userChoice;
+                // We've used the prompt, and can't use it again, discard it
+                deferredPrompt = null;
+                // Hide our install promotion banner
+                if (pwaBanner) {
+                    pwaBanner.style.display = 'none';
+                }
+            });
+        }
+
+        // Hide banner if app is already installed
+        window.addEventListener('appinstalled', () => {
+            deferredPrompt = null;
+            if (pwaBanner) {
+                pwaBanner.style.display = 'none';
+            }
+        });
+    </script>
 </body>
 </html>
 
