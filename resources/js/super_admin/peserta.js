@@ -5,6 +5,179 @@ document.addEventListener('DOMContentLoaded', () => {
     const resetPasswordPesertaModal = document.getElementById('reset-password-peserta-modal');
     const filterPesertaModal = document.getElementById('filter-peserta-modal');
 
+    // ===== Security Sanitizers =====
+    const CHARS_PATTERN = /[^a-zA-Z0-9\s\-\/\\().,'"&]/g;
+    const DIGITS_ONLY_PATTERN = /[^0-9]/g;
+    const EMAIL_ALLOWED_PATTERN = /[^\w\d\.\-\+@_]/g;
+    const ADDRESS_ALLOWED_PATTERN = /[^a-zA-Z0-9\s\-\/\\().,'"&#@:\n\r]/g;
+
+    function applySanitizer(inputId, pattern, maxLength) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+
+        // Create character counter for fields with max length
+        let counter = null;
+        if (maxLength) {
+            counter = document.createElement('div');
+            counter.className = 'char-counter';
+            counter.style.cssText = 'font-size:0.73rem;text-align:right;margin-top:4px;color:var(--text-secondary);transition:color .2s;';
+            input.parentNode.insertBefore(counter, input.nextSibling);
+        }
+
+        function updateCounter() {
+            if (!counter) return;
+            const len = input.value.length;
+            const remaining = maxLength - len;
+            counter.textContent = `${len} / ${maxLength} karakter`;
+            counter.style.color = remaining <= 10
+                ? (remaining <= 0 ? '#f87171' : '#fbbf24')
+                : 'var(--text-secondary)';
+        }
+
+        input.addEventListener('input', () => {
+            const cleaned = input.value.replace(pattern, '');
+            if (cleaned !== input.value) {
+                const pos = input.selectionStart - (input.value.length - cleaned.length);
+                input.value = cleaned;
+                input.setSelectionRange(pos, pos);
+            }
+            if (maxLength && input.value.length > maxLength) {
+                input.value = input.value.substring(0, maxLength);
+            }
+            updateCounter();
+        });
+
+        input.addEventListener('paste', () => {
+            setTimeout(() => {
+                let cleaned = input.value.replace(pattern, '');
+                if (maxLength && cleaned.length > maxLength) {
+                    cleaned = cleaned.substring(0, maxLength);
+                }
+                input.value = cleaned;
+                updateCounter();
+            }, 0);
+        });
+
+        if (maxLength) {
+            updateCounter();
+        }
+    }
+
+    // Apply to Add Modal
+    applySanitizer('nip', DIGITS_ONLY_PATTERN, 24);
+    applySanitizer('nama_lengkap', CHARS_PATTERN, 170);
+    applySanitizer('email', EMAIL_ALLOWED_PATTERN, 254);
+    applySanitizer('no_telepon', DIGITS_ONLY_PATTERN, 15);
+    applySanitizer('alamat', ADDRESS_ALLOWED_PATTERN, 224);
+    applySanitizer('nama_darurat_1', CHARS_PATTERN, 170);
+    applySanitizer('no_darurat_1', DIGITS_ONLY_PATTERN, 15);
+    applySanitizer('nama_darurat_2', CHARS_PATTERN, 170);
+    applySanitizer('no_darurat_2', DIGITS_ONLY_PATTERN, 15);
+    applySanitizer('instansi', CHARS_PATTERN, 170);
+    applySanitizer('jabatan', CHARS_PATTERN, 170);
+
+    // Apply to Edit Modal
+    applySanitizer('edit_nip', DIGITS_ONLY_PATTERN, 24);
+    applySanitizer('edit_nama_lengkap', CHARS_PATTERN, 170);
+    applySanitizer('edit_email', EMAIL_ALLOWED_PATTERN, 254);
+    applySanitizer('edit_no_telepon', DIGITS_ONLY_PATTERN, 15);
+    applySanitizer('edit_alamat', ADDRESS_ALLOWED_PATTERN, 224);
+    applySanitizer('edit_nama_darurat_1', CHARS_PATTERN, 170);
+    applySanitizer('edit_no_darurat_1', DIGITS_ONLY_PATTERN, 15);
+    applySanitizer('edit_nama_darurat_2', CHARS_PATTERN, 170);
+    applySanitizer('edit_no_darurat_2', DIGITS_ONLY_PATTERN, 15);
+    applySanitizer('edit_instansi', CHARS_PATTERN, 170);
+    applySanitizer('edit_jabatan', CHARS_PATTERN, 170);
+
+    function showErrorAlert(title, message) {
+        if (window.Swal) {
+            window.Swal.fire({
+                background: document.documentElement.getAttribute('data-theme') === 'light' ? '#ffffff' : '#1e293b',
+                color: document.documentElement.getAttribute('data-theme') === 'light' ? '#0f172a' : '#f8fafc',
+                confirmButtonColor: '#2e4085',
+                icon: 'warning',
+                title: title,
+                text: message,
+                confirmButtonText: 'Mengerti'
+            });
+        } else {
+            alert(title + ': ' + message);
+        }
+    }
+
+    function validatePesertaForm(form, isEdit) {
+        const prefix = isEdit ? 'edit_' : '';
+        const nip = document.getElementById(prefix + 'nip')?.value || '';
+        const email = document.getElementById(prefix + 'email')?.value || '';
+        const noTelepon = document.getElementById(prefix + 'no_telepon')?.value || '';
+        const noDarurat1 = document.getElementById(prefix + 'no_darurat_1')?.value || '';
+        const namaDarurat1 = document.getElementById(prefix + 'nama_darurat_1')?.value || '';
+        const hubunganDarurat1 = document.getElementById(prefix + 'hubungan_darurat_1')?.value || '';
+
+        const namaDarurat2 = document.getElementById(prefix + 'nama_darurat_2')?.value || '';
+        const noDarurat2 = document.getElementById(prefix + 'no_darurat_2')?.value || '';
+        const hubunganDarurat2 = document.getElementById(prefix + 'hubungan_darurat_2')?.value || '';
+
+        // NIP digits validation
+        if (!/^[0-9]+$/.test(nip)) {
+            showErrorAlert('NIP Tidak Valid', 'NIP hanya boleh diisi angka tanpa spasi.');
+            return false;
+        }
+
+        // Email validation (must contain @ and .)
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            showErrorAlert('Format Email Tidak Valid', 'Format email tidak valid (harus mengandung @ dan domain yang memiliki titik).');
+            return false;
+        }
+
+        // No telepon validation
+        if (!/^[0-9]+$/.test(noTelepon)) {
+            showErrorAlert('No Telepon Tidak Valid', 'No telepon hanya boleh diisi angka.');
+            return false;
+        }
+
+        // No darurat validation
+        if (noDarurat1 === noTelepon) {
+            showErrorAlert('Kontak Darurat Bentrok', 'No Darurat 1 tidak boleh sama dengan No Telepon peserta.');
+            return false;
+        }
+
+        // Conditional validation for Emergency Contact 2:
+        // If any of the three fields is filled, then all three are required
+        const hasNama2 = !!namaDarurat2.trim();
+        const hasNo2 = !!noDarurat2.trim();
+        const hasHubungan2 = !!hubunganDarurat2.trim();
+
+        if (hasNama2 || hasNo2 || hasHubungan2) {
+            if (!hasNama2 || !hasNo2 || !hasHubungan2) {
+                showErrorAlert('Data Belum Lengkap', 'Jika Kontak Darurat 2 diisi, maka Nama, Nomor Telepon, dan Hubungan wajib diisi semuanya.');
+                return false;
+            }
+            if (noDarurat2 === noTelepon) {
+                showErrorAlert('Kontak Darurat Bentrok', 'No Darurat 2 tidak boleh sama dengan No Telepon peserta.');
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    const addForm = addPesertaModal?.querySelector('form');
+    addForm?.addEventListener('submit', (event) => {
+        if (!validatePesertaForm(addForm, false)) {
+            event.preventDefault();
+        }
+    });
+
+    const editPesertaForm = document.getElementById('edit-peserta-form');
+    editPesertaForm?.addEventListener('submit', (event) => {
+        if (!validatePesertaForm(editPesertaForm, true)) {
+            event.preventDefault();
+        }
+    });
+
+
     const openAddPesertaModal = document.getElementById('open-add-peserta-modal');
     const closeAddPesertaModal = document.getElementById('close-add-peserta-modal');
     const cancelAddPesertaModal = document.getElementById('cancel-add-peserta-modal');
@@ -19,7 +192,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeFilterPesertaModal = document.getElementById('close-filter-peserta-modal');
     const applyTableFilters = document.getElementById('apply-table-filters');
     const resetTableFilters = document.getElementById('reset-table-filters');
-    const editPesertaForm = document.getElementById('edit-peserta-form');
     const resetPasswordPesertaForm = document.getElementById('reset-password-peserta-form');
     const closeResetPasswordPesertaModal = document.getElementById('close-reset-password-peserta-modal');
     const cancelResetPasswordPesertaModal = document.getElementById('cancel-reset-password-peserta-modal');
@@ -90,18 +262,93 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.querySelectorAll('[data-action="view-peserta"]').forEach((button) => {
         button.addEventListener('click', () => {
+            // Helper function to format WhatsApp phone number
+            const formatWa = (phone) => {
+                if (!phone) return '';
+                let clean = phone.replace(/[^0-9]/g, '');
+                if (clean.startsWith('0')) {
+                    clean = '62' + clean.slice(1);
+                } else if (!clean.startsWith('62')) {
+                    clean = '62' + clean;
+                }
+                return clean;
+            };
+
+            const isEmptyVal = (val) => !val || val.trim() === '' || val.trim() === '-';
+
             setText('detail-nip', button.dataset.nip);
             setText('detail-nama', button.dataset.nama);
             setText('detail-email', button.dataset.email);
-            setText('detail-telepon', button.dataset.telepon);
             setText('detail-alamat', button.dataset.alamat);
-            setText('detail-no-darurat-1', button.dataset.noDarurat1);
-            setText('detail-hubungan-darurat-1', button.dataset.hubunganDarurat1);
-            setText('detail-no-darurat-2', button.dataset.noDarurat2);
-            setText('detail-hubungan-darurat-2', button.dataset.hubunganDarurat2);
+            setText('detail-jabatan', button.dataset.jabatan);
             setText('detail-instansi', button.dataset.instansi);
             setText('detail-pembimbing', button.dataset.pembimbing);
             setText('detail-status', button.dataset.status);
+
+            // No Telepon
+            const phoneVal = button.dataset.telepon || '';
+            const detailTelepon = document.getElementById('detail-telepon');
+            const waLinkTelepon = document.getElementById('wa-link-telepon');
+            if (detailTelepon) detailTelepon.textContent = phoneVal || '-';
+            if (waLinkTelepon) {
+                if (!isEmptyVal(phoneVal)) {
+                    waLinkTelepon.href = `https://api.whatsapp.com/send/?phone=${formatWa(phoneVal)}`;
+                    waLinkTelepon.style.display = 'inline-flex';
+                } else {
+                    waLinkTelepon.style.display = 'none';
+                }
+            }
+
+            // Kontak Darurat 1
+            const namaDar1 = button.dataset.nama_darurat_1 || '';
+            const hubDar1 = button.dataset.hubungan_darurat_1 || '';
+            const noDar1 = button.dataset.no_darurat_1 || '';
+
+            const detailNamaDar1 = document.getElementById('detail-nama-darurat-1');
+            const detailHubDar1 = document.getElementById('detail-hubungan-darurat-1');
+            const detailNoDar1 = document.getElementById('detail-no-darurat-1');
+            const waLinkDar1 = document.getElementById('wa-link-darurat-1');
+
+            if (detailNamaDar1) detailNamaDar1.textContent = isEmptyVal(namaDar1) ? 'Nama tidak diisi' : namaDar1;
+            if (detailHubDar1) detailHubDar1.textContent = isEmptyVal(hubDar1) ? '-' : hubDar1;
+            if (detailNoDar1) detailNoDar1.textContent = isEmptyVal(noDar1) ? '-' : noDar1;
+            if (waLinkDar1) {
+                if (!isEmptyVal(noDar1)) {
+                    waLinkDar1.href = `https://api.whatsapp.com/send/?phone=${formatWa(noDar1)}`;
+                    waLinkDar1.style.display = 'inline-flex';
+                } else {
+                    waLinkDar1.style.display = 'none';
+                }
+            }
+
+            // Kontak Darurat 2
+            const namaDar2 = button.dataset.nama_darurat_2 || '';
+            const hubDar2 = button.dataset.hubungan_darurat_2 || '';
+            const noDar2 = button.dataset.no_darurat_2 || '';
+
+            const groupDar2 = document.getElementById('detail-group-darurat-2');
+            const detailNamaDar2 = document.getElementById('detail-nama-darurat-2');
+            const detailHubDar2 = document.getElementById('detail-hubungan-darurat-2');
+            const detailNoDar2 = document.getElementById('detail-no-darurat-2');
+            const waLinkDar2 = document.getElementById('wa-link-darurat-2');
+
+            if (!isEmptyVal(namaDar2) || !isEmptyVal(hubDar2) || !isEmptyVal(noDar2)) {
+                if (groupDar2) groupDar2.style.display = 'block';
+                if (detailNamaDar2) detailNamaDar2.textContent = isEmptyVal(namaDar2) ? 'Nama tidak diisi' : namaDar2;
+                if (detailHubDar2) detailHubDar2.textContent = isEmptyVal(hubDar2) ? '-' : hubDar2;
+                if (detailNoDar2) detailNoDar2.textContent = isEmptyVal(noDar2) ? '-' : noDar2;
+                if (waLinkDar2) {
+                    if (!isEmptyVal(noDar2)) {
+                        waLinkDar2.href = `https://api.whatsapp.com/send/?phone=${formatWa(noDar2)}`;
+                        waLinkDar2.style.display = 'inline-flex';
+                    } else {
+                        waLinkDar2.style.display = 'none';
+                    }
+                }
+            } else {
+                if (groupDar2) groupDar2.style.display = 'none';
+            }
+
             toggleModal(detailPesertaModal, true);
         });
     });
@@ -119,13 +366,30 @@ document.addEventListener('DOMContentLoaded', () => {
             setValue('edit_email', button.dataset.email);
             setValue('edit_no_telepon', button.dataset.telepon);
             setValue('edit_alamat', button.dataset.alamat);
-            setValue('edit_no_darurat_1', button.dataset.noDarurat1);
-            setValue('edit_hubungan_darurat_1', button.dataset.hubunganDarurat1);
-            setValue('edit_no_darurat_2', button.dataset.noDarurat2);
-            setValue('edit_hubungan_darurat_2', button.dataset.hubunganDarurat2);
+            setValue('edit_nama_darurat_1', button.dataset.nama_darurat_1);
+            setValue('edit_no_darurat_1', button.dataset.no_darurat_1);
+            setValue('edit_hubungan_darurat_1', button.dataset.hubungan_darurat_1);
+            setValue('edit_nama_darurat_2', button.dataset.nama_darurat_2);
+            setValue('edit_no_darurat_2', button.dataset.no_darurat_2);
+            setValue('edit_hubungan_darurat_2', button.dataset.hubungan_darurat_2);
             setValue('edit_instansi', button.dataset.instansi);
+            setValue('edit_jabatan', button.dataset.jabatan);
             setValue('edit_pembimbing_id', button.dataset.pembimbingId);
             setValue('edit_status_aktif', button.dataset.status);
+
+            // Update char counters
+            document.getElementById('edit_nip')?.dispatchEvent(new Event('input'));
+            document.getElementById('edit_nama_lengkap')?.dispatchEvent(new Event('input'));
+            document.getElementById('edit_email')?.dispatchEvent(new Event('input'));
+            document.getElementById('edit_no_telepon')?.dispatchEvent(new Event('input'));
+            document.getElementById('edit_alamat')?.dispatchEvent(new Event('input'));
+            document.getElementById('edit_nama_darurat_1')?.dispatchEvent(new Event('input'));
+            document.getElementById('edit_no_darurat_1')?.dispatchEvent(new Event('input'));
+            document.getElementById('edit_nama_darurat_2')?.dispatchEvent(new Event('input'));
+            document.getElementById('edit_no_darurat_2')?.dispatchEvent(new Event('input'));
+            document.getElementById('edit_instansi')?.dispatchEvent(new Event('input'));
+            document.getElementById('edit_jabatan')?.dispatchEvent(new Event('input'));
+
             toggleModal(editPesertaModal, true);
         });
     });
@@ -704,5 +968,45 @@ document.addEventListener('DOMContentLoaded', () => {
                 confirmButtonText: 'Oke'
             });
         }
+    });
+
+    // ===== Dynamic Asterisks for Emergency Contact 2 =====
+    function updateEmergency2Asterisks(prefix = '') {
+        const nama = document.getElementById(prefix + 'nama_darurat_2');
+        const no = document.getElementById(prefix + 'no_darurat_2');
+        const hubungan = document.getElementById(prefix + 'hubungan_darurat_2');
+        
+        const hasVal = (nama?.value || '').trim() || (no?.value || '').trim() || (hubungan?.value || '').trim();
+        
+        const asterisks = [
+            nama?.closest('.form-group')?.querySelector('.required-asterisk'),
+            no?.closest('.form-group')?.querySelector('.required-asterisk'),
+            hubungan?.closest('.form-group')?.querySelector('.required-asterisk')
+        ];
+        
+        asterisks.forEach(asterisk => {
+            if (asterisk) {
+                asterisk.style.display = hasVal ? 'inline' : 'none';
+            }
+        });
+    }
+
+    ['input', 'change'].forEach(eventType => {
+        ['nama_darurat_2', 'no_darurat_2', 'hubungan_darurat_2'].forEach(id => {
+            const addEl = document.getElementById(id);
+            const editEl = document.getElementById('edit_' + id);
+            
+            addEl?.addEventListener(eventType, () => updateEmergency2Asterisks(''));
+            editEl?.addEventListener(eventType, () => updateEmergency2Asterisks('edit_'));
+        });
+    });
+
+    // Run once on edit modal initialization when clicked
+    document.querySelectorAll('[data-action="edit-peserta"]').forEach((button) => {
+        button.addEventListener('click', () => {
+            setTimeout(() => {
+                updateEmergency2Asterisks('edit_');
+            }, 50);
+        });
     });
 });

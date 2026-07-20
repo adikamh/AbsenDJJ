@@ -3,12 +3,19 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-
-#[Fillable(['user_id', 'tanggal_mulai', 'tanggal_selesai', 'jenis', 'alasan', 'file_bukti', 'status_approval', 'catatan_pembimbing'])]
 class LeaveRequest extends Model
 {
+    protected $fillable = [
+        'user_id',
+        'tanggal_mulai',
+        'tanggal_selesai',
+        'jenis',
+        'alasan',
+        'file_bukti',
+        'status_approval',
+        'catatan_pembimbing',
+    ];
     /**
      * Get the attributes that should be cast.
      *

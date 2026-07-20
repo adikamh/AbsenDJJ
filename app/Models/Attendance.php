@@ -3,12 +3,20 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-
-#[Fillable(['user_id', 'tanggal', 'jam_masuk', 'jam_pulang', 'koordinat_masuk', 'koordinat_pulang', 'foto_masuk', 'foto_pulang', 'status'])]
 class Attendance extends Model
 {
+    protected $fillable = [
+        'user_id',
+        'tanggal',
+        'jam_masuk',
+        'jam_pulang',
+        'koordinat_masuk',
+        'koordinat_pulang',
+        'foto_masuk',
+        'foto_pulang',
+        'status',
+    ];
     /**
      * Get the attributes that should be cast.
      *

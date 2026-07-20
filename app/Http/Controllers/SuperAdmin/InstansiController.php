@@ -26,8 +26,19 @@ class InstansiController extends Controller
     public function storeInstansi(Request $request)
     {
         $validated = $request->validateWithBag('storeInstansi', [
-            'nama_instansi' => ['required', 'string', 'max:255', 'unique:instansi,nama_instansi'],
-            'jenis' => ['required', 'string', 'max:255'],
+            'nama_instansi' => [
+                'required',
+                'string',
+                'max:170',
+                'unique:instansi,nama_instansi',
+                'regex:/^[a-zA-Z0-9\s\-\/\(\)\.,\'\"\\\\&]*$/'
+            ],
+            'jenis' => ['required', 'string', 'in:Universitas,SMK,Lainnya'],
+        ], [
+            'nama_instansi.regex' => 'Nama instansi hanya boleh diisi huruf, angka, spasi, dan karakter: / \\ " \' & ( ) . , -',
+            'nama_instansi.max' => 'Nama instansi tidak boleh lebih dari 170 karakter.',
+            'nama_instansi.unique' => 'Nama instansi ini sudah terdaftar.',
+            'jenis.in' => 'Jenis instansi tidak valid.',
         ]);
 
         Instansi::create($validated);
@@ -43,8 +54,19 @@ class InstansiController extends Controller
     public function updateInstansi(Request $request, Instansi $instansi)
     {
         $validated = $request->validateWithBag('updateInstansi', [
-            'nama_instansi' => ['required', 'string', 'max:255', 'unique:instansi,nama_instansi,' . $instansi->id],
-            'jenis' => ['required', 'string', 'max:255'],
+            'nama_instansi' => [
+                'required',
+                'string',
+                'max:170',
+                'unique:instansi,nama_instansi,' . $instansi->id,
+                'regex:/^[a-zA-Z0-9\s\-\/\(\)\.,\'\"\\\\&]*$/'
+            ],
+            'jenis' => ['required', 'string', 'in:Universitas,SMK,Lainnya'],
+        ], [
+            'nama_instansi.regex' => 'Nama instansi hanya boleh diisi huruf, angka, spasi, dan karakter: / \\ " \' & ( ) . , -',
+            'nama_instansi.max' => 'Nama instansi tidak boleh lebih dari 170 karakter.',
+            'nama_instansi.unique' => 'Nama instansi ini sudah terdaftar.',
+            'jenis.in' => 'Jenis instansi tidak valid.',
         ]);
 
         $instansi->update($validated);

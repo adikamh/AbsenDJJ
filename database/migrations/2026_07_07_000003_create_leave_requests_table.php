@@ -18,7 +18,7 @@ return new class extends Migration
             $table->date('tanggal_mulai');
             $table->date('tanggal_selesai');
             $table->string('jenis'); // 'Izin' atau 'Sakit'
-            $table->text('alasan');
+            $table->text('alasan')->nullable();
             $table->string('file_bukti')->nullable(); // Path file surat keterangan/dokter
             
             $table->string('status_approval')->default('Pending'); // 'Pending', 'Approved', 'Rejected'

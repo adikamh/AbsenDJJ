@@ -113,5 +113,12 @@ class UserSeeder extends Seeder
                 ]
             );
         }
+
+        // Ensure user_code is generated for all users if not already set
+        $generator = app(\App\Services\UniqueCodeGenerator::class);
+        $usersWithoutCode = User::whereNull('user_code')->orWhere('user_code', '')->get();
+        foreach ($usersWithoutCode as $u) {
+            $u->updateQuietly(['user_code' => $generator->generateUserCode($u->id)]);
+        }
     }
 }

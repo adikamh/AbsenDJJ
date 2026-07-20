@@ -90,7 +90,7 @@
 }
 
 /* Responsive adjustments for Admin Interns Show details page */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     /* 1. Stack Profile & Emergency Contact card items vertically */
     .profile-layout {
         grid-template-columns: 1fr !important;

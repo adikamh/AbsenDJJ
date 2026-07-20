@@ -334,3 +334,74 @@ input[type="text"].form-control {
         padding: 35px 24px;
     }
 }
+
+/* PWA Promotion Banner Styles */
+.pwa-banner {
+    background: #1e293b;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 16px;
+    margin-top: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    color: #f8fafc;
+    animation: slideUp 0.4s ease-out;
+}
+
+.pwa-banner-content {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.pwa-icon {
+    background: rgba(255, 204, 51, 0.15);
+    color: #ffcc33;
+    border-radius: 12px;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.pwa-text-group {
+    flex: 1;
+}
+
+.pwa-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 2px;
+}
+
+.pwa-desc {
+    font-size: 0.78rem;
+    color: #94a3b8;
+    line-height: 1.4;
+}
+
+.btn-pwa-action {
+    background: #ffcc33;
+    color: #0f172a;
+    border: none;
+    border-radius: 10px;
+    padding: 10px;
+    font-weight: 600;
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    text-align: center;
+}
+
+.btn-pwa-action:hover {
+    background: #ffe082;
+}
+
+@keyframes slideUp {
+    0% { opacity: 0; transform: translateY(15px); }
+    100% { opacity: 1; transform: translateY(0); }
+}

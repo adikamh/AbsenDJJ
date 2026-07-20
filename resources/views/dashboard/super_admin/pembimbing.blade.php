@@ -61,6 +61,7 @@
                                         data-telepon="{{ $user->no_telepon ?? '-' }}"
                                         data-alamat="{{ $user->alamat ?? '-' }}"
                                         data-instansi="{{ $user->instansi?->nama_instansi ?? '-' }}"
+                                        data-jabatan="{{ $user->jabatan ?? '-' }}"
                                         data-status="{{ $user->status_aktif ? 'Aktif' : 'Tidak Aktif' }}"
                                         aria-label="Detail {{ $user->nama_lengkap }}"
                                         title="Detail"
@@ -78,6 +79,7 @@
                                         data-id="{{ $user->id }}"
                                         data-nip="{{ $user->nip }}"
                                         data-nama="{{ $user->nama_lengkap }}"
+                                        data-jabatan="{{ $user->jabatan }}"
                                         data-email="{{ $user->email }}"
                                         data-telepon="{{ $user->no_telepon }}"
                                         data-alamat="{{ $user->alamat }}"
@@ -160,56 +162,75 @@
 
                 <div class="form-grid">
                     <div class="form-group">
-                        <label for="nip">NIP</label>
-                        <input type="text" id="nip" name="nip" value="{{ old('nip') }}" required>
+                        <label for="nip">NIP <span style="color: #f87171;">*</span></label>
+                        <input type="text" id="nip" name="nip" value="{{ old('nip') }}" required maxlength="24" placeholder="Hanya angka, maks 24 karakter" autocomplete="off">
                         @error('nip', 'storePembimbing')
                             <span class="form-error">{{ $message }}</span>
                         @enderror
                     </div>
 
                     <div class="form-group">
-                        <label for="nama_lengkap">Nama</label>
-                        <input type="text" id="nama_lengkap" name="nama_lengkap" value="{{ old('nama_lengkap') }}" required>
+                        <label for="nama_lengkap">Nama Lengkap <span style="color: #f87171;">*</span></label>
+                        <input type="text" id="nama_lengkap" name="nama_lengkap" value="{{ old('nama_lengkap') }}" required maxlength="170" placeholder="Nama lengkap pembimbing" autocomplete="off">
                         @error('nama_lengkap', 'storePembimbing')
                             <span class="form-error">{{ $message }}</span>
                         @enderror
                     </div>
 
                     <div class="form-group">
-                        <label for="email">Email</label>
-                        <input type="email" id="email" name="email" value="{{ old('email') }}" required>
+                        <label for="jabatan">Jabatan <span style="font-size: 0.8rem; color: #9ca3af;">(Opsional)</span></label>
+                        <input type="text" id="jabatan" name="jabatan" value="{{ old('jabatan') }}" maxlength="170" placeholder="Contoh: Team Leader, dll." autocomplete="off">
+                        @error('jabatan', 'storePembimbing')
+                            <span class="form-error">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email <span style="color: #f87171;">*</span></label>
+                        <input type="email" id="email" name="email" value="{{ old('email') }}" required maxlength="254" placeholder="contoh@domain.com" autocomplete="off">
                         @error('email', 'storePembimbing')
                             <span class="form-error">{{ $message }}</span>
                         @enderror
                     </div>
 
                     <div class="form-group">
-                        <label for="no_telepon">No Telepon</label>
-                        <input type="text" id="no_telepon" name="no_telepon" value="{{ old('no_telepon') }}" inputmode="numeric" pattern="[0-9]+" required>
+                        <label for="no_telepon">No Telepon <span style="color: #f87171;">*</span></label>
+                        <input type="text" id="no_telepon" name="no_telepon" value="{{ old('no_telepon') }}" inputmode="numeric" required maxlength="15" placeholder="Hanya angka, maks 15 karakter" autocomplete="off">
                         @error('no_telepon', 'storePembimbing')
                             <span class="form-error">{{ $message }}</span>
                         @enderror
                     </div>
 
                     <div class="form-group">
-                        <label for="alamat">Alamat</label>
-                        <input type="text" id="alamat" name="alamat" value="{{ old('alamat') }}" required>
+                        <label for="alamat">Alamat <span style="color: #f87171;">*</span></label>
+                        <input type="text" id="alamat" name="alamat" value="{{ old('alamat') }}" required maxlength="224" placeholder="Alamat lengkap (maks 224 karakter)" autocomplete="off">
                         @error('alamat', 'storePembimbing')
                             <span class="form-error">{{ $message }}</span>
                         @enderror
                     </div>
 
                     <div class="form-group">
-                        <label for="instansi">Instansi</label>
-                        <input type="text" id="instansi" name="instansi" class="autocomplete-instansi" data-suggestions="{{ json_encode($instansi->pluck('nama_instansi')) }}" value="{{ old('instansi') }}" required>
+                        <label for="instansi">Instansi <span style="color: #f87171;">*</span></label>
+                        <input type="text" id="instansi" name="instansi" class="autocomplete-instansi" data-suggestions="{{ json_encode($instansi->pluck('nama_instansi')) }}" value="{{ old('instansi') }}" required maxlength="170" placeholder="Nama instansi (maks 170 karakter)" autocomplete="off">
                         @error('instansi', 'storePembimbing')
                             <span class="form-error">{{ $message }}</span>
                         @enderror
                     </div>
 
                     <div class="form-group">
-                        <label for="password">Password</label>
-                        <input type="password" id="password" name="password" minlength="8" required style="width: 100%; padding: 10px 14px; border-radius: 8px;">
+                        <label for="status_aktif">Status <span style="color: #f87171;">*</span></label>
+                        <select id="status_aktif" name="status_aktif" required>
+                            <option value="1" @selected(old('status_aktif', '1') === '1')>Aktif</option>
+                            <option value="0" @selected(old('status_aktif') === '0')>Tidak Aktif</option>
+                        </select>
+                        @error('status_aktif', 'storePembimbing')
+                            <span class="form-error">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label for="password">Password <span style="color: #f87171;">*</span></label>
+                        <input type="password" id="password" name="password" minlength="8" required style="width: 100%; padding: 10px 14px; border-radius: 8px;" placeholder="Minimal 8 karakter">
                         <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px;">
                             <button type="button" id="btn-generate-pembimbing-password" class="btn-secondary" style="padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600;" title="Buat Password Otomatis">
                                 Auto
@@ -220,17 +241,6 @@
                         </div>
                         <span style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px; display: block;">Masukkan minimal 8 karakter (bebas) atau klik tombol **Auto** untuk membuat password otomatis acak (8-10 karakter dari NIP & Nama).</span>
                         @error('password', 'storePembimbing')
-                            <span class="form-error">{{ $message }}</span>
-                        @enderror
-                    </div>
-
-                    <div class="form-group">
-                        <label for="status_aktif">Status</label>
-                        <select id="status_aktif" name="status_aktif" required>
-                            <option value="1" @selected(old('status_aktif', '1') === '1')>Aktif</option>
-                            <option value="0" @selected(old('status_aktif') === '0')>Tidak Aktif</option>
-                        </select>
-                        @error('status_aktif', 'storePembimbing')
                             <span class="form-error">{{ $message }}</span>
                         @enderror
                     </div>
@@ -273,6 +283,10 @@
                     <strong id="detail-alamat">-</strong>
                 </div>
                 <div class="detail-item">
+                    <span>Jabatan</span>
+                    <strong id="detail-jabatan">-</strong>
+                </div>
+                <div class="detail-item">
                     <span>Instansi</span>
                     <strong id="detail-instansi">-</strong>
                 </div>
@@ -308,55 +322,63 @@
 
                 <div class="form-grid">
                     <div class="form-group">
-                        <label for="edit_nip">NIP</label>
-                        <input type="text" id="edit_nip" name="nip" value="{{ old('nip') }}" required>
+                        <label for="edit_nip">NIP <span style="color: #f87171;">*</span></label>
+                        <input type="text" id="edit_nip" name="nip" value="{{ old('nip') }}" required maxlength="24" placeholder="Hanya angka, maks 24 karakter" autocomplete="off">
                         @error('nip', 'updatePembimbing')
                             <span class="form-error">{{ $message }}</span>
                         @enderror
                     </div>
 
                     <div class="form-group">
-                        <label for="edit_nama_lengkap">Nama</label>
-                        <input type="text" id="edit_nama_lengkap" name="nama_lengkap" value="{{ old('nama_lengkap') }}" required>
+                        <label for="edit_nama_lengkap">Nama Lengkap <span style="color: #f87171;">*</span></label>
+                        <input type="text" id="edit_nama_lengkap" name="nama_lengkap" value="{{ old('nama_lengkap') }}" required maxlength="170" placeholder="Nama lengkap pembimbing" autocomplete="off">
                         @error('nama_lengkap', 'updatePembimbing')
                             <span class="form-error">{{ $message }}</span>
                         @enderror
                     </div>
 
                     <div class="form-group">
-                        <label for="edit_email">Email</label>
-                        <input type="email" id="edit_email" name="email" value="{{ old('email') }}" required>
+                        <label for="edit_jabatan">Jabatan <span style="font-size: 0.8rem; color: #9ca3af;">(Opsional)</span></label>
+                        <input type="text" id="edit_jabatan" name="jabatan" value="{{ old('jabatan') }}" maxlength="170" placeholder="Contoh: Team Leader, dll." autocomplete="off">
+                        @error('jabatan', 'updatePembimbing')
+                            <span class="form-error">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit_email">Email <span style="color: #f87171;">*</span></label>
+                        <input type="email" id="edit_email" name="email" value="{{ old('email') }}" required maxlength="254" placeholder="contoh@domain.com" autocomplete="off">
                         @error('email', 'updatePembimbing')
                             <span class="form-error">{{ $message }}</span>
                         @enderror
                     </div>
 
                     <div class="form-group">
-                        <label for="edit_no_telepon">No Telepon</label>
-                        <input type="text" id="edit_no_telepon" name="no_telepon" value="{{ old('no_telepon') }}" inputmode="numeric" pattern="[0-9]+" required>
+                        <label for="edit_no_telepon">No Telepon <span style="color: #f87171;">*</span></label>
+                        <input type="text" id="edit_no_telepon" name="no_telepon" value="{{ old('no_telepon') }}" inputmode="numeric" required maxlength="15" placeholder="Hanya angka, maks 15 karakter" autocomplete="off">
                         @error('no_telepon', 'updatePembimbing')
                             <span class="form-error">{{ $message }}</span>
                         @enderror
                     </div>
 
                     <div class="form-group">
-                        <label for="edit_alamat">Alamat</label>
-                        <input type="text" id="edit_alamat" name="alamat" value="{{ old('alamat') }}" required>
+                        <label for="edit_alamat">Alamat <span style="color: #f87171;">*</span></label>
+                        <input type="text" id="edit_alamat" name="alamat" value="{{ old('alamat') }}" required maxlength="224" placeholder="Alamat lengkap (maks 224 karakter)" autocomplete="off">
                         @error('alamat', 'updatePembimbing')
                             <span class="form-error">{{ $message }}</span>
                         @enderror
                     </div>
 
                     <div class="form-group">
-                        <label for="edit_instansi">Instansi</label>
-                        <input type="text" id="edit_instansi" name="instansi" class="autocomplete-instansi" data-suggestions="{{ json_encode($instansi->pluck('nama_instansi')) }}" value="{{ old('instansi') }}" required>
+                        <label for="edit_instansi">Instansi <span style="color: #f87171;">*</span></label>
+                        <input type="text" id="edit_instansi" name="instansi" class="autocomplete-instansi" data-suggestions="{{ json_encode($instansi->pluck('nama_instansi')) }}" value="{{ old('instansi') }}" required maxlength="170" placeholder="Nama instansi (maks 170 karakter)" autocomplete="off">
                         @error('instansi', 'updatePembimbing')
                             <span class="form-error">{{ $message }}</span>
                         @enderror
                     </div>
 
                     <div class="form-group">
-                        <label for="edit_status_aktif">Status</label>
+                        <label for="edit_status_aktif">Status <span style="color: #f87171;">*</span></label>
                         <select id="edit_status_aktif" name="status_aktif" required>
                             <option value="1" @selected(old('status_aktif', '1') === '1')>Aktif</option>
                             <option value="0" @selected(old('status_aktif') === '0')>Tidak Aktif</option>

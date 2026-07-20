@@ -49,7 +49,7 @@
     margin-bottom: 20px;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1025px) {
     .time-inputs-grid {
         grid-template-columns: 1fr 1fr 1fr;
     }
@@ -483,9 +483,7 @@
     letter-spacing: 0.05em;
 }
 
-.calendar-day-label:first-child {
-    color: #ef4444; /* Minggu merah */
-}
+
 
 .calendar-days-grid {
     display: contents;
@@ -530,7 +528,7 @@
     color: var(--text-primary);
 }
 
-.calendar-cell.cell-sunday .cell-number {
+.cell-status-holiday .cell-number {
     color: #ef4444;
 }
 
@@ -637,7 +635,7 @@
 .dot-holiday { background: #ef4444; }
 
 /* ===== Responsive ===== */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     .day-grid {
         grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     }
@@ -720,7 +718,13 @@
         margin-bottom: 4px !important;
     }
 
-    #tab-date > div:first-child button {
+    #tab-date > div:first-child button,
+    #tab-date > div:first-child form {
+        width: 100% !important;
+        display: block !important;
+    }
+
+    #tab-date > div:first-child form button {
         width: 100% !important;
         justify-content: center !important;
     }

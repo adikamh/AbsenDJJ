@@ -59,12 +59,38 @@
                     <option value="Rejected" {{ request('status_approval') === 'Rejected' ? 'selected' : '' }}>Ditolak</option>
                 </select>
             </div>
-            @if(request()->anyFilled(['search', 'status_approval']))
+            <div class="filter-item">
+                <label for="tanggal">Tanggal</label>
+                <input type="date" id="tanggal" name="tanggal" value="{{ request('tanggal') }}" class="filter-select" onchange="this.form.submit()" style="color: var(--text-primary); cursor: pointer; min-height: 38px;">
+            </div>
+            <div class="filter-item">
+                <label for="bulan">Bulan</label>
+                <select id="bulan" name="bulan" class="filter-select" onchange="this.form.submit()">
+                    <option value="">Semua Bulan</option>
+                    @for($m = 1; $m <= 12; $m++)
+                        <option value="{{ $m }}" {{ request('bulan') == $m ? 'selected' : '' }}>
+                            {{ \Carbon\Carbon::create(now()->year, $m, 1)->translatedFormat('F') }}
+                        </option>
+                    @endfor
+                </select>
+            </div>
+            <div class="filter-item">
+                <label for="tahun">Tahun</label>
+                <select id="tahun" name="tahun" class="filter-select" onchange="this.form.submit()">
+                    <option value="">Semua Tahun</option>
+                    @for($y = now()->year - 2; $y <= now()->year + 1; $y++)
+                        <option value="{{ $y }}" {{ request('tahun') == $y ? 'selected' : '' }}>
+                            {{ $y }}
+                        </option>
+                    @endfor
+                </select>
+            </div>
+            @if(request()->anyFilled(['search', 'status_approval', 'tanggal', 'bulan', 'tahun']))
                 <a href="{{ route('peserta.logbook') }}" class="btn-filter-reset">Reset Filter</a>
             @endif
         </form>
 
-        <div class="table-responsive">
+        <div class="table-responsive" id="logbook-table-container">
             <table class="custom-table">
                 <thead>
                     <tr>
@@ -99,6 +125,8 @@
                                     <span class="badge badge-success">Disetujui</span>
                                 @elseif($logbook->status_approval === 'Rejected')
                                     <span class="badge badge-danger">Ditolak</span>
+                                @elseif($logbook->status_approval === 'Revisi')
+                                    <span class="badge badge-warning" style="background-color: #fbbf24 !important; border-color: #fbbf24 !important; color: #1e1b4b !important;">Revisi</span>
                                 @elseif($logbook->status_approval === 'Draft')
                                     <span class="draft-badge">Draft</span>
                                 @else
@@ -106,25 +134,41 @@
                                 @endif
                             </td>
                             <td>
-                                <span class="muted-small">{{ !empty($logbook->catatan_pembimbing) ? $logbook->catatan_pembimbing : '-' }}</span>
+                                @if($logbook->status_approval === 'Revisi')
+                                    <span style="color: #fbbf24; font-weight: 600; display: block; margin-bottom: 2px;">⚠️ Perlu Revisi:</span>
+                                    <span style="color: var(--text-primary); font-style: italic;">"{{ $logbook->catatan_pembimbing }}"</span>
+                                @else
+                                    <span class="muted-small">{{ !empty($logbook->catatan_pembimbing) ? $logbook->catatan_pembimbing : '-' }}</span>
+                                @endif
                             </td>
                             <td>
-                                @if(in_array($logbook->status_approval, ['Pending', 'Draft']))
+                                @if($logbook->status_approval === 'Draft')
                                     <div style="display: flex; gap: 8px;">
                                         <button type="button" class="btn-camera btn-camera-primary open-edit-logbook-modal"
-                                                data-id="{{ $logbook->id }}"
+                                                data-id="{{ $logbook->logbook_code }}"
                                                 data-kegiatan="{{ $logbook->kegiatan }}"
                                                 data-tags="{{ $logbook->tags }}"
                                                 data-deskripsi="{{ $logbook->deskripsi }}">
                                             Edit
                                         </button>
-                                        <form action="{{ route('peserta.logbook.destroy', $logbook->id) }}" method="POST" class="delete-logbook-form">
+                                        <form action="{{ route('peserta.logbook.destroy', $logbook->logbook_code) }}" method="POST" class="delete-logbook-form">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn-camera btn-camera-danger btn-delete-logbook">
                                                 Hapus
                                             </button>
                                         </form>
+                                    </div>
+                                @elseif($logbook->status_approval === 'Revisi')
+                                    <div style="display: flex; gap: 8px;">
+                                        <button type="button" class="btn-camera btn-camera-primary open-edit-logbook-modal"
+                                                data-id="{{ $logbook->logbook_code }}"
+                                                data-kegiatan="{{ $logbook->kegiatan }}"
+                                                data-tags="{{ $logbook->tags }}"
+                                                data-deskripsi="{{ $logbook->deskripsi }}"
+                                                style="background: #fbbf24 !important; border-color: #fbbf24 !important; color: #1e1b4b !important; font-weight: 600;">
+                                            Edit Revisi
+                                        </button>
                                     </div>
                                 @else
                                     <span class="muted-small" style="color: var(--text-secondary);">No Action</span>
@@ -155,8 +199,9 @@
             <form action="{{ route('peserta.logbook.store') }}" method="POST" class="modal-form">
                 @csrf
                 <div class="form-group">
-                    <label for="tanggal">Tanggal Kegiatan</label>
-                    <input type="date" id="tanggal" name="tanggal" value="{{ date('Y-m-d') }}" required>
+                    <label>Tanggal Kegiatan</label>
+                    <input type="text" value="{{ \Carbon\Carbon::today()->translatedFormat('d F Y') }}" disabled style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--glass-border); font-weight: 500;">
+                    <input type="hidden" id="tanggal" name="tanggal" value="{{ date('Y-m-d') }}">
                 </div>
                 <div class="form-group">
                     <label for="kegiatan">Judul Kegiatan / Tugas</label>
@@ -213,4 +258,109 @@
 
 @push('scripts')
     @vite('resources/js/logbook.js')
+    <div id="logbook-dates-data" data-dates='@json($existingDates)'></div>
+    <div id="today-logbook-data" 
+         data-exists="{{ $todayLogbook ? 'true' : 'false' }}"
+         data-id="{{ $todayLogbook?->logbook_code }}"
+         data-status="{{ $todayLogbook?->status_approval }}"
+         data-kegiatan="{{ $todayLogbook?->kegiatan }}"
+         data-tags="{{ $todayLogbook?->tags }}"
+         data-deskripsi="{{ $todayLogbook?->deskripsi }}">
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const btnOpenAddLogbook = document.getElementById('open-add-logbook-modal');
+            const dataEl = document.getElementById('logbook-dates-data');
+
+            // Auto open write logbook modal if write-logbook parameter is present
+            if (btnOpenAddLogbook) {
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.has('write-logbook')) {
+                    btnOpenAddLogbook.click();
+                }
+            }
+
+            if (btnOpenAddLogbook && dataEl) {
+                btnOpenAddLogbook.addEventListener('click', (e) => {
+                    const todayDataEl = document.getElementById('today-logbook-data');
+                    if (todayDataEl && todayDataEl.getAttribute('data-exists') === 'true') {
+                        e.stopImmediatePropagation();
+                        e.preventDefault();
+
+                        const status = todayDataEl.getAttribute('data-status');
+                        if (status === 'Draft') {
+                            // Automatically open Edit Modal with today's draft details
+                            const id = todayDataEl.getAttribute('data-id');
+                            const kegiatan = todayDataEl.getAttribute('data-kegiatan');
+                            const tags = todayDataEl.getAttribute('data-tags') || '';
+                            const deskripsi = todayDataEl.getAttribute('data-deskripsi');
+
+                            const editLogbookForm = document.getElementById('edit-logbook-form');
+                            const editKegiatanInput = document.getElementById('edit-kegiatan');
+                            const editTagsInput = document.getElementById('edit-tags');
+                            const editDeskripsiInput = document.getElementById('edit-deskripsi');
+                            const modalEditLogbook = document.getElementById('modal-edit-logbook');
+
+                            if (editLogbookForm) editLogbookForm.action = `/peserta/logbook/${id}`;
+                            if (editKegiatanInput) editKegiatanInput.value = kegiatan;
+                            if (editTagsInput) editTagsInput.value = tags;
+                            if (editDeskripsiInput) editDeskripsiInput.value = deskripsi;
+
+                            if (modalEditLogbook) {
+                                modalEditLogbook.classList.add('is-open');
+                            }
+                        } else {
+                            // Logbook already submitted (Pending / Approved / Rejected)
+                            if (window.Swal) {
+                                const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+                                window.Swal.fire({
+                                    background: isLight ? '#ffffff' : '#1e293b',
+                                    color: isLight ? '#0f172a' : '#f8fafc',
+                                    confirmButtonColor: isLight ? '#2e4085' : '#ffcc33',
+                                    icon: 'error',
+                                    title: 'Logbook Sudah Terkirim',
+                                    text: 'Anda sudah mengirimkan logbook untuk hari ini. Logbook yang sudah diajukan/disetujui tidak dapat diubah kembali.',
+                                    confirmButtonText: 'Mengerti'
+                                });
+                            } else {
+                                alert('Anda sudah mengirimkan logbook untuk hari ini. Logbook yang sudah diajukan/disetujui tidak dapat diubah kembali.');
+                            }
+                        }
+                    }
+                }, true); // capture phase
+            }
+
+            const form = document.querySelector('#modal-add-logbook form');
+            if (form) {
+                form.addEventListener('submit', (e) => {
+                    const dateInput = document.getElementById('tanggal');
+                    if (dateInput) {
+                        const selectedDate = dateInput.value;
+                        if (dataEl) {
+                            const existingDates = JSON.parse(dataEl.getAttribute('data-dates') || '[]');
+                            if (existingDates.includes(selectedDate)) {
+                                e.preventDefault();
+                                e.stopPropagation();
+
+                                if (window.Swal) {
+                                    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+                                    window.Swal.fire({
+                                        background: isLight ? '#ffffff' : '#1e293b',
+                                        color: isLight ? '#0f172a' : '#f8fafc',
+                                        confirmButtonColor: isLight ? '#2e4085' : '#ffcc33',
+                                        icon: 'error',
+                                        title: 'Logbook Sudah Ada',
+                                        text: 'Anda sudah mengisi logbook untuk tanggal tersebut. Hanya diperbolehkan satu logbook per hari.',
+                                        confirmButtonText: 'Mengerti'
+                                    });
+                                } else {
+                                    alert('Anda sudah mengisi logbook untuk tanggal tersebut. Hanya diperbolehkan satu logbook per hari.');
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
 @endpush

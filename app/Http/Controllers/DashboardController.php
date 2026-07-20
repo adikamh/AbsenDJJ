@@ -11,6 +11,13 @@ class DashboardController extends Controller
      */
     public function index()
     {
+        // Auto-update past attendances where user checked in but forgot to check out (past 24:00 of that day)
+        \App\Models\Attendance::where('tanggal', '<', \Carbon\Carbon::today()->toDateString())
+            ->whereNotNull('jam_masuk')
+            ->whereNull('jam_pulang')
+            ->whereNotIn('status', ['Lupa Absen Pulang', 'Tanpa Keterangan', 'Izin', 'Sakit'])
+            ->update(['status' => 'Lupa Absen Pulang']);
+
         $user = Auth::user();
 
         if ($user->isSuperAdmin()) {

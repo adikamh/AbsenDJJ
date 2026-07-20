@@ -10,9 +10,39 @@ use Illuminate\Support\Facades\Http;
 class SettingsController extends Controller
 {
     /**
-     * Show general settings form.
+     * Show default attendance settings form.
      */
-    public function editSettings()
+    public function editDefaultSettings()
+    {
+        $settings = app(\App\Settings\GeneralSettings::class);
+        $dayOverrides = WorkSchedule::where('type', 'day')->get()->keyBy('day_of_week');
+        $dateOverrides = WorkSchedule::where('type', 'date')->orderBy('specific_date')->get();
+        return view('dashboard.super_admin.settings.default', compact('settings', 'dayOverrides', 'dateOverrides'));
+    }
+
+    /**
+     * Show calendar settings.
+     */
+    public function editCalendarSettings()
+    {
+        $settings = app(\App\Settings\GeneralSettings::class);
+        $dayOverrides = WorkSchedule::where('type', 'day')->get()->keyBy('day_of_week');
+        $dateOverrides = WorkSchedule::where('type', 'date')->orderBy('specific_date')->get();
+        return view('dashboard.super_admin.settings.calendar', compact('settings', 'dayOverrides', 'dateOverrides'));
+    }
+
+    /**
+     * Show day overrides settings.
+     */
+    public function editDayOverrides()
+    {
+        return redirect()->route('super-admin.settings.default');
+    }
+
+    /**
+     * Show date overrides settings (calendar & national holiday sync).
+     */
+    public function editDateOverrides()
     {
         $settings = app(\App\Settings\GeneralSettings::class);
 
@@ -40,7 +70,81 @@ class SettingsController extends Controller
         $dayOverrides = WorkSchedule::where('type', 'day')->get()->keyBy('day_of_week');
         $dateOverrides = WorkSchedule::where('type', 'date')->orderBy('specific_date')->get();
 
-        return view('dashboard.super_admin.settings', compact('settings', 'dayOverrides', 'dateOverrides'));
+        return view('dashboard.super_admin.settings.date_overrides', compact('settings', 'dayOverrides', 'dateOverrides'));
+    }
+
+    /**
+     * Show geofencing settings.
+     */
+    public function editGeofencingSettings()
+    {
+        $settings = app(\App\Settings\GeneralSettings::class);
+        $dayOverrides = WorkSchedule::where('type', 'day')->get()->keyBy('day_of_week');
+        $dateOverrides = WorkSchedule::where('type', 'date')->orderBy('specific_date')->get();
+        $locations = \App\Models\OfficeLocation::orderBy('created_at', 'desc')->get();
+        return view('dashboard.super_admin.settings.geofencing', compact('settings', 'dayOverrides', 'dateOverrides', 'locations'));
+    }
+
+    /**
+     * Store a new office location coordinate.
+     */
+    public function storeOfficeLocation(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'latitude' => ['required', 'numeric', 'between:-90,90'],
+            'longitude' => ['required', 'numeric', 'between:-180,180'],
+            'radius' => ['required', 'integer', 'min:1'],
+        ]);
+
+        \App\Models\OfficeLocation::create([
+            'name' => $validated['name'],
+            'latitude' => (string)$validated['latitude'],
+            'longitude' => (string)$validated['longitude'],
+            'radius' => (int)$validated['radius'],
+        ]);
+
+        return redirect()
+            ->route('super-admin.settings.geofencing')
+            ->with('success', 'Lokasi kantor baru berhasil ditambahkan.');
+    }
+
+    /**
+     * Delete an office location coordinate.
+     */
+    public function destroyOfficeLocation($id)
+    {
+        $location = \App\Models\OfficeLocation::findOrFail($id);
+        $location->delete();
+
+        return redirect()
+            ->route('super-admin.settings.geofencing')
+            ->with('success', 'Lokasi kantor berhasil dihapus.');
+    }
+
+    /**
+     * Update an office location coordinate.
+     */
+    public function updateOfficeLocation(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'latitude' => ['required', 'numeric', 'between:-90,90'],
+            'longitude' => ['required', 'numeric', 'between:-180,180'],
+            'radius' => ['required', 'integer', 'min:1'],
+        ]);
+
+        $location = \App\Models\OfficeLocation::findOrFail($id);
+        $location->update([
+            'name' => $validated['name'],
+            'latitude' => (string)$validated['latitude'],
+            'longitude' => (string)$validated['longitude'],
+            'radius' => (int)$validated['radius'],
+        ]);
+
+        return redirect()
+            ->route('super-admin.settings.geofencing')
+            ->with('success', 'Lokasi kantor berhasil diperbarui.');
     }
 
     /**
@@ -80,18 +184,14 @@ class SettingsController extends Controller
     }
 
     /**
-     * Update general settings.
+     * Update default attendance settings.
      */
-    public function updateSettings(Request $request)
+    public function updateDefaultSettings(Request $request)
     {
-        \Illuminate\Support\Facades\Log::info('updateSettings called', $request->all());
         $validated = $request->validate([
             'jam_masuk' => ['required', 'string', 'regex:/^[0-9]{2}:[0-9]{2}(:[0-9]{2})?$/'],
             'jam_pulang' => ['required', 'string', 'regex:/^[0-9]{2}:[0-9]{2}(:[0-9]{2})?$/'],
             'batas_keterlambatan' => ['required', 'string', 'regex:/^[0-9]{2}:[0-9]{2}(:[0-9]{2})?$/'],
-            'latitude_kantor' => ['required', 'numeric', 'between:-90,90'],
-            'longitude_kantor' => ['required', 'numeric', 'between:-180,180'],
-            'radius_meter' => ['required', 'integer', 'min:1'],
         ]);
 
         $settings = app(\App\Settings\GeneralSettings::class);
@@ -99,6 +199,27 @@ class SettingsController extends Controller
         $settings->jam_masuk = strlen($validated['jam_masuk']) === 5 ? $validated['jam_masuk'] . ':00' : $validated['jam_masuk'];
         $settings->jam_pulang = strlen($validated['jam_pulang']) === 5 ? $validated['jam_pulang'] . ':00' : $validated['jam_pulang'];
         $settings->batas_keterlambatan = strlen($validated['batas_keterlambatan']) === 5 ? $validated['batas_keterlambatan'] . ':00' : $validated['batas_keterlambatan'];
+
+        $settings->save();
+        WorkSchedule::updateTodayHolidayCacheFile();
+
+        return redirect()
+            ->route('super-admin.settings.default')
+            ->with('success', 'Pengaturan waktu kehadiran default berhasil diperbarui.');
+    }
+
+    /**
+     * Update geofencing settings.
+     */
+    public function updateGeofencingSettings(Request $request)
+    {
+        $validated = $request->validate([
+            'latitude_kantor' => ['required', 'numeric', 'between:-90,90'],
+            'longitude_kantor' => ['required', 'numeric', 'between:-180,180'],
+            'radius_meter' => ['required', 'integer', 'min:1'],
+        ]);
+
+        $settings = app(\App\Settings\GeneralSettings::class);
         
         $settings->latitude_kantor = (string) $validated['latitude_kantor'];
         $settings->longitude_kantor = (string) $validated['longitude_kantor'];
@@ -107,8 +228,8 @@ class SettingsController extends Controller
         $settings->save();
 
         return redirect()
-            ->route('super-admin.settings')
-            ->with('success', 'Pengaturan parameter global berhasil diperbarui.');
+            ->route('super-admin.settings.geofencing')
+            ->with('success', 'Pengaturan lokasi & geofencing berhasil diperbarui.');
     }
 
     /**
@@ -124,7 +245,15 @@ class SettingsController extends Controller
             'batas_keterlambatan' => ['nullable', 'string', 'regex:/^[0-9]{2}:[0-9]{2}(:[0-9]{2})?$/'],
             'jam_pulang' => ['nullable', 'string', 'regex:/^[0-9]{2}:[0-9]{2}(:[0-9]{2})?$/'],
             'is_holiday' => ['nullable', 'boolean'],
-            'keterangan' => ['nullable', 'string', 'max:255'],
+            'keterangan' => [
+                'nullable',
+                'string',
+                'max:170',
+                'regex:/^[a-zA-Z0-9\s\-\/\(\)\.,\'\"\\\\&]*$/'
+            ],
+        ], [
+            'keterangan.regex' => 'Kolom keterangan hanya boleh diisi huruf, angka, spasi, dan karakter khusus berikut: / \ " \' & ( ) . , -',
+            'keterangan.max' => 'Kolom keterangan tidak boleh lebih dari 170 karakter.',
         ]);
 
         $isHoliday = $request->boolean('is_holiday');
@@ -135,7 +264,7 @@ class SettingsController extends Controller
                 ->where('day_of_week', $validated['day_of_week'])
                 ->exists();
             if ($exists) {
-                return redirect()->route('super-admin.settings')
+                return redirect()->route('super-admin.settings.default')
                     ->with('error', 'Override untuk hari tersebut sudah ada. Silakan edit yang sudah ada.');
             }
         } else {
@@ -143,7 +272,7 @@ class SettingsController extends Controller
                 ->where('specific_date', $validated['specific_date'])
                 ->exists();
             if ($exists) {
-                return redirect()->route('super-admin.settings')
+                return redirect()->route('super-admin.settings.date-overrides')
                     ->with('error', 'Override untuk tanggal tersebut sudah ada. Silakan edit yang sudah ada.');
             }
         }
@@ -163,9 +292,23 @@ class SettingsController extends Controller
         }
 
         WorkSchedule::create($data);
+        WorkSchedule::updateTodayHolidayCacheFile();
 
-        return redirect()
-            ->route('super-admin.settings')
+        // Dispatch notifications if marked as holiday
+        if ($isHoliday) {
+            if ($validated['type'] === 'day') {
+                WorkSchedule::sendWeeklyHolidayNotification((int) $validated['day_of_week'], $validated['keterangan'] ?? null);
+            } else {
+                WorkSchedule::sendHolidayNotification($validated['specific_date'], $validated['keterangan'] ?? null);
+            }
+        }
+
+        $redirectUrl = route($validated['type'] === 'day' ? 'super-admin.settings.default' : 'super-admin.settings.date-overrides');
+        if (str_contains(request()->headers->get('referer') ?? '', '/settings/calendar')) {
+            $redirectUrl = route('super-admin.settings.calendar');
+        }
+
+        return redirect()->to($redirectUrl)
             ->with('success', 'Jadwal override berhasil ditambahkan.');
     }
 
@@ -179,7 +322,15 @@ class SettingsController extends Controller
             'batas_keterlambatan' => ['nullable', 'string', 'regex:/^[0-9]{2}:[0-9]{2}(:[0-9]{2})?$/'],
             'jam_pulang' => ['nullable', 'string', 'regex:/^[0-9]{2}:[0-9]{2}(:[0-9]{2})?$/'],
             'is_holiday' => ['nullable', 'boolean'],
-            'keterangan' => ['nullable', 'string', 'max:255'],
+            'keterangan' => [
+                'nullable',
+                'string',
+                'max:170',
+                'regex:/^[a-zA-Z0-9\s\-\/\(\)\.,\'\"\\\\&]*$/'
+            ],
+        ], [
+            'keterangan.regex' => 'Kolom keterangan hanya boleh diisi huruf, angka, spasi, dan karakter khusus berikut: / \ " \' & ( ) . , -',
+            'keterangan.max' => 'Kolom keterangan tidak boleh lebih dari 170 karakter.',
         ]);
 
         $isHoliday = $request->boolean('is_holiday');
@@ -200,9 +351,23 @@ class SettingsController extends Controller
         }
 
         $schedule->update($data);
+        WorkSchedule::updateTodayHolidayCacheFile();
 
-        return redirect()
-            ->route('super-admin.settings')
+        // Dispatch notifications if marked as holiday
+        if ($isHoliday) {
+            if ($schedule->type === 'day') {
+                WorkSchedule::sendWeeklyHolidayNotification((int) $schedule->day_of_week, $data['keterangan'] ?? null);
+            } else {
+                WorkSchedule::sendHolidayNotification($schedule->specific_date, $data['keterangan'] ?? null);
+            }
+        }
+
+        $redirectUrl = route($schedule->type === 'day' ? 'super-admin.settings.default' : 'super-admin.settings.date-overrides');
+        if (str_contains(request()->headers->get('referer') ?? '', '/settings/calendar')) {
+            $redirectUrl = route('super-admin.settings.calendar');
+        }
+
+        return redirect()->to($redirectUrl)
             ->with('success', 'Jadwal override berhasil diperbarui.');
     }
 
@@ -211,11 +376,17 @@ class SettingsController extends Controller
      */
     public function destroyScheduleOverride(WorkSchedule $schedule)
     {
+        $type = $schedule->type;
         $schedule->delete();
+        WorkSchedule::updateTodayHolidayCacheFile();
 
-        return redirect()
-            ->route('super-admin.settings')
-            ->with('success', 'Jadwal override berhasil dihapus, kembali to default.');
+        $redirectUrl = route($type === 'day' ? 'super-admin.settings.default' : 'super-admin.settings.date-overrides');
+        if (str_contains(request()->headers->get('referer') ?? '', '/settings/calendar')) {
+            $redirectUrl = route('super-admin.settings.calendar');
+        }
+
+        return redirect()->to($redirectUrl)
+            ->with('success', 'Jadwal override berhasil dihapus, kembali ke default.');
     }
 
     /**
@@ -267,6 +438,7 @@ class SettingsController extends Controller
                             'keterangan' => $desc,
                         ]);
                         $importedCount++;
+                        WorkSchedule::sendHolidayNotification($dateStr, $desc);
                     }
                 }
                 $successYears[] = $year;
@@ -276,7 +448,7 @@ class SettingsController extends Controller
         }
 
         if (count($successYears) === 0) {
-            return redirect()->route('super-admin.settings')
+            return redirect()->route('super-admin.settings.date-overrides')
                 ->with('error', 'Gagal mengimpor hari libur nasional untuk tahun ' . implode(', ', $failedYears) . '.');
         }
 
@@ -284,8 +456,9 @@ class SettingsController extends Controller
         if (count($failedYears) > 0) {
             $successMsg .= " Namun, gagal untuk tahun " . implode(', ', $failedYears) . ".";
         }
+        WorkSchedule::updateTodayHolidayCacheFile();
 
-        return redirect()->route('super-admin.settings')
+        return redirect()->route('super-admin.settings.date-overrides')
             ->with('success', $successMsg);
     }
 }

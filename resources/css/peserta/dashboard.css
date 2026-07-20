@@ -14,6 +14,14 @@
     }
 }
 
+/* Also collapse at tablet breakpoint (matches global 1024px breakpoint) */
+@media (max-width: 1024px) {
+    .admin-dashboard-row {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+    }
+}
+
 /* Single-column stack layout: cards appear top-to-bottom */
 .peserta-stack {
     display: flex;
@@ -49,6 +57,7 @@
     margin-top: 10px;
     max-width: 400px;
     width: 100%;
+    flex-wrap: wrap; /* allow buttons to wrap on narrow screens */
 }
 
 .attendance-button {
@@ -360,7 +369,7 @@
 
 /* ===== Responsive Mobile Adjustments for Participant Views ===== */
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     /* Digital Clock Adjustments for Card Header */
     .card-header .digital-clock-container {
         width: 100% !important;
@@ -372,14 +381,14 @@
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
         margin-top: 6px !important;
     }
-    
+
     .card-header #digital-clock {
         font-size: 1.6rem !important;
         color: var(--accent-primary) !important;
         text-shadow: 0 0 10px rgba(255, 204, 51, 0.2) !important;
         letter-spacing: 1px !important;
     }
-    
+
     .card-header #digital-date {
         font-size: 0.8rem !important;
         margin-top: 4px !important;
@@ -427,7 +436,7 @@
         max-width: 100%;
         display: block;
     }
-    
+
     .cell-desc {
         display: none !important; /* Hide details description on mobile to avoid clutter */
     }
@@ -460,14 +469,14 @@
     .attendance-button {
         width: 100% !important;
     }
-    
+
     .selfie-row {
         flex-direction: row !important;
         flex-wrap: wrap;
         justify-content: center;
         gap: 12px !important;
     }
-    
+
     .selfie-thumb {
         max-width: 110px !important;
     }

@@ -20,6 +20,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/logout', [AuthController::class, 'logout']); // convenient GET fallback
+
+    // Account Management (Profile)
+    Route::get('/account', [\App\Http\Controllers\AccountController::class, 'edit'])->name('account.edit');
+    Route::put('/account', [\App\Http\Controllers\AccountController::class, 'update'])->name('account.update');
 });
 
 Route::post('/cookie-consent', [CookieConsentController::class, 'store'])->name('cookie-consent.store');
@@ -44,8 +48,22 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('super-admin')->group(fu
     Route::put('/instansi/{instansi}', [\App\Http\Controllers\SuperAdmin\InstansiController::class, 'updateInstansi'])->name('super-admin.instansi.update');
     Route::delete('/instansi/{instansi}', [\App\Http\Controllers\SuperAdmin\InstansiController::class, 'destroyInstansi'])->name('super-admin.instansi.destroy');
 
-    Route::get('/settings', [\App\Http\Controllers\SuperAdmin\SettingsController::class, 'editSettings'])->name('super-admin.settings');
-    Route::put('/settings', [\App\Http\Controllers\SuperAdmin\SettingsController::class, 'updateSettings'])->name('super-admin.settings.update');
+    // New Global Parameter Settings split routes
+    Route::get('/settings', function () {
+        return redirect()->route('super-admin.settings.default');
+    })->name('super-admin.settings');
+
+    Route::get('/settings/default', [\App\Http\Controllers\SuperAdmin\SettingsController::class, 'editDefaultSettings'])->name('super-admin.settings.default');
+    Route::get('/settings/calendar', [\App\Http\Controllers\SuperAdmin\SettingsController::class, 'editCalendarSettings'])->name('super-admin.settings.calendar');
+    Route::get('/settings/day-overrides', [\App\Http\Controllers\SuperAdmin\SettingsController::class, 'editDayOverrides'])->name('super-admin.settings.day-overrides');
+    Route::get('/settings/date-overrides', [\App\Http\Controllers\SuperAdmin\SettingsController::class, 'editDateOverrides'])->name('super-admin.settings.date-overrides');
+    Route::get('/settings/geofencing', [\App\Http\Controllers\SuperAdmin\SettingsController::class, 'editGeofencingSettings'])->name('super-admin.settings.geofencing');
+
+    Route::put('/settings/update-default', [\App\Http\Controllers\SuperAdmin\SettingsController::class, 'updateDefaultSettings'])->name('super-admin.settings.update-default');
+    Route::put('/settings/update-geofencing', [\App\Http\Controllers\SuperAdmin\SettingsController::class, 'updateGeofencingSettings'])->name('super-admin.settings.update-geofencing');
+    Route::post('/settings/geofencing/locations', [\App\Http\Controllers\SuperAdmin\SettingsController::class, 'storeOfficeLocation'])->name('super-admin.settings.geofencing.store');
+    Route::put('/settings/geofencing/locations/{location}', [\App\Http\Controllers\SuperAdmin\SettingsController::class, 'updateOfficeLocation'])->name('super-admin.settings.geofencing.update');
+    Route::delete('/settings/geofencing/locations/{location}', [\App\Http\Controllers\SuperAdmin\SettingsController::class, 'destroyOfficeLocation'])->name('super-admin.settings.geofencing.destroy');
 
     Route::post('/schedules', [\App\Http\Controllers\SuperAdmin\SettingsController::class, 'storeScheduleOverride'])->name('super-admin.schedules.store');
     Route::post('/schedules/sync-holidays', [\App\Http\Controllers\SuperAdmin\SettingsController::class, 'syncHolidays'])->name('super-admin.schedules.sync-holidays');
@@ -61,14 +79,21 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
 
     Route::post('/logbook/{logbook}/approve', [\App\Http\Controllers\Admin\LogbookController::class, 'approve'])->name('admin.logbook.approve');
     Route::post('/logbook/{logbook}/reject', [\App\Http\Controllers\Admin\LogbookController::class, 'reject'])->name('admin.logbook.reject');
+    Route::post('/logbook/{logbook}/revision', [\App\Http\Controllers\Admin\LogbookController::class, 'revision'])->name('admin.logbook.revision');
     Route::post('/leave/{leave}/approve', [\App\Http\Controllers\Admin\LeaveController::class, 'approve'])->name('admin.leave.approve');
     Route::post('/leave/{leave}/reject', [\App\Http\Controllers\Admin\LeaveController::class, 'reject'])->name('admin.leave.reject');
+    
+    Route::post('/settings/toggle-global', [\App\Http\Controllers\Admin\LogbookController::class, 'toggleGlobalAutoApprove'])->name('admin.settings.toggle-global');
+    Route::post('/settings/toggle-intern/{intern}', [\App\Http\Controllers\Admin\LogbookController::class, 'toggleInternAutoApprove'])->name('admin.settings.toggle-intern');
+    Route::post('/settings/toggle-global-photo', [\App\Http\Controllers\Admin\LogbookController::class, 'toggleGlobalPhotoRequirement'])->name('admin.settings.toggle-global-photo');
+    Route::post('/settings/toggle-intern-photo/{intern}', [\App\Http\Controllers\Admin\LogbookController::class, 'toggleInternPhotoRequirement'])->name('admin.settings.toggle-intern-photo');
 });
 
-Route::middleware(['auth', 'role:peserta,admin'])->prefix('peserta')->group(function () {
+Route::middleware(['auth', 'role:peserta,admin,super_admin'])->prefix('peserta')->group(function () {
     Route::get('/my-attendance/monthly-report', [\App\Http\Controllers\Peserta\AttendanceHistoryController::class, 'exportMonthlyReport'])->name('peserta.monthly-report');
     Route::get('/my-attendance/consolidated-report', [\App\Http\Controllers\Peserta\AttendanceHistoryController::class, 'exportConsolidatedReport'])->name('peserta.consolidated-report');
     Route::get('/my-attendance/csv', [\App\Http\Controllers\Peserta\AttendanceHistoryController::class, 'exportCsv'])->name('peserta.attendance.csv');
+    Route::get('/my-attendance/formulir-absensi', [\App\Http\Controllers\Peserta\AttendanceHistoryController::class, 'printFormulirAbsensi'])->name('peserta.formulir-absensi');
     Route::get('/logbook/export-pdf', [\App\Http\Controllers\Peserta\LogbookController::class, 'exportPdf'])->name('peserta.logbook.pdf');
     Route::get('/logbook/export-csv', [\App\Http\Controllers\Peserta\LogbookController::class, 'exportCsv'])->name('peserta.logbook.csv');
     
@@ -80,8 +105,9 @@ Route::middleware(['auth', 'role:peserta,admin'])->prefix('peserta')->group(func
 Route::middleware(['auth', 'role:peserta'])->prefix('peserta')->group(function () {
     // Absensi & Riwayat
     Route::get('/my-attendance', [\App\Http\Controllers\Peserta\AttendanceHistoryController::class, 'index'])->name('peserta.attendance');
-    Route::post('/attendance/check-in', [\App\Http\Controllers\AttendanceController::class, 'checkIn'])->name('peserta.attendance.checkin');
-    Route::post('/attendance/check-out', [\App\Http\Controllers\AttendanceController::class, 'checkOut'])->name('peserta.attendance.checkout');
+    Route::post('/attendance/check-in', [\App\Http\Controllers\AttendanceController::class, 'checkIn'])->middleware('throttle:30,1')->name('peserta.attendance.checkin');
+    Route::post('/attendance/check-out', [\App\Http\Controllers\AttendanceController::class, 'checkOut'])->middleware('throttle:30,1')->name('peserta.attendance.checkout');
+    Route::get('/attendance/check-holiday', [\App\Http\Controllers\Peserta\DashboardController::class, 'checkHoliday'])->name('peserta.attendance.check-holiday');
 
     // Logbook
     Route::get('/logbook', [\App\Http\Controllers\Peserta\LogbookController::class, 'index'])->name('peserta.logbook');
@@ -123,4 +149,52 @@ if (app()->environment('local')) {
         ]);
     })->name('dev-reload-check');
 }
+
+Route::get('/logbooks/poll-check', function (\Illuminate\Http\Request $request) {
+    $user = auth()->user();
+    if (!$user) return response()->json(['hash' => '']);
+    
+    // Holiday/WorkSchedule updates affect everyone, so we always include them in the hash
+    $schedCount = \App\Models\WorkSchedule::count();
+    $schedMax = \App\Models\WorkSchedule::max('updated_at');
+    
+    // Determine target user to check (for specific intern pages or participant page)
+    $targetUserId = null;
+    if ($user->role?->nama_role === 'peserta') {
+        $targetUserId = $user->id;
+    } elseif ($user->role?->nama_role === 'admin' || $user->role?->nama_role === 'super_admin') {
+        if ($request->has('user_code')) {
+            $targetUser = \App\Models\User::where('user_code', $request->query('user_code'))->first();
+            if ($targetUser) {
+                $targetUserId = $targetUser->id;
+            }
+        }
+    }
+    
+    if ($targetUserId) {
+        $logCount = \App\Models\Logbook::where('user_id', $targetUserId)->count();
+        $logMax = \App\Models\Logbook::where('user_id', $targetUserId)->max('updated_at');
+        $attCount = \App\Models\Attendance::where('user_id', $targetUserId)->count();
+        $attMax = \App\Models\Attendance::where('user_id', $targetUserId)->max('updated_at');
+        
+        $hash = md5($logCount . '_' . $logMax . '_' . $attCount . '_' . $attMax . '_' . $schedCount . '_' . $schedMax);
+    } else {
+        // Fallback for general pages
+        if ($user->role?->nama_role === 'admin') {
+            $internIds = $user->anakBimbingan()->pluck('id');
+            $logCount = \App\Models\Logbook::whereIn('user_id', $internIds)->count();
+            $logMax = \App\Models\Logbook::whereIn('user_id', $internIds)->max('updated_at');
+            $attCount = \App\Models\Attendance::whereIn('user_id', $internIds)->count();
+            $attMax = \App\Models\Attendance::whereIn('user_id', $internIds)->max('updated_at');
+            
+            $hash = md5($logCount . '_' . $logMax . '_' . $attCount . '_' . $attMax . '_' . $schedCount . '_' . $schedMax);
+        } else {
+            // Super Admin or other general fallbacks
+            $hash = md5($schedCount . '_' . $schedMax);
+        }
+    }
+    
+    return response()->json(['hash' => $hash]);
+})->middleware('auth')->name('logbooks.poll-check');
+
 

@@ -14,3 +14,134 @@
 #filter-instansi-modal .modal-actions {
     margin-top: 10px;
 }
+
+/* Allow dropdown to overflow modal body */
+.form-modal {
+    overflow: visible !important;
+}
+
+.modal-form {
+    overflow: visible !important;
+}
+
+/* ===== Custom Select Dropdown (Jenis Instansi) ===== */
+.custom-select-wrapper {
+    position: relative;
+    width: 100%;
+    user-select: none;
+}
+
+.custom-select-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 11px 12px;
+    background: #0f172a2e;
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 0.95rem;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+}
+
+[data-theme="light"] .custom-select-trigger {
+    background: #ffffffe0;
+}
+
+.custom-select-trigger:focus,
+.custom-select-trigger:hover {
+    border-color: var(--accent-primary);
+}
+
+.custom-select-wrapper.is-open .custom-select-trigger {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px var(--accent-primary-rgba);
+}
+
+.custom-select-value {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.custom-select-arrow {
+    flex-shrink: 0;
+    margin-left: 8px;
+    color: var(--text-secondary);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.custom-select-wrapper.is-open .custom-select-arrow {
+    transform: rotate(180deg);
+}
+
+/* Push modal content down when dropdown is open so it's never clipped */
+.custom-select-wrapper.is-open {
+    margin-bottom: 148px;
+}
+
+.custom-select-options {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    background: var(--modal-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    list-style: none;
+    padding: 6px;
+    margin: 0;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+.custom-select-wrapper.is-open .custom-select-options {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.custom-select-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 14px;
+    border-radius: 8px;
+    font-size: 0.92rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-weight: 500;
+}
+
+.custom-select-option:hover {
+    background: var(--accent-primary-rgba);
+    color: var(--text-primary);
+}
+
+.custom-select-option.is-selected {
+    background: var(--accent-primary);
+    color: var(--button-primary-text);
+    font-weight: 700;
+}
+
+/* ===== Char Counter for Nama Instansi ===== */
+.instansi-char-counter {
+    font-size: 0.73rem;
+    text-align: right;
+    margin-top: 4px;
+    transition: color 0.2s;
+    color: var(--text-secondary);
+}
+

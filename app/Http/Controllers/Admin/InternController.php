@@ -99,7 +99,7 @@ class InternController extends Controller
     public function show(Request $request, User $intern)
     {
         // Security check: must be guided by current admin
-        if ($intern->pembimbing_id !== auth()->id()) {
+        if ((int) $intern->pembimbing_id !== (int) auth()->id()) {
             abort(403, 'Anda tidak memiliki akses ke data peserta magang ini.');
         }
 
@@ -137,6 +137,14 @@ class InternController extends Controller
                 return \Carbon\Carbon::parse($item->tanggal)->toDateString();
             });
 
+        // Fetch all logbooks for the selected month to be grouped by date
+        $calendarLogbooks = $intern->logbooks()
+            ->whereBetween('tanggal', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
+            ->get()
+            ->groupBy(function($item) {
+                return \Carbon\Carbon::parse($item->tanggal)->toDateString();
+            });
+
         // Fetch work schedule overrides for the selected month to show custom holidays
         $schedules = \App\Models\WorkSchedule::where('type', 'date')
             ->whereBetween('specific_date', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
@@ -144,6 +152,32 @@ class InternController extends Controller
             ->keyBy(function($item) {
                 return \Carbon\Carbon::parse($item->specific_date)->toDateString();
             });
+
+        // Dynamically mock Lupa Absen Masuk dan Pulang if logbook is present but no attendance on workdays
+        $tempAttendances = collect();
+        $daysInMonth = $selectedDate->daysInMonth;
+        for ($day = 1; $day <= $daysInMonth; $day++) {
+            $loopDateStr = \Carbon\Carbon::create($year, $month, $day)->toDateString();
+            if ($calendarAttendances->has($loopDateStr)) {
+                $tempAttendances->put($loopDateStr, $calendarAttendances->get($loopDateStr));
+            } elseif (isset($calendarLogbooks[$loopDateStr]) && $calendarLogbooks[$loopDateStr]->isNotEmpty()) {
+                $loopDateObj = \Carbon\Carbon::parse($loopDateStr);
+                $schedule = \App\Models\WorkSchedule::getScheduleForDate($loopDateObj);
+                $isHoliday = $schedule ? $schedule->is_holiday : false;
+                
+                if (!$isHoliday && \Carbon\Carbon::parse($loopDateStr)->lessThan(\Carbon\Carbon::today())) {
+                    $mock = new Attendance([
+                        'user_id' => $intern->id,
+                        'tanggal' => $loopDateStr,
+                        'jam_masuk' => null,
+                        'jam_pulang' => null,
+                        'status' => 'Lupa Absen Masuk dan Pulang'
+                    ]);
+                    $tempAttendances->put($loopDateStr, $mock);
+                }
+            }
+        }
+        $calendarAttendances = $tempAttendances;
 
         return view('dashboard.admin.interns.show', compact(
             'intern',
@@ -158,6 +192,7 @@ class InternController extends Controller
             'year',
             'selectedDate',
             'calendarAttendances',
+            'calendarLogbooks',
             'schedules'
         ));
     }

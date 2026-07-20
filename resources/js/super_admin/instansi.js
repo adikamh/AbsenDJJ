@@ -1,7 +1,113 @@
 document.addEventListener('DOMContentLoaded', () => {
     const addInstansiModal = document.getElementById('add-instansi-modal');
     const editInstansiModal = document.getElementById('edit-instansi-modal');
+
+    // ===== Security: Sanitize nama_instansi inputs =====
+    // Allowed: letters, numbers, spaces, and: - / \ " ' & ( ) . ,
+    // Blocked: < > ; = { } | ^ ` ~ # % etc.
+    const NAMA_PATTERN = /[^a-zA-Z0-9\s\-\/\\().,'"&]/g;
+    const MAX_NAMA_LENGTH = 170;
+
+    function initNamaInput(inputEl) {
+        if (!inputEl) return;
+        // Create char counter
+        const counter = document.createElement('div');
+        counter.className = 'instansi-char-counter';
+        inputEl.parentNode.insertBefore(counter, inputEl.nextSibling);
+
+        function updateCounter() {
+            const len = inputEl.value.length;
+            const rem = MAX_NAMA_LENGTH - len;
+            counter.textContent = `${len} / ${MAX_NAMA_LENGTH} karakter`;
+            counter.style.color = rem <= 20
+                ? (rem <= 0 ? '#f87171' : '#fbbf24')
+                : 'var(--text-secondary)';
+        }
+
+        inputEl.addEventListener('input', () => {
+            const cleaned = inputEl.value.replace(NAMA_PATTERN, '');
+            if (cleaned !== inputEl.value) {
+                const pos = inputEl.selectionStart - (inputEl.value.length - cleaned.length);
+                inputEl.value = cleaned;
+                inputEl.setSelectionRange(pos, pos);
+            }
+            updateCounter();
+        });
+
+        inputEl.addEventListener('paste', () => {
+            setTimeout(() => {
+                inputEl.value = inputEl.value.replace(NAMA_PATTERN, '').substring(0, MAX_NAMA_LENGTH);
+                updateCounter();
+            }, 0);
+        });
+
+        updateCounter();
+    }
+
+    initNamaInput(document.getElementById('nama_instansi'));
+    initNamaInput(document.getElementById('edit_nama_instansi'));
+
+    // ===== Custom Select Dropdown Logic =====
+    function initCustomSelect(wrapperId, hiddenInputId, valueLabelSelector) {
+        const wrapper = document.getElementById(wrapperId);
+        if (!wrapper) return;
+        const trigger = wrapper.querySelector('.custom-select-trigger');
+        const valueLabel = wrapper.querySelector('.custom-select-value');
+        const options = wrapper.querySelectorAll('.custom-select-option');
+        const hiddenInput = document.getElementById(hiddenInputId);
+
+        function openSelect() {
+            wrapper.classList.add('is-open');
+            trigger.setAttribute('aria-expanded', 'true');
+        }
+
+        function closeSelect() {
+            wrapper.classList.remove('is-open');
+            trigger.setAttribute('aria-expanded', 'false');
+        }
+
+        function selectOption(li) {
+            const val = li.dataset.value;
+            const text = li.textContent.trim();
+            if (hiddenInput) hiddenInput.value = val;
+            if (valueLabel) valueLabel.textContent = text;
+            options.forEach(o => o.classList.remove('is-selected'));
+            li.classList.add('is-selected');
+            closeSelect();
+        }
+
+        trigger?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            wrapper.classList.contains('is-open') ? closeSelect() : openSelect();
+        });
+
+        options.forEach(li => {
+            li.addEventListener('click', () => selectOption(li));
+        });
+
+        // Close when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!wrapper.contains(e.target)) closeSelect();
+        });
+
+        // Expose a setter for JS-driven value changes (e.g. when Edit modal opens)
+        wrapper._setSelectValue = function(val) {
+            const match = [...options].find(o => o.dataset.value === val);
+            if (match) {
+                selectOption(match);
+            } else {
+                if (hiddenInput) hiddenInput.value = '';
+                if (valueLabel) valueLabel.textContent = 'Pilih Jenis';
+                options.forEach(o => o.classList.remove('is-selected'));
+            }
+        };
+    }
+
+    initCustomSelect('add-jenis-wrapper', 'jenis');
+    initCustomSelect('edit-jenis-wrapper', 'edit_jenis');
+
     const filterInstansiModal = document.getElementById('filter-instansi-modal');
+
 
     const openAddInstansiModal = document.getElementById('open-add-instansi-modal');
     const closeAddInstansiModal = document.getElementById('close-add-instansi-modal');
@@ -40,6 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
     openFilterModal?.addEventListener('click', () => toggleModal(filterInstansiModal, true));
     closeFilterInstansiModal?.addEventListener('click', () => toggleModal(filterInstansiModal, false));
 
+    // When edit button is clicked, also update the custom select
     document.querySelectorAll('[data-action="edit-instansi"]').forEach((button) => {
         button.addEventListener('click', () => {
             const actionTemplate = editInstansiForm?.dataset.actionTemplate || '';
@@ -49,7 +156,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
             setValue('edit_id', button.dataset.id);
             setValue('edit_nama_instansi', button.dataset.nama);
-            setValue('edit_jenis', button.dataset.jenis);
+
+            // Update custom select for jenis
+            const editWrapper = document.getElementById('edit-jenis-wrapper');
+            if (editWrapper?._setSelectValue) {
+                editWrapper._setSelectValue(button.dataset.jenis);
+            } else {
+                setValue('edit_jenis', button.dataset.jenis);
+            }
+
+            // Update char counter for nama
+            document.getElementById('edit_nama_instansi')?.dispatchEvent(new Event('input'));
+
             toggleModal(editInstansiModal, true);
         });
     });
